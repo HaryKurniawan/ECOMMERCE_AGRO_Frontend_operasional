@@ -5,9 +5,15 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                docker build -t agro-frontend-operasional .
-                '''
+                withCredentials([
+                    file(credentialsId: 'frontend-operasional-env', variable: 'ENV_FILE')
+                ]) {
+                    sh '''
+                    cp $ENV_FILE .env.local
+
+                    docker build -t agro-frontend-operasional .
+                    '''
+                }
             }
         }
 
@@ -26,15 +32,24 @@ pipeline {
             }
         }
 
+        stage('Health Check') {
+            steps {
+                sh '''
+                sleep 10
+                docker ps | grep agro-frontend-operasional
+                '''
+            }
+        }
+
     }
 
     post {
         success {
-            echo 'Deployment successful!'
+            echo 'Frontend deployment successful!'
         }
 
         failure {
-            echo 'Deployment failed!'
+            echo 'Frontend deployment failed!'
             sh 'docker logs agro-frontend-operasional --tail 100 || true'
         }
     }
