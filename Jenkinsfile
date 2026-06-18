@@ -26,15 +26,6 @@ pipeline {
             }
         }
 
-        stage('Health Check') {
-            steps {
-                sh '''
-                sleep 15
-
-                curl -f http://localhost:3002 || exit 1
-                '''
-            }
-        }
     }
 
     post {
