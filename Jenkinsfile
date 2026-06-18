@@ -1,106 +1,50 @@
-// ============================================================================
-// SIMPLE CI PIPELINE - AGRO JABAR ECOMMERCE FRONTEND OPERASIONAL
-// ============================================================================
-// Pipeline ini HANYA untuk Continuous Integration (CI), BUKAN deployment
-// 
-// Yang sudah di-handle oleh Git Hooks:
-// - ESLint check (pre-commit)
-// - Build check (pre-push)
-//
-// Yang di-handle oleh Jenkins:
-// - Run tests (unit + E2E)
-// - Generate test reports
-// - Notify hasil build
-// ============================================================================
-
 pipeline {
     agent any
 
-    environment {
-        NODE_VERSION = '18'
-        PROJECT_NAME = 'agro-jabar-ecommerce-frontend-operasional'
-    }
-
-    options {
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        timeout(time: 20, unit: 'MINUTES')
-        timestamps()
-    }
-
     stages {
-        stage('📥 Checkout') {
+
+        stage('Build Docker Image') {
             steps {
-                echo "Checking out code..."
-                checkout scm
+                sh '''
+                docker build -t agro-frontend-operasional .
+                '''
             }
         }
 
-        stage('📦 Install Dependencies') {
+        stage('Deploy') {
             steps {
-                echo "Installing dependencies..."
-                nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
-                    sh 'npm ci'
-                }
+                sh '''
+                docker stop agro-frontend-operasional || true
+                docker rm agro-frontend-operasional || true
+
+                docker run -d \
+                --name agro-frontend-operasional \
+                --network 1panel-network \
+                -p 3002:3004 \
+                agro-frontend-operasional
+                '''
             }
         }
 
-        stage('🧪 Run Unit Tests') {
+        stage('Health Check') {
             steps {
-                echo "Running unit tests..."
-                nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
-                    sh 'npm run test:coverage || true'
-                }
-            }
-        }
+                sh '''
+                sleep 15
 
-        stage('🎭 Run E2E Tests') {
-            steps {
-                echo "Running E2E tests..."
-                nodejs(nodeJSInstallationName: "Node ${NODE_VERSION}") {
-                    sh '''
-                        # Install Playwright browsers (jika belum)
-                        npx playwright install --with-deps chromium || true
-                        
-                        # Run E2E tests
-                        npm run test:e2e || true
-                    '''
-                }
+                curl -f http://localhost:3002 || exit 1
+                '''
             }
         }
     }
 
     post {
-        always {
-            // Publish test results (jika ada)
-            junit testResults: '**/test-results/**/*.xml', allowEmptyResults: true
-            
-            // Publish coverage report (jika ada)
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'coverage',
-                reportFiles: 'index.html',
-                reportName: 'Coverage Report'
-            ])
-            
-            // Publish Playwright report (jika ada)
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'playwright-report',
-                reportFiles: 'index.html',
-                reportName: 'Playwright Report'
-            ])
-        }
-        
         success {
-            echo "✅ Build successful!"
+            echo 'Deployment successful!'
         }
-        
+
         failure {
-            echo "❌ Build failed!"
+            echo 'Deployment failed!'
+            sh 'docker logs agro-frontend-operasional --tail 100 || true'
         }
     }
 }

@@ -218,13 +218,12 @@ export default function KelolaProdukPage({
 
   const handleUpdateVarian = async (
     varianId: string,
-    hargaPerKemasan?: number,
+    biayaTambahan?: number,
     isActive?: boolean,
   ) => {
     try {
       const payload: any = {};
-      if (hargaPerKemasan !== undefined)
-        payload.hargaPerKemasan = hargaPerKemasan;
+      if (biayaTambahan !== undefined) payload.biayaTambahan = biayaTambahan;
       if (isActive !== undefined) payload.isActive = isActive;
 
       await apiClient.patch(`/ecom-produk/varian/${varianId}`, payload);
@@ -764,9 +763,9 @@ export default function KelolaProdukPage({
                                 unit
                               </span>
                               <span>
-                                Harga Jual:{" "}
+                                Biaya Tambahan:{" "}
                                 <strong className="text-emerald-700">
-                                  {formatRupiah(varian.hargaPerKemasan)}
+                                  {formatRupiah(varian.biayaTambahan)}
                                 </strong>
                               </span>
                             </div>
@@ -810,11 +809,11 @@ export default function KelolaProdukPage({
                                   type="button"
                                   onClick={() => {
                                     setEditingVarianId(varian.id);
-                                    setEditVarianPrice(varian.hargaPerKemasan);
+                                    setEditVarianPrice(varian.biayaTambahan);
                                   }}
                                   className="px-2.5 py-1 text-xs bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 rounded-lg transition-colors font-semibold"
                                 >
-                                  Ubah Harga
+                                  Ubah Biaya
                                 </button>
                                 <button
                                   type="button"
@@ -865,7 +864,8 @@ export default function KelolaProdukPage({
                       </button>
                     </div>
                     <span className="text-[10px] text-gray-400 block mt-1 font-normal leading-normal">
-                      Harga dapat disesuaikan per varian kemasan di atas.
+                      Harga total per varian kemasan akan ditambah dengan Biaya
+                      Tambahan di atas.
                     </span>
                   </div>
                   <div>

@@ -112,7 +112,9 @@ export default function LaporanKeuanganPage() {
   const [baseLoading, setBaseLoading] = useState(true);
 
   // ── Profit summary (period filter) ─────────────────────────────────────────
+  type OrderFilterType = "ALL" | "RETAIL" | "B2B";
   const [activePeriod, setActivePeriod] = useState<PeriodKey>("month");
+  const [orderType, setOrderType] = useState<OrderFilterType>("ALL");
   const [summary, setSummary] = useState<ProfitSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
 
@@ -123,6 +125,32 @@ export default function LaporanKeuanganPage() {
   const [stockEndDate, setStockEndDate] = useState("");
   const [downloadingOrders, setDownloadingOrders] = useState(false);
   const [downloadingStock, setDownloadingStock] = useState(false);
+
+  const fetchOrders = useCallback(async (id: string, type: OrderFilterType) => {
+    try {
+      const isGrosir =
+        type === "B2B" ? true : type === "RETAIL" ? false : undefined;
+      const ordersRes = await ordersApi.sellerGetOrders(id, {
+        isGrosir,
+        limit: 1000,
+      });
+      const rawList =
+        ordersRes?.data?.data?.data ||
+        ordersRes?.data?.data ||
+        ordersRes?.data ||
+        [];
+      const list: FinanceOrder[] = Array.isArray(rawList) ? rawList : [];
+      setOrders(
+        [...list].sort(
+          (a, b) =>
+            new Date(b.tanggalDibuat || b.createdAt || "").getTime() -
+            new Date(a.tanggalDibuat || a.createdAt || "").getTime(),
+        ),
+      );
+    } catch {
+      toast.error("Gagal memuat daftar pesanan");
+    }
+  }, []);
 
   // ── Initial data load ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -143,23 +171,8 @@ export default function LaporanKeuanganPage() {
           return;
         }
         setTokoId(id);
-
-        const ordersRes = await ordersApi.sellerGetOrders(id);
-        const rawList =
-          ordersRes?.data?.data?.data ||
-          ordersRes?.data?.data ||
-          ordersRes?.data ||
-          [];
-        const list: FinanceOrder[] = Array.isArray(rawList) ? rawList : [];
-        setOrders(
-          [...list].sort(
-            (a, b) =>
-              new Date(b.tanggalDibuat || b.createdAt || "").getTime() -
-              new Date(a.tanggalDibuat || a.createdAt || "").getTime(),
-          ),
-        );
       } catch {
-        toast.error("Gagal memuat data laporan");
+        toast.error("Gagal memuat profil toko");
       } finally {
         setBaseLoading(false);
       }
@@ -167,25 +180,37 @@ export default function LaporanKeuanganPage() {
     init();
   }, [_hasHydrated, isAuthenticated, router]);
 
-  // ── Fetch profit summary setiap kali period atau tokoId berubah ─────────────
-  const loadSummary = useCallback(async (period: PeriodKey, id: string) => {
-    setSummaryLoading(true);
-    try {
-      const range = getDateRange(period);
-      const res = await fetchProfitSummary(id, range);
-      // TransformInterceptor: { success, data: { ... } }
-      const data = (res as any)?.data ?? res;
-      setSummary(data as ProfitSummary);
-    } catch {
-      setSummary(null);
-    } finally {
-      setSummaryLoading(false);
+  useEffect(() => {
+    if (tokoId) {
+      fetchOrders(tokoId, orderType);
     }
-  }, []);
+  }, [tokoId, orderType, fetchOrders]);
+
+  // ── Fetch profit summary setiap kali period atau tokoId berubah ─────────────
+  const loadSummary = useCallback(
+    async (period: PeriodKey, id: string, type: OrderFilterType) => {
+      setSummaryLoading(true);
+      try {
+        const range: any = getDateRange(period);
+        if (type === "B2B") range.isB2B = true;
+        else if (type === "RETAIL") range.isB2B = false;
+
+        const res = await fetchProfitSummary(id, range);
+        // TransformInterceptor: { success, data: { ... } }
+        const data = (res as any)?.data ?? res;
+        setSummary(data as ProfitSummary);
+      } catch {
+        setSummary(null);
+      } finally {
+        setSummaryLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    if (tokoId) loadSummary(activePeriod, tokoId);
-  }, [tokoId, activePeriod, loadSummary]);
+    if (tokoId) loadSummary(activePeriod, tokoId, orderType);
+  }, [tokoId, activePeriod, orderType, loadSummary]);
 
   // ── Download helpers ────────────────────────────────────────────────────────
   const applyOrderPreset = (days: number) => {
@@ -314,6 +339,27 @@ export default function LaporanKeuanganPage() {
         </div>
       </div>
 
+      {/* ── Order Type Tabs ── */}
+      <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+        {[
+          { key: "ALL", label: "Semua Pesanan" },
+          { key: "RETAIL", label: "Eceran (Toko)" },
+          { key: "B2B", label: "Grosir (B2B Gudang)" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setOrderType(tab.key as OrderFilterType)}
+            className={`px-5 py-2 text-xs font-medium rounded-lg transition-all ${
+              orderType === tab.key
+                ? "bg-white text-emerald-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* ── Period Filter ── */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -326,7 +372,7 @@ export default function LaporanKeuanganPage() {
           )}
           {!summaryLoading && tokoId && (
             <button
-              onClick={() => loadSummary(activePeriod, tokoId)}
+              onClick={() => loadSummary(activePeriod, tokoId, orderType)}
               className="ml-1 text-slate-400 hover:text-emerald-600 transition-colors"
             >
               <RefreshCw size={13} />

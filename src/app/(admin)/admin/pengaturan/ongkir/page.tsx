@@ -191,7 +191,7 @@ export default function PengaturanOngkirPage() {
 
             <div className="font-normal">
               <label className="block text-xs text-gray-500 mb-1.5 font-normal">
-                Batas Berat Gratis (Kilogram)
+                Batas Berat B2B / Grosir (Kilogram)
               </label>
               <div className="relative font-normal">
                 <input
@@ -207,8 +207,8 @@ export default function PengaturanOngkirPage() {
                 </span>
               </div>
               <p className="text-[10px] text-gray-400 mt-1 font-normal">
-                Gratis ongkir jika berat total pesanan sama dengan atau melebihi
-                batas ini
+                Gratis ongkir jika berat pesanan mencapai batas ini. Pesanan ini
+                dianggap Grosir/B2B dan dikirim langsung dari Gudang (SBU).
               </p>
             </div>
 

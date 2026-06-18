@@ -36,7 +36,7 @@ interface Store {
 interface VarianKemasan {
   id: string;
   ukuranKg: number;
-  hargaPerKemasan: number;
+  biayaTambahan: number;
   stokKemasan: number;
   isActive: boolean;
 }
@@ -475,10 +475,11 @@ export default function ManajemenProdukPage() {
                                         className="flex items-center justify-between bg-white border border-gray-100 rounded-lg px-3 py-1.5 text-sm"
                                       >
                                         <span className="font-medium text-gray-800">
-                                          Kemasan {v.ukuranKg} kg
+                                          Kemasan {v.ukuranKg} kg Biaya
+                                          Tambahan:{" "}
                                         </span>
                                         <span className="text-emerald-700 font-bold">
-                                          {formatRupiah(v.hargaPerKemasan)}
+                                          {formatRupiah(v.biayaTambahan)}
                                         </span>
                                       </div>
                                     ))}

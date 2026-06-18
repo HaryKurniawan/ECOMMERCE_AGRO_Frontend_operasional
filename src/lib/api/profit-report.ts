@@ -17,6 +17,7 @@ export interface ProfitSummaryFilters {
   startDate?: string;
   endDate?: string;
   groupBy?: "day" | "week" | "month";
+  isB2B?: boolean;
 }
 
 /**
@@ -53,6 +54,8 @@ export async function fetchProfitSummary(
   if (filters?.startDate) params.append("startDate", filters.startDate);
   if (filters?.endDate) params.append("endDate", filters.endDate);
   if (filters?.groupBy) params.append("groupBy", filters.groupBy);
+  if (filters?.isB2B !== undefined)
+    params.append("isB2B", filters.isB2B.toString());
 
   const queryString = params.toString();
   const url = `/ecommerce/profit-report/toko/${tokoId}/summary${queryString ? `?${queryString}` : ""}`;
