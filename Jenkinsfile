@@ -19,16 +19,21 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh '''
-                docker stop agro-frontend-operasional || true
-                docker rm agro-frontend-operasional || true
+                withCredentials([
+                    file(credentialsId: 'frontend-operasional-env', variable: 'ENV_FILE')
+                ]) {
+                    sh '''
+                    docker stop agro-frontend-operasional || true
+                    docker rm agro-frontend-operasional || true
 
-                docker run -d \
-                --name agro-frontend-operasional \
-                --network 1panel-network \
-                -p 3002:3004 \
-                agro-frontend-operasional
-                '''
+                    docker run -d \
+                    --name agro-frontend-operasional \
+                    --network 1panel-network \
+                    --env-file $ENV_FILE \
+                    -p 3002:3004 \
+                    agro-frontend-operasional
+                    '''
+                }
             }
         }
 
