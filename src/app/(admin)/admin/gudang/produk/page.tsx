@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import {
   Package,
   Search,
@@ -34,53 +35,46 @@ interface WarehouseItem {
 const fmtRp = (n: number) => `Rp ${(n || 0).toLocaleString("id-ID")}`;
 
 export default function ProdukGudangPage() {
-  const [products, setProducts] = useState<ProdukGudang[]>([]);
-  const [warehouses, setWarehouses] = useState<WarehouseItem[]>([]);
   const [selectedGudang, setSelectedGudang] = useState<string>("ALL");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
-  // Ambil daftar gudang untuk filter
-  useEffect(() => {
-    const fetchWarehouses = async () => {
-      try {
-        const res = await gudangApi.getWarehouses();
-        const raw = res?.data?.data || res?.data || [];
-        const list = Array.isArray(raw) ? raw : (raw.data ?? []);
-        setWarehouses(list);
-      } catch (err) {
-        console.error("Error fetching warehouses:", err);
-      }
-    };
-    fetchWarehouses();
-  }, []);
-
-  const fetchProducts = async (gudangId?: string, showLoading = true) => {
-    try {
-      if (showLoading) setLoading(true);
-      setError("");
-      const res = await gudangApi.getProdukGudang(
-        gudangId && gudangId !== "ALL" ? gudangId : undefined,
-      );
+  // Query untuk daftar gudang
+  const { data: warehouses = [] } = useQuery<WarehouseItem[]>({
+    queryKey: ["admin-warehouses"],
+    queryFn: async () => {
+      const res = await gudangApi.getWarehouses();
       const raw = res?.data?.data || res?.data || [];
-      setProducts(Array.isArray(raw) ? raw : (raw.data ?? []));
-    } catch (err: any) {
-      console.error("Error fetching warehouse products:", err);
-      setError("Gagal memuat daftar produk gudang.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      return Array.isArray(raw) ? raw : (raw.data ?? []);
+    },
+    staleTime: 5 * 60 * 1000, // Cache 5 menit
+  });
 
-  useEffect(() => {
-    fetchProducts(selectedGudang);
-  }, [selectedGudang]);
+  // Query untuk daftar produk gudang
+  const {
+    data: products = [],
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery<ProdukGudang[]>({
+    queryKey: ["admin-gudang-produk", selectedGudang],
+    queryFn: async () => {
+      const gid =
+        selectedGudang && selectedGudang !== "ALL" ? selectedGudang : undefined;
+      const res = await gudangApi.getProdukGudang(gid);
+      const raw = res?.data?.data || res?.data || [];
+      return Array.isArray(raw) ? raw : (raw.data ?? []);
+    },
+    staleTime: 3 * 60 * 1000, // Cache 3 menit
+  });
+
+  const loading = isLoading || isFetching;
+  const error = isError ? "Gagal memuat daftar produk gudang." : "";
 
   const filtered = useMemo(
     () =>
       products.filter(
-        (p) =>
+        (p: ProdukGudang) =>
           p.nama?.toLowerCase().includes(search.toLowerCase()) ||
           p.deskripsi?.toLowerCase().includes(search.toLowerCase()) ||
           p.gudangNama?.toLowerCase().includes(search.toLowerCase()),
@@ -101,7 +95,7 @@ export default function ProdukGudangPage() {
           </p>
         </div>
         <button
-          onClick={() => fetchProducts(selectedGudang)}
+          onClick={() => refetch()}
           disabled={loading}
           className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:text-emerald-600 shadow-sm active:scale-95 transition-all"
         >
@@ -138,7 +132,7 @@ export default function ProdukGudangPage() {
           className="px-4 py-3 bg-gray-50 border border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all md:w-64"
         >
           <option value="ALL">Semua Gudang</option>
-          {warehouses.map((w) => (
+          {warehouses.map((w: WarehouseItem) => (
             <option key={w.id} value={w.id}>
               {w.nama}
             </option>
@@ -166,34 +160,42 @@ export default function ProdukGudangPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map((p) => (
+          {filtered.map((p: ProdukGudang) => (
             <div
               key={`${p.gudangId}-${p.id}`}
               className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group"
             >
               {/* Image */}
-              <div className="h-40 bg-gray-50 relative overflow-hidden border-b border-gray-100">
-                {p.gambarUrl ? (
-                  <Image
+              <div className="h-40 bg-gray-50 relative overflow-hidden border-b border-gray-100 flex-shrink-0">
+                {p.gambarUrl && (
+                  <img
                     src={p.gambarUrl}
                     alt={p.nama}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      if (e.currentTarget.nextElementSibling) {
+                        (
+                          e.currentTarget.nextElementSibling as HTMLElement
+                        ).style.display = "flex";
+                      }
+                    }}
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-emerald-50/50">
-                    <Package size={40} className="text-emerald-200" />
-                  </div>
                 )}
+                <div
+                  className="w-full h-full items-center justify-center bg-emerald-50/50 absolute inset-0"
+                  style={{ display: p.gambarUrl ? "none" : "flex" }}
+                >
+                  <Package size={40} className="text-emerald-200" />
+                </div>
               </div>
 
               {/* Content */}
-              <div className="p-4 space-y-2">
+              <div className="p-4 flex flex-col flex-1 gap-2">
                 <h3 className="font-bold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors line-clamp-1">
                   {p.varianProduk ? `${p.nama} ${p.varianProduk}` : p.nama}
                 </h3>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">
                     {p.nama}
                   </span>
@@ -203,18 +205,27 @@ export default function ProdukGudangPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-baseline gap-1">
+                <div className="flex items-baseline gap-1 mt-0.5">
                   <span className="text-lg font-bold text-emerald-700">
                     {fmtRp(p.hargaGudang)}
                   </span>
                   <span className="text-xs text-gray-400">/ {p.satuan}</span>
                 </div>
                 {p.gudangNama && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 pt-1 border-t border-gray-50">
+                  <div className="flex items-center gap-1.5 text-[11px] text-gray-500 pt-1 border-t border-gray-50 mt-1">
                     <Warehouse size={12} className="text-gray-400" />
-                    {p.gudangNama}
+                    <span className="truncate">{p.gudangNama}</span>
                   </div>
                 )}
+
+                {/* Button Placeholder for Admin */}
+                <button
+                  disabled
+                  className="mt-auto w-full px-3 py-2 rounded-xl text-xs font-medium transition-all border flex items-center justify-center gap-1.5 bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
+                  title="Fitur Pengajuan hanya tersedia untuk akun Seller"
+                >
+                  Hanya Seller yg bisa Ajukan
+                </button>
               </div>
             </div>
           ))}

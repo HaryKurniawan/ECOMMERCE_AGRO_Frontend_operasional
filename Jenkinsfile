@@ -20,9 +20,13 @@ pipeline {
                     docker run --rm \\
                         -u \$(id -u):\$(id -g) \\
                         -v "\$(pwd):/src" \\
+                        -v "/var/jenkins_home/dependency-check-data:/usr/share/dependency-check/data" \\
                         owasp/dependency-check:latest \\
                         --project "Ecommerce Frontend Operasional" \\
                         --scan /src \\
+                        --exclude "**/node_modules/**" \\
+                        --exclude "**/.next/**" \\
+                        --exclude "**/coverage/**" \\
                         --nvdApiKey \$NVD_API_KEY \\
                         --format "HTML" \\
                         --format "JSON" \\
