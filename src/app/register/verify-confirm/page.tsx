@@ -35,20 +35,10 @@ function VerifyConfirmContent() {
         setStatus("success");
         setMessage(res.data?.message || "Email berhasil diverifikasi!");
       } catch (err: any) {
-        // Jika karena Strict Mode terpanggil 2x dan token sudah hangus
         const errMsg =
           err?.response?.data?.message || "Gagal memverifikasi email";
-        if (
-          errMsg.toLowerCase().includes("tidak valid") ||
-          errMsg.toLowerCase().includes("sudah terverifikasi")
-        ) {
-          // Asumsikan sudah diverifikasi pada mounting pertama (efek React Strict Mode)
-          setStatus("success");
-          setMessage("Email Anda sudah berhasil diverifikasi! Silakan login.");
-        } else {
-          setStatus("error");
-          setMessage(errMsg);
-        }
+        setStatus("error");
+        setMessage(errMsg);
       }
     };
 
