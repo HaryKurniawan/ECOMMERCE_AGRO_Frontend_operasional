@@ -66,7 +66,7 @@ export default function AdminBannerPage() {
     setLoading(true);
     try {
       const res = await bannerApi.getAdminBanners();
-      setBanners(res.data || []);
+      setBanners(res.data?.data || []);
     } catch (err) {
       toast.error("Gagal memuat banner");
       console.error(err);
