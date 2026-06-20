@@ -60,7 +60,7 @@ export const usePembayaran = (orderId: string | null) => {
     setIsProcessing(true);
     if (orderId && orderId !== "ORD00000001") {
       try {
-        await ordersApi.updateStatus(orderId, "DIPROSES");
+        await ordersApi.updateStatus(orderId, { status: "DIPROSES" });
         setIsPaid(true);
       } catch (error) {
         console.error("Failed to simulate payment", error);

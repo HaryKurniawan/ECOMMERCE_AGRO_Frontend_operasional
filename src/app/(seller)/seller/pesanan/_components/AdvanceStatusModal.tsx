@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { X, Loader2, Truck, User } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, Loader2, Truck, User, Upload as UploadIcon } from "lucide-react";
+
+import { apiClient } from "@/lib/ecommerce-api";
 
 import { OrderItem } from "../_hooks/useSellerOrders";
 import {
@@ -38,6 +40,10 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
   const [note, setNote] = useState("");
   const [selectedCourierId, setSelectedCourierId] = useState("");
   const [sendEmailNotification, setSendEmailNotification] = useState(true);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const nextStatus = order ? getNextStatus(order.shipping?.status ?? "") : null;
   const isHandover = nextStatus === "PICKUP_CONFIRMATION";
@@ -52,7 +58,56 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
   if (!order) return null;
 
   const canConfirm =
-    !isHandover || (couriers.length > 0 && !!selectedCourierId);
+    (!isHandover || (couriers.length > 0 && !!selectedCourierId)) && !uploading;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFotoFile(file);
+      setFotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    try {
+      setUploading(true);
+      let fotoUrl = undefined;
+
+      if (fotoFile) {
+        const formData = new FormData();
+        formData.append("file", fotoFile);
+        const uploadRes = await apiClient.post(
+          "/upload/pesanan/gambar",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        );
+        fotoUrl = uploadRes.data?.data?.url;
+      }
+
+      if (fotoUrl) {
+        // Panggil update status order dulu dengan foto URL
+        await apiClient.patch(`/ecom-pesanan/${order.id}/status`, {
+          status: order.status,
+          fotoSebelumKirimUrl: fotoUrl,
+        });
+      }
+
+      onConfirm(
+        note,
+        isHandover ? selectedCourierId : undefined,
+        isHandover ? sendEmailNotification : undefined,
+      );
+    } catch (err: any) {
+      alert(
+        "Gagal mengupload foto atau memperbarui pesanan: " +
+          (err.message || ""),
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <>
@@ -161,7 +216,7 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
           )}
 
           {/* Note Input */}
-          <div className="space-y-2 mb-6">
+          <div className="space-y-2 mb-4">
             <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">
               Catatan Aktivitas
             </label>
@@ -173,6 +228,52 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
               placeholder="Catatan (opsional, misal: diserahkan di pos 1)"
             />
           </div>
+
+          {/* Foto Sebelum Kirim (Hanya untuk Handover) */}
+          {isHandover && (
+            <div className="space-y-2 mb-6">
+              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">
+                Foto Sebelum Kirim (Opsional)
+              </label>
+
+              {!fotoPreview ? (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-blue-500 hover:border-blue-300 transition-all cursor-pointer"
+                >
+                  <UploadIcon size={24} className="mb-2" />
+                  <span className="text-xs font-semibold">
+                    Klik untuk upload foto pesanan
+                  </span>
+                </div>
+              ) : (
+                <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={fotoPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => {
+                      setFotoPreview(null);
+                      setFotoFile(null);
+                    }}
+                    className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-full hover:bg-red-500 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+          )}
 
           {/* Email Notification Toggle - Only for Handover step */}
           {isHandover && couriers.length > 0 && (
@@ -207,17 +308,11 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
 
           {/* Confirm Button */}
           <button
-            onClick={() =>
-              onConfirm(
-                note,
-                isHandover ? selectedCourierId : undefined,
-                isHandover ? sendEmailNotification : undefined,
-              )
-            }
-            disabled={loading || !canConfirm}
+            onClick={handleConfirmAction}
+            disabled={loading || uploading || !canConfirm}
             className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-slate-100 active:scale-[0.98]"
           >
-            {loading ? (
+            {loading || uploading ? (
               <Loader2 size={18} className="animate-spin" />
             ) : (
               <Truck size={18} />

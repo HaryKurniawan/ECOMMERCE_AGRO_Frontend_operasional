@@ -3,6 +3,35 @@ pipeline {
 
     stages {
 
+        stage('OWASP Dependency-Check') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')
+                ]) {
+                    sh '''
+                    if [ -n "$NVD_API_KEY" ]; then
+                      echo "API Key ditemukan"
+                    else
+                      echo "API Key kosong"
+                      exit 1
+                    fi
+                    
+                    echo "Running OWASP Dependency-Check for Frontend Operasional..."
+                    docker run --rm \\
+                        -u \$(id -u):\$(id -g) \\
+                        -v "\$(pwd):/src" \\
+                        owasp/dependency-check:latest \\
+                        --project "Ecommerce Frontend Operasional" \\
+                        --scan /src \\
+                        --nvdApiKey \$NVD_API_KEY \\
+                        --format "HTML" \\
+                        --format "JSON" \\
+                        --out /src/dependency-check-report || true
+                    '''
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 withCredentials([
@@ -49,6 +78,11 @@ pipeline {
     }
 
     post {
+        always {
+            dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.json'
+            archiveArtifacts artifacts: 'dependency-check-report/*.html', allowEmptyArchive: true
+        }
+
         success {
             echo 'Frontend deployment successful!'
         }

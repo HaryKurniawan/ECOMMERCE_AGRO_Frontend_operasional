@@ -20,8 +20,10 @@ export const ordersApi = {
   getMyOrders: (params?: { status?: string; page?: number; limit?: number }) =>
     apiClient.get("/ecom-pesanan/my-pesanan", { params }),
   getById: (id: string) => apiClient.get(`/ecom-pesanan/${id}`),
-  updateStatus: (id: string, status: string) =>
-    apiClient.patch(`/ecom-pesanan/${id}/status`, { status }),
+  updateStatus: (
+    id: string,
+    data: { status: string; fotoSebelumKirimUrl?: string },
+  ) => apiClient.patch(`/ecom-pesanan/${id}/status`, data),
   adminGetAll: (params?: {
     status?: string;
     page?: number;

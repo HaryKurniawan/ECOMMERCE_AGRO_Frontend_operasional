@@ -206,7 +206,10 @@ export default function StockRequestDetailPage() {
     console.log("[SSE] Connecting for seller store:", storeId);
 
     // Connect to Express TS Gudang SSE Server
-    const sseUrl = `http://localhost:5005/api/events/seller?sellerId=${storeId}`;
+    const gudangBaseUrl =
+      process.env.NEXT_PUBLIC_GUDANG_API_URL ||
+      "https://gudang-agro-backend.vercel.app";
+    const sseUrl = `${gudangBaseUrl}/api/events/seller?sellerId=${storeId}`;
     const es = new EventSource(sseUrl);
     eventSourceRef.current = es;
 

@@ -85,6 +85,10 @@ const ADMIN_MENU: SidebarMenuItem[] = [
     path: "/admin/pengaturan",
     label: "Pengaturan",
     icon: <Settings size={17} />,
+    children: [
+      { path: "/admin/pengaturan", label: "Umum" },
+      { path: "/admin/kelola-foto", label: "Kelola Foto" },
+    ],
   },
 ];
 
