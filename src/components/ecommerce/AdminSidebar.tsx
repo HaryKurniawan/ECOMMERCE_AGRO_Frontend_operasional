@@ -88,6 +88,7 @@ const ADMIN_MENU: SidebarMenuItem[] = [
     children: [
       { path: "/admin/pengaturan", label: "Umum" },
       { path: "/admin/kelola-foto", label: "Kelola Foto" },
+      { path: "/admin/banner", label: "Banner Promo" },
     ],
   },
 ];

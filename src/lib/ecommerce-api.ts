@@ -20,3 +20,4 @@ export * from "./api/admin";
 export * from "./api/gudang";
 export * from "./api/dashboard";
 export * from "./api/delivery-batch";
+export * from "./api/banner";
