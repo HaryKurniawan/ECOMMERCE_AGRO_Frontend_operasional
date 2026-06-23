@@ -1001,7 +1001,7 @@ export default function KelolaProdukPage({
                       key={idx}
                       className="flex gap-2 items-start bg-gray-50 p-3 rounded-xl border border-gray-100 relative"
                     >
-                      {idx > 0 && (
+                      {editForm.images.length > 1 ? (
                         <button
                           type="button"
                           onClick={() =>
@@ -1010,7 +1010,20 @@ export default function KelolaProdukPage({
                               images: prev.images.filter((_, i) => i !== idx),
                             }))
                           }
-                          className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-sm border border-gray-100 hover:bg-red-50"
+                          className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-sm border border-gray-100 hover:bg-red-50 z-10"
+                        >
+                          <X size={12} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditForm((prev) => ({
+                              ...prev,
+                              images: [{ type: "link", value: "" }],
+                            }))
+                          }
+                          className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-sm border border-gray-100 hover:bg-red-50 z-10"
                         >
                           <X size={12} />
                         </button>
@@ -1047,50 +1060,119 @@ export default function KelolaProdukPage({
                           </button>
                         </div>
                         {img.type === "link" ? (
-                          <input
-                            type="url"
-                            value={img.value}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setEditForm((prev) => ({
-                                ...prev,
-                                images: prev.images.map((im, i) =>
-                                  i === idx ? { ...im, value: val } : im,
-                                ),
-                              }));
-                            }}
-                            placeholder="https://example.com/image.png"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                          />
-                        ) : (
-                          <div>
-                            {img.value ? (
-                              <div className="flex items-center gap-2">
+                          <div className="space-y-2">
+                            <input
+                              type="url"
+                              value={img.value}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setEditForm((prev) => ({
+                                  ...prev,
+                                  images: prev.images.map((im, i) =>
+                                    i === idx ? { ...im, value: val } : im,
+                                  ),
+                                }));
+                              }}
+                              placeholder="https://example.com/image.png"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                            {img.value && (
+                              <div className="mt-2 relative inline-block">
                                 <Image
                                   src={img.value}
                                   alt="Preview"
-                                  width={40}
-                                  height={40}
-                                  className="w-10 h-10 object-cover rounded-md border border-gray-200"
+                                  width={100}
+                                  height={100}
+                                  className="w-24 h-24 object-cover rounded-md border border-gray-200"
+                                  unoptimized
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                  }}
+                                />
+                                <div className="flex gap-2 mt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEditForm((prev) => ({
+                                        ...prev,
+                                        images: prev.images.map((im, i) =>
+                                          i === idx ? { ...im, value: "" } : im,
+                                        ),
+                                      }))
+                                    }
+                                    className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 font-semibold"
+                                  >
+                                    Ganti URL
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEditForm((prev) => ({
+                                        ...prev,
+                                        images:
+                                          prev.images.length > 1
+                                            ? prev.images.filter(
+                                                (_, i) => i !== idx,
+                                              )
+                                            : [{ type: "link", value: "" }],
+                                      }))
+                                    }
+                                    className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100 font-semibold"
+                                  >
+                                    Hapus Foto
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            {img.value ? (
+                              <div className="space-y-2">
+                                <Image
+                                  src={img.value}
+                                  alt="Preview"
+                                  width={100}
+                                  height={100}
+                                  className="w-24 h-24 object-cover rounded-md border border-gray-200"
                                   unoptimized
                                 />
-                                <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded">
-                                  ✔️ File Terpilih
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setEditForm((prev) => ({
-                                      ...prev,
-                                      images: prev.images.map((im, i) =>
-                                        i === idx ? { ...im, value: "" } : im,
-                                      ),
-                                    }))
-                                  }
-                                  className="text-[10px] text-red-500 font-bold ml-auto hover:underline"
-                                >
-                                  Ganti File
-                                </button>
+                                <div className="flex gap-2 items-center">
+                                  <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded">
+                                    ✔️ File Terpilih
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEditForm((prev) => ({
+                                        ...prev,
+                                        images: prev.images.map((im, i) =>
+                                          i === idx ? { ...im, value: "" } : im,
+                                        ),
+                                      }))
+                                    }
+                                    className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 font-semibold"
+                                  >
+                                    Ganti File
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEditForm((prev) => ({
+                                        ...prev,
+                                        images:
+                                          prev.images.length > 1
+                                            ? prev.images.filter(
+                                                (_, i) => i !== idx,
+                                              )
+                                            : [{ type: "link", value: "" }],
+                                      }))
+                                    }
+                                    className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100 font-semibold"
+                                  >
+                                    Hapus Foto
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <input
@@ -1101,6 +1183,9 @@ export default function KelolaProdukPage({
                                   if (file) {
                                     // Validasi maksimal 2 MB
                                     if (file.size > 2 * 1024 * 1024) {
+                                      alert(
+                                        `Ukuran file ${file.name} terlalu besar! Maksimal 2 MB per foto.`,
+                                      );
                                       setFieldFeedback({
                                         field: "images",
                                         type: "error",
