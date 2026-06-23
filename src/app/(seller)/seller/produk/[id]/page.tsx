@@ -1099,6 +1099,18 @@ export default function KelolaProdukPage({
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
+                                    // Validasi maksimal 2 MB
+                                    if (file.size > 2 * 1024 * 1024) {
+                                      setFieldFeedback({
+                                        field: "images",
+                                        type: "error",
+                                        msg: `Ukuran file ${file.name} terlalu besar! Maksimal 2 MB per foto.`,
+                                      });
+                                      e.target.value = "";
+                                      return;
+                                    }
+                                    setFieldFeedback(null);
+
                                     const reader = new FileReader();
                                     reader.onloadend = () => {
                                       const val = reader.result as string;
