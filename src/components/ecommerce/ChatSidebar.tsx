@@ -105,7 +105,12 @@ const ChatSidebar: React.FC = () => {
       if (convData?.id) {
         // Refresh conversations to ensure it's in the list
         await fetchConversations();
-        router.push(`/admin/chat/${convData.id}`);
+        const basePath =
+          typeof window !== "undefined" &&
+          window.location.pathname.startsWith("/cs")
+            ? "/cs/chat"
+            : "/admin/chat";
+        router.push(`${basePath}/${convData.id}`);
       }
     } catch (err) {
       console.error("Failed to initiate chat with contact", err);
@@ -194,10 +199,15 @@ const ChatSidebar: React.FC = () => {
                 conv.customer?.name || conv.customer?.email || "Customer";
               const isActive = activeId === conv.id;
 
+              const basePath =
+                typeof window !== "undefined" &&
+                window.location.pathname.startsWith("/cs")
+                  ? "/cs/chat"
+                  : "/admin/chat";
               return (
                 <button
                   key={conv.id}
-                  onClick={() => router.push(`/admin/chat/${conv.id}`)}
+                  onClick={() => router.push(`${basePath}/${conv.id}`)}
                   className={`w-full flex items-center gap-3 p-4 transition-colors text-left ${
                     isActive ? "bg-primary-50/50" : "hover:bg-gray-50"
                   }`}

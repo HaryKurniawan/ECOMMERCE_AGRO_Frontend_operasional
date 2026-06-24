@@ -8,6 +8,8 @@ interface User {
   role: string;
   isVerifiedB2B?: boolean;
   b2bVerification?: any;
+  tokoId?: string;
+  toko?: { id: string; [key: string]: any };
 }
 
 interface AuthState {

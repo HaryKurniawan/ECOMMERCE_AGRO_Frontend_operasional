@@ -146,7 +146,25 @@ const AdminChatRoomPage: React.FC = () => {
     eventSource.onmessage = (event) => {
       try {
         const rawData = JSON.parse(event.data);
+
+        // Skip heartbeat messages
+        if (
+          rawData?.type === "heartbeat" ||
+          rawData?.data?.type === "heartbeat"
+        )
+          return;
+
         const msgObj = rawData.data || rawData;
+
+        // Skip if no real message ID or sender
+        if (
+          !msgObj.id &&
+          !msgObj.pengirimId &&
+          !msgObj.senderId &&
+          !msgObj.message?.id
+        )
+          return;
+
         const newMessage: MessageData = {
           id:
             msgObj.id ||
@@ -172,6 +190,9 @@ const AdminChatRoomPage: React.FC = () => {
             msgObj.tanggalDibuat ||
             new Date().toISOString(),
         };
+
+        // Extra safety check for empty content
+        if (!newMessage.content && !newMessage.senderId) return;
 
         setMessages((prev) => {
           if (newMessage.id && prev.some((m) => m.id === newMessage.id))
@@ -286,9 +307,9 @@ const AdminChatRoomPage: React.FC = () => {
     }
   });
 
-  if (loading) {
+  if (loading || !user?.id) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex items-center justify-center py-20 h-full">
         <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
       </div>
     );
@@ -300,12 +321,12 @@ const AdminChatRoomPage: React.FC = () => {
     "Customer";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-50">
+    <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center gap-3 shadow-sm z-20 border-b border-gray-100 flex-shrink-0">
         <button
           onClick={() => router.push("/cs/chat")}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 md:hidden"
         >
           <ArrowLeft size={20} />
         </button>
