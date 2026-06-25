@@ -15,6 +15,8 @@ import {
 
 import { useAuthStore } from "@/store/auth-store";
 
+import NotifBell from "./NotifBell";
+
 const NAV_TABS = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/seller/dashboard" },
   { label: "Produk", icon: Package, path: "/seller/produk" },
@@ -89,60 +91,63 @@ export default function SellerTopbar() {
       </div>
 
       {/* ── Right: Avatar/Email Dropdown ── */}
-      <div className="relative">
-        <button
-          onClick={() => setIsProfileOpen(!isProfileOpen)}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all text-right group"
-        >
-          <div className="hidden sm:flex items-center gap-2">
-            <p className="text-[12px] font-medium text-gray-600 group-hover:text-gray-800 transition-colors tracking-tight">
-              {email}
-            </p>
-            <ChevronDown
-              size={12}
-              className={`text-gray-500 group-hover:text-gray-700 transition-transform duration-200 ${
-                isProfileOpen ? "rotate-180" : ""
-              }`}
-            />
-          </div>
-          <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-50 group-hover:border-primary-100 transition-all duration-200 shadow-sm">
-            <UserIcon
-              size={15}
-              className="text-gray-400 group-hover:text-primary-600 transition-colors"
-            />
-          </div>
-        </button>
-
-        {isProfileOpen && (
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 z-40 cursor-default"
-              onClick={() => setIsProfileOpen(false)}
-              aria-label="Close profile menu"
-            />
-            <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 z-50 animate-in fade-in zoom-in duration-200">
-              <button
-                onClick={() => {
-                  setIsProfileOpen(false);
-                  router.push("/seller/profil-toko");
-                }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-700 hover:bg-gray-50 text-[12px] font-medium transition-all"
-              >
-                <Store size={14} className="text-gray-500" />
-                Profil Toko
-              </button>
-              <div className="h-px bg-gray-100 my-1 mx-2" />
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 text-[12px] font-medium transition-all"
-              >
-                <LogOut size={14} />
-                Keluar Sesi
-              </button>
+      <div className="flex items-center gap-2">
+        <NotifBell />
+        <div className="relative">
+          <button
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all text-right group"
+          >
+            <div className="hidden sm:flex items-center gap-2">
+              <p className="text-[12px] font-medium text-gray-600 group-hover:text-gray-800 transition-colors tracking-tight">
+                {email}
+              </p>
+              <ChevronDown
+                size={12}
+                className={`text-gray-500 group-hover:text-gray-700 transition-transform duration-200 ${
+                  isProfileOpen ? "rotate-180" : ""
+                }`}
+              />
             </div>
-          </>
-        )}
+            <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-50 group-hover:border-primary-100 transition-all duration-200 shadow-sm">
+              <UserIcon
+                size={15}
+                className="text-gray-400 group-hover:text-primary-600 transition-colors"
+              />
+            </div>
+          </button>
+
+          {isProfileOpen && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setIsProfileOpen(false)}
+                aria-label="Close profile menu"
+              />
+              <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 z-50 animate-in fade-in zoom-in duration-200">
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    router.push("/seller/profil-toko");
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-700 hover:bg-gray-50 text-[12px] font-medium transition-all"
+                >
+                  <Store size={14} className="text-gray-500" />
+                  Profil Toko
+                </button>
+                <div className="h-px bg-gray-100 my-1 mx-2" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 text-[12px] font-medium transition-all"
+                >
+                  <LogOut size={14} />
+                  Keluar Sesi
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

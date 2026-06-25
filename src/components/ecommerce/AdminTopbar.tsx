@@ -18,6 +18,8 @@ import {
 
 import { useAuthStore } from "@/store/auth-store";
 
+import NotifBell from "./NotifBell";
+
 const NAV_TABS = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
   { label: "Management Account", icon: UserIcon, path: "/admin/pengguna" },
@@ -83,53 +85,56 @@ export default function AdminTopbar() {
       </div>
 
       {/* ── Right: Avatar/Email Dropdown ── */}
-      <div className="relative">
-        <button
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all text-right group"
-        >
-          {/* Email and Chevron */}
-          <div className="hidden sm:flex items-center gap-2">
-            <p className="text-[12px] font-medium text-gray-600 group-hover:text-gray-800 transition-colors tracking-tight">
-              {email}
-            </p>
-            <ChevronDown
-              size={12}
-              className={`text-gray-500 group-hover:text-gray-700 transition-transform duration-200 ${
-                isDropdownOpen ? "rotate-180" : ""
-              }`}
-            />
-          </div>
-
-          {/* Avatar Circle with User Icon */}
-          <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-50 group-hover:border-primary-100 transition-all duration-200 shadow-sm">
-            <UserIcon
-              size={15}
-              className="text-gray-400 group-hover:text-primary-600 transition-colors"
-            />
-          </div>
-        </button>
-
-        {/* Floating Dropdown Menus */}
-        {isDropdownOpen && (
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 z-40 cursor-default"
-              onClick={() => setIsDropdownOpen(false)}
-              aria-label="Close dropdown"
-            />
-            <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 z-50 animate-in fade-in zoom-in duration-200">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 text-[12px] font-medium transition-all"
-              >
-                <LogOut size={14} />
-                Keluar Sesi
-              </button>
+      <div className="flex items-center gap-2">
+        <NotifBell />
+        <div className="relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all text-right group"
+          >
+            {/* Email and Chevron */}
+            <div className="hidden sm:flex items-center gap-2">
+              <p className="text-[12px] font-medium text-gray-600 group-hover:text-gray-800 transition-colors tracking-tight">
+                {email}
+              </p>
+              <ChevronDown
+                size={12}
+                className={`text-gray-500 group-hover:text-gray-700 transition-transform duration-200 ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
             </div>
-          </>
-        )}
+
+            {/* Avatar Circle with User Icon */}
+            <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-50 group-hover:border-primary-100 transition-all duration-200 shadow-sm">
+              <UserIcon
+                size={15}
+                className="text-gray-400 group-hover:text-primary-600 transition-colors"
+              />
+            </div>
+          </button>
+
+          {/* Floating Dropdown Menus */}
+          {isDropdownOpen && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setIsDropdownOpen(false)}
+                aria-label="Close dropdown"
+              />
+              <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 z-50 animate-in fade-in zoom-in duration-200">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 text-[12px] font-medium transition-all"
+                >
+                  <LogOut size={14} />
+                  Keluar Sesi
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

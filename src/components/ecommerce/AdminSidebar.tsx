@@ -89,6 +89,7 @@ const ADMIN_MENU: SidebarMenuItem[] = [
       { path: "/admin/pengaturan", label: "Umum" },
       { path: "/admin/kelola-foto", label: "Kelola Foto" },
       { path: "/admin/banner", label: "Banner Promo" },
+      { path: "/admin/notifikasi", label: "Broadcast Notifikasi" },
     ],
   },
 ];
