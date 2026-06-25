@@ -53,14 +53,19 @@ const InitShippingModal: React.FC<InitShippingModalProps> = ({
             <button
               onClick={onConfirm}
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-3 transition-colors"
             >
               {loading ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={20} className="animate-spin shrink-0" />
               ) : (
-                <Truck size={16} />
+                <Truck size={20} className="shrink-0" />
               )}
-              Mulai Proses Pengiriman (Sedang Disiapkan)
+              <div className="flex flex-col items-start leading-tight text-left">
+                <span>Mulai Proses Pengiriman</span>
+                <span className="text-xs font-normal text-blue-100 mt-0.5">
+                  Status: Sedang Disiapkan
+                </span>
+              </div>
             </button>
           </div>
         </div>
