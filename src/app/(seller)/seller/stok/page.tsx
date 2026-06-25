@@ -30,6 +30,12 @@ interface ProductItem {
   satuan?: string;
   terjual?: number | string;
   rating?: number | string;
+  varian?: {
+    id: string;
+    ukuranKg: number;
+    stokKemasan: number;
+    isActive: boolean;
+  }[];
 }
 
 interface StockLog {
@@ -528,32 +534,51 @@ export default function SellerStockManagementPage() {
                       </div>
 
                       {/* Right: Stock Count Display only */}
-                      <div className="flex items-center gap-4 flex-shrink-0">
-                        {/* Status Pills */}
-                        <div>
-                          {s === 0 ? (
-                            <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-rose-50 text-rose-500 border border-rose-100">
-                              Habis
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-4">
+                          {/* Status Pills */}
+                          <div>
+                            {s === 0 ? (
+                              <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-rose-50 text-rose-500 border border-rose-100">
+                                Habis
+                              </span>
+                            ) : s < 10 ? (
+                              <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-amber-50 text-amber-500 border border-amber-100">
+                                Rendah
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                Normal
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Solid Stock display */}
+                          <div className="w-20 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                            <span
+                              className={`text-[12px] font-medium ${s === 0 ? "text-rose-500" : s < 10 ? "text-amber-500" : "text-slate-800"}`}
+                            >
+                              {s} {p.satuan || "unit"}
                             </span>
-                          ) : s < 10 ? (
-                            <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-amber-50 text-amber-500 border border-amber-100">
-                              Rendah
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">
-                              Normal
-                            </span>
-                          )}
+                          </div>
                         </div>
 
-                        {/* Solid Stock display */}
-                        <div className="w-20 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                          <span
-                            className={`text-[12px] font-medium ${s === 0 ? "text-rose-500" : s < 10 ? "text-amber-500" : "text-slate-800"}`}
-                          >
-                            {s} {p.satuan || "unit"}
-                          </span>
-                        </div>
+                        {/* Varian Kemasan Sub-Stock */}
+                        {p.varian && p.varian.length > 0 && (
+                          <div className="flex flex-wrap justify-end gap-1.5 mt-0.5">
+                            {p.varian.map((v) => (
+                              <div
+                                key={v.id}
+                                className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50/50 text-emerald-600 border border-emerald-100/50 flex gap-1"
+                              >
+                                <span className="font-semibold">
+                                  {v.ukuranKg}kg:
+                                </span>
+                                <span>{v.stokKemasan}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

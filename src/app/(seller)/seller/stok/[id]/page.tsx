@@ -26,6 +26,12 @@ interface ProductItem {
   harga: number | string;
   stok: number | string;
   satuan?: string;
+  varian?: {
+    id: string;
+    ukuranKg: number;
+    stokKemasan: number;
+    isActive: boolean;
+  }[];
 }
 
 interface StockLog {
@@ -298,7 +304,7 @@ export default function SellerProductStockDetailPage() {
                 <span className="text-[9px] text-slate-400 font-medium block uppercase tracking-wider mb-0.5">
                   Stok Saat Ini
                 </span>
-                <div className="flex items-center gap-2 justify-end">
+                <div className="flex items-center gap-2 justify-end mb-1">
                   <span className="text-base font-medium text-slate-700">
                     {product.stok}
                   </span>
@@ -319,6 +325,20 @@ export default function SellerProductStockDetailPage() {
                     </span>
                   )}
                 </div>
+
+                {product.varian && product.varian.length > 0 && (
+                  <div className="flex flex-wrap justify-end gap-1.5 max-w-[200px] mt-1.5">
+                    {product.varian.map((v) => (
+                      <div
+                        key={v.id}
+                        className="text-[10px] px-2 py-0.5 rounded bg-emerald-50/50 text-emerald-600 border border-emerald-100/50 flex gap-1"
+                      >
+                        <span className="font-semibold">{v.ukuranKg}kg:</span>
+                        <span>{v.stokKemasan}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button
@@ -363,35 +383,51 @@ export default function SellerProductStockDetailPage() {
               </div>
 
               {/* Current Stock block */}
-              <div className="p-3 bg-slate-50/50 border border-slate-100/50 rounded-2xl flex items-center justify-between">
-                <div>
-                  <span className="text-[9px] text-slate-400 font-medium block uppercase tracking-wider mb-0.5">
-                    Stok Saat Ini
-                  </span>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-lg font-medium text-slate-700">
-                      {product.stok}
+              <div className="p-3 bg-slate-50/50 border border-slate-100/50 rounded-2xl flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <span className="text-[9px] text-slate-400 font-medium block uppercase tracking-wider mb-0.5">
+                      Stok Saat Ini
                     </span>
-                    <span className="text-xs font-normal text-slate-400">
-                      {product.satuan || "unit"}
-                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-medium text-slate-700">
+                        {product.stok}
+                      </span>
+                      <span className="text-xs font-normal text-slate-400">
+                        {product.satuan || "unit"}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    {s === 0 ? (
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-rose-50 text-rose-500 border border-rose-100">
+                        Habis
+                      </span>
+                    ) : s < 10 ? (
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-amber-50 text-amber-500 border border-amber-100">
+                        Rendah
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">
+                        Cukup
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div>
-                  {s === 0 ? (
-                    <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-rose-50 text-rose-500 border border-rose-100">
-                      Habis
-                    </span>
-                  ) : s < 10 ? (
-                    <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-amber-50 text-amber-500 border border-amber-100">
-                      Rendah
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      Cukup
-                    </span>
-                  )}
-                </div>
+
+                {product.varian && product.varian.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-slate-100/80">
+                    {product.varian.map((v) => (
+                      <div
+                        key={v.id}
+                        className="text-[10px] px-2 py-0.5 rounded bg-emerald-50/50 text-emerald-600 border border-emerald-100/50 flex gap-1"
+                      >
+                        <span className="font-semibold">{v.ukuranKg}kg:</span>
+                        <span>{v.stokKemasan}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
