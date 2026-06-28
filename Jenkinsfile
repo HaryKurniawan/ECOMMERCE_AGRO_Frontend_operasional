@@ -19,6 +19,8 @@ pipeline {
                     file(credentialsId: "${ENV_CRED_ID}", variable: 'ENV_FILE')
                 ]) {
                     sh '''
+                    # Hapus sisa file lama (jika ada) untuk mencegah Permission Denied
+                    rm -f .env.local || true
                     cp $ENV_FILE .env.local
                     docker build -t ${IMAGE_NAME} .
                     '''
