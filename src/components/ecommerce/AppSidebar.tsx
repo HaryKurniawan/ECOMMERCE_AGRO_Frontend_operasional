@@ -29,6 +29,7 @@ export interface SidebarMenuItem {
   children?: SidebarSubItem[];
   isHeader?: boolean;
   hasBadge?: boolean;
+  badgeCount?: number;
 }
 
 interface AppSidebarProps {
