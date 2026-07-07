@@ -161,15 +161,15 @@ const SellerSidebar: React.FC = () => {
       : UTAMA_MENU;
 
   // Calculate active orders
-  const activeReguler = regulerOrders.filter((o) =>
+  const activeReguler = regulerOrders.filter((o: any) =>
     ["MENUNGGU_BAYAR", "MENUNGGU_KONFIRMASI_SELLER", "DIPROSES"].includes(
-      o.status,
+      o.status || "",
     ),
   ).length;
 
-  const activeGrosir = grosirOrders.filter((o) =>
+  const activeGrosir = grosirOrders.filter((o: any) =>
     ["MENUNGGU_BAYAR", "MENUNGGU_KONFIRMASI_SELLER", "DIPROSES"].includes(
-      o.status,
+      o.status || "",
     ),
   ).length;
 
