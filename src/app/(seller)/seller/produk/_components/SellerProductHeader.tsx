@@ -17,7 +17,6 @@ const SellerProductHeader: React.FC<SellerProductHeaderProps> = ({
   return (
     <PageHeader
       title="Produk & Gudang"
-      description="Kelola etalase toko dan lihat stok gudang fisik Anda"
       icon={Package}
       iconColor="text-emerald-600"
       actions={

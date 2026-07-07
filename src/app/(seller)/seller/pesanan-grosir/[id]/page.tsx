@@ -195,7 +195,7 @@ export default function DetailPesananGrosirPage() {
       setGeocoding(true);
       setGeocodeError("");
       fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(order.alamatKirim)}&format=json&limit=1`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(order.alamatKirim)}&format=json&limit=1&email=admin@agrojabar.com`,
         { headers: { "Accept-Language": "id,en" } },
       )
         .then((res) => res.json())
@@ -206,11 +206,11 @@ export default function DetailPesananGrosirPage() {
               lng: parseFloat(data[0].lon),
             });
           } else {
-            setGeocodeError("Lokasi tidak ditemukan di peta.");
+            setGeocodeError("Titik peta otomatis tidak ditemukan.");
           }
         })
         .catch(() => {
-          setGeocodeError("Gagal memuat peta.");
+          setGeocodeError("Gagal memuat peta otomatis.");
         })
         .finally(() => {
           setGeocoding(false);
@@ -521,6 +521,10 @@ export default function DetailPesananGrosirPage() {
                   <MapPin size={18} className="text-slate-300 animate-pulse" />
                   <p className="text-xs text-slate-400 text-center px-4 font-medium">
                     {geocodeError}
+                    <br />
+                    <span className="text-[10px] opacity-70">
+                      Gunakan tombol Google Maps di bawah
+                    </span>
                   </p>
                 </div>
               ) : geocoding ? (

@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Activity,
   Truck,
+  Store,
 } from "lucide-react";
 
 import { formatRupiah, chatApi } from "@/lib/ecommerce-api";
@@ -187,16 +188,19 @@ function DistBar({
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   MENUNGGU_BAYAR: {
     label: "Menunggu",
-    cls: "bg-amber-50 text-amber-600 border-amber-100",
+    cls: "bg-slate-100 text-slate-600 border-slate-200",
   },
   DIPROSES: {
     label: "Diproses",
-    cls: "bg-blue-50 text-blue-600 border-blue-100",
+    cls: "bg-emerald-50 text-emerald-600 border-emerald-100",
   },
-  DIKIRIM: { label: "Dikirim", cls: "bg-sky-50 text-sky-600 border-sky-100" },
+  DIKIRIM: {
+    label: "Dikirim",
+    cls: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  },
   SELESAI: {
     label: "Selesai",
-    cls: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    cls: "bg-slate-50 text-slate-400 border-slate-100",
   },
   DIBATALKAN: {
     label: "Batal",
@@ -358,7 +362,7 @@ const DashboardSellerPage: React.FC = () => {
                   />
                 </div>
               ) : (
-                "🏪"
+                <Store size={26} className="text-white/90" />
               )}
             </div>
             <div>

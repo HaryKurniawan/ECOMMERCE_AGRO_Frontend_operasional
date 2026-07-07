@@ -11,6 +11,7 @@ import {
   Truck,
   PackageCheck,
   AlertTriangle,
+  X,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -123,88 +124,123 @@ export default function NotifBell() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center relative"
-      >
-        <Bell size={16} className="text-gray-600" />
-        {unreadCount > 0 && (
-          <div className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </div>
-        )}
-      </button>
+    <>
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/60 hover:bg-emerald-50 hover:border-emerald-100/50 transition-colors flex items-center justify-center relative group"
+        >
+          <Bell
+            size={18}
+            className="text-slate-600 group-hover:text-emerald-600 transition-colors"
+          />
+          {unreadCount > 0 && (
+            <div className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </div>
+          )}
+        </button>
+      </div>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
-          <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50/50">
-            <h3 className="font-bold text-sm text-gray-800">Notifikasi</h3>
+      {/* Backdrop Overlay */}
+      <div
+        className={`fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[9998] transition-all duration-300 ${
+          isOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
+        onClick={() => setIsOpen(false)}
+      />
+
+      {/* Sidebar Slide from Right */}
+      <div
+        className={`fixed top-0 right-0 h-screen w-80 sm:w-96 bg-white shadow-2xl z-[9999] flex flex-col transition-transform duration-300 ease-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100">
+          <h3 className="font-bold text-[15px] text-slate-800 tracking-tight">
+            Notifikasi
+          </h3>
+          <div className="flex items-center gap-1.5">
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-[11px] font-semibold text-primary-600 hover:bg-primary-50 px-2 py-1 rounded-md transition-colors"
+                className="text-[11px] font-semibold text-emerald-600 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg transition-colors"
               >
                 Tandai Dibaca
               </button>
             )}
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Tutup notifikasi"
+            >
+              <X size={18} />
+            </button>
           </div>
+        </div>
 
-          <div className="max-h-[320px] overflow-y-auto">
-            {notifications.length > 0 ? (
-              notifications.slice(0, 5).map((notif) => (
-                <div
-                  key={notif.id}
-                  onClick={() => handleNotifClick(notif.id, notif.isRead)}
-                  className={`p-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex gap-3 transition-colors ${
-                    !notif.isRead ? "bg-primary-50/30" : ""
-                  }`}
-                >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getColor(notif.tipe)}`}
-                  >
-                    {getIcon(notif.tipe)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-xs truncate ${!notif.isRead ? "font-bold text-gray-900" : "font-medium text-gray-700"}`}
-                    >
-                      {notif.judul}
-                    </p>
-                    <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">
-                      {notif.pesan}
-                    </p>
-                  </div>
-                  {!notif.isRead && (
-                    <div className="w-2 h-2 rounded-full bg-primary-600 flex-shrink-0 mt-1.5" />
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="p-8 text-center">
-                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Bell size={20} className="text-gray-300" />
-                </div>
-                <p className="text-xs text-gray-500">Belum ada notifikasi</p>
-              </div>
-            )}
-          </div>
-
-          {notifications.length > 0 && (
-            <div className="p-2 border-t border-gray-100">
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  router.push("/notifikasi");
-                }}
-                className="w-full py-1.5 text-center text-[11px] font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+        {/* Notification List */}
+        <div className="flex-1 overflow-y-auto bg-slate-50/30">
+          {notifications.length > 0 ? (
+            notifications.map((notif) => (
+              <div
+                key={notif.id}
+                onClick={() => handleNotifClick(notif.id, notif.isRead)}
+                className={`p-4 sm:p-5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer flex gap-3.5 transition-colors ${
+                  !notif.isRead ? "bg-emerald-50/30" : ""
+                }`}
               >
-                Lihat Semua
-              </button>
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${getColor(notif.tipe)}`}
+                >
+                  {getIcon(notif.tipe)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`text-[13px] truncate ${!notif.isRead ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}
+                  >
+                    {notif.judul}
+                  </p>
+                  <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
+                    {notif.pesan}
+                  </p>
+                </div>
+                {!notif.isRead && (
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-2" />
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+              <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-3 border border-slate-100">
+                <Bell size={24} className="text-slate-300" />
+              </div>
+              <p className="text-sm font-medium text-slate-600 mb-1">
+                Belum ada notifikasi
+              </p>
+              <p className="text-[12px] text-slate-400">
+                Pemberitahuan terbaru akan muncul di sini
+              </p>
             </div>
           )}
         </div>
-      )}
-    </div>
+
+        {/* Footer Action */}
+        {notifications.length > 0 && (
+          <div className="p-4 border-t border-slate-100 bg-white">
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push("/notifikasi");
+              }}
+              className="w-full py-2.5 text-center text-[12px] font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200/60"
+            >
+              Lihat Semua Notifikasi
+            </button>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

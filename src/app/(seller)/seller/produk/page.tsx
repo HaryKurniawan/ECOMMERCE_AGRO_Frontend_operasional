@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Search, Loader2, AlertCircle, PackageOpen } from "lucide-react";
 
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+
 import { useSellerProducts, ProductItem } from "./_hooks/useSellerProducts";
 import EtalaseCard from "./_components/EtalaseCard";
 import SellerProductHeader from "./_components/SellerProductHeader";
@@ -122,25 +124,17 @@ const ProdukSayaPage: React.FC = () => {
           />
         </div>
 
-        <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl w-fit">
-          {[
-            { label: "Semua", val: "semua" },
-            { label: "Aktif", val: "active" },
-            { label: "Nonaktif", val: "inactive" },
-            { label: "Habis", val: "out_of_stock" },
-          ].map((s) => (
-            <button
-              key={s.val}
-              onClick={() => setFilterStatus(s.val)}
-              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-                filterStatus === s.val
-                  ? "bg-white text-emerald-700 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
+        <div className="py-1.5 shrink-0">
+          <SegmentedControl
+            value={filterStatus}
+            onChange={setFilterStatus}
+            options={[
+              { label: "Semua", value: "semua" },
+              { label: "Aktif", value: "active" },
+              { label: "Nonaktif", value: "inactive" },
+              { label: "Habis", value: "out_of_stock" },
+            ]}
+          />
         </div>
       </div>
 

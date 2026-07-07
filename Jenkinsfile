@@ -6,7 +6,7 @@ pipeline {
         
         APP_PORT = "${IS_PRODUCTION == 'true' ? '3002' : '3003'}"
         CONTAINER_NAME = "${IS_PRODUCTION == 'true' ? 'agro-frontend-operasional' : 'agro-frontend-operasional-staging'}"
-        ENV_CRED_ID = "${IS_PRODUCTION == 'true' ? 'frontend-operasional-env' : 'frontend-operasional-env-staging'}"
+        ENV_CRED_ID = "${IS_PRODUCTION == 'true' ? 'agro_env_frontend_ops' : 'frontend-operasional-env-staging'}"
         IMAGE_NAME = "${CONTAINER_NAME}-image"
     }
 

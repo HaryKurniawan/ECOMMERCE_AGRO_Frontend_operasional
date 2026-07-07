@@ -135,7 +135,7 @@ const ManajemenPenggunaPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 lg:p-8 max-w-[1600px] mx-auto min-h-screen bg-gray-50/30">
+    <div className="w-full min-h-screen bg-transparent">
       <PageHeader
         title="Manajemen Pengguna"
         description={`Total ${regularUsersCount} akun terdaftar.`}

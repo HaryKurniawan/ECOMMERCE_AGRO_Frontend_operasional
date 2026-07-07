@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, AlertCircle, Loader2, Package } from "lucide-react";
+import {
+  ClipboardList,
+  AlertCircle,
+  Loader2,
+  Package,
+  ArrowUpDown,
+} from "lucide-react";
+
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 import { useSellerOrders, OrderItem } from "./_hooks/useSellerOrders";
 import OrderCard from "./_components/OrderCard";
@@ -10,6 +18,7 @@ import AdvanceStatusModal from "./_components/AdvanceStatusModal";
 
 export default function PesananMasukPage() {
   const [filterStatus, setFilterStatus] = useState("semua");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const {
     orders,
     loading,
@@ -32,24 +41,27 @@ export default function PesananMasukPage() {
     { id: "DIPROSES", label: "Diproses" },
     { id: "DIKIRIM", label: "Dikirim" },
     { id: "TIBA", label: "Tiba" },
-    { id: "SELESAI", label: "Selesai" },
-    { id: "DIBATALKAN", label: "Dibatalkan" },
-    { id: "DITUTUP", label: "Riwayat" },
   ];
 
-  const filtered = orders.filter((p) => {
-    if (filterStatus === "semua") {
-      // Hanya tampilkan pesanan aktif (bukan selesai/dibatalkan/ditutup)
-      return !["SELESAI", "DIBATALKAN", "DITUTUP"].includes(p.status);
-    }
-    if (filterStatus === "TIBA") {
-      return p.shipping?.status === "ARRIVED";
-    }
-    if (filterStatus === "DIKIRIM") {
-      return p.status === "DIKIRIM" && p.shipping?.status !== "ARRIVED";
-    }
-    return p.status === filterStatus;
-  });
+  const filtered = orders
+    .filter((p) => {
+      if (filterStatus === "semua") {
+        // Hanya tampilkan pesanan aktif (bukan selesai/dibatalkan/ditutup)
+        return !["SELESAI", "DIBATALKAN", "DITUTUP"].includes(p.status);
+      }
+      if (filterStatus === "TIBA") {
+        return p.shipping?.status === "ARRIVED";
+      }
+      if (filterStatus === "DIKIRIM") {
+        return p.status === "DIKIRIM" && p.shipping?.status !== "ARRIVED";
+      }
+      return p.status === filterStatus;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+    });
 
   if (loading)
     return (
@@ -70,61 +82,75 @@ export default function PesananMasukPage() {
     );
 
   return (
-    <div className="space-y-8 w-full">
-      <div className="flex flex-col gap-4 pb-6 border-b border-slate-100">
+    <div className="space-y-4 w-full">
+      <div className="flex flex-col gap-4">
         <div className="space-y-1.5">
           <h1 className="text-2xl md:text-3xl font-medium text-slate-800 flex items-center gap-2">
             <ClipboardList size={24} className="text-emerald-600" /> Pesanan
             Masuk
           </h1>
-          <p className="text-xs md:text-sm text-slate-500 font-medium">
-            Kelola pesanan dan status pengiriman pelanggan retail Anda.
-          </p>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-none py-1.5">
-          {statusList.map((tab) => {
-            const count =
-              tab.id === "semua"
-                ? orders.filter(
-                    (p) =>
-                      !["SELESAI", "DIBATALKAN", "DITUTUP"].includes(p.status),
-                  ).length
-                : tab.id === "TIBA"
-                  ? orders.filter((p) => p.shipping?.status === "ARRIVED")
-                      .length
-                  : tab.id === "DIKIRIM"
-                    ? orders.filter(
-                        (p) =>
-                          p.status === "DIKIRIM" &&
-                          p.shipping?.status !== "ARRIVED",
-                      ).length
-                    : orders.filter((p) => p.status === tab.id).length;
-            const isActive = filterStatus === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setFilterStatus(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
-                  isActive
-                    ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100"
-                    : "bg-white text-gray-500 border-gray-100 hover:bg-gray-50 hover:border-gray-200 hover:text-gray-700"
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        {/* Filter Tabs & Sort */}
+        <div className="py-1.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <SegmentedControl
+            value={filterStatus}
+            onChange={setFilterStatus}
+            options={statusList.map((tab) => {
+              const count =
+                tab.id === "semua"
+                  ? orders.filter(
+                      (p) =>
+                        !["SELESAI", "DIBATALKAN", "DITUTUP"].includes(
+                          p.status,
+                        ),
+                    ).length
+                  : tab.id === "TIBA"
+                    ? orders.filter((p) => p.shipping?.status === "ARRIVED")
+                        .length
+                    : tab.id === "DIKIRIM"
+                      ? orders.filter(
+                          (p) =>
+                            p.status === "DIKIRIM" &&
+                            p.shipping?.status !== "ARRIVED",
+                        ).length
+                      : orders.filter((p) => p.status === tab.id).length;
+              const isActive = filterStatus === tab.id;
+
+              return {
+                value: tab.id,
+                label: (
+                  <div className="flex items-center gap-2">
+                    <span>{tab.label}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </div>
+                ),
+              };
+            })}
+          />
+
+          <div className="relative flex items-center gap-2 bg-white border border-slate-200 hover:border-emerald-300 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 rounded-xl px-3.5 py-1.5 shadow-sm transition-all shrink-0 w-full md:w-auto self-start md:self-auto cursor-pointer group">
+            <ArrowUpDown
+              size={14}
+              className="text-slate-400 group-hover:text-emerald-500 transition-colors"
+            />
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as "desc" | "asc")}
+              className="bg-transparent text-[12px] font-medium text-slate-700 focus:outline-none cursor-pointer w-full appearance-none pr-2"
+            >
+              <option value="desc">Urutkan: Terbaru</option>
+              <option value="asc">Urutkan: Terlama</option>
+            </select>
+          </div>
         </div>
       </div>
 

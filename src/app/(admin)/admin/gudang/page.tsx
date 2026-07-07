@@ -31,18 +31,27 @@ export default function DaftarGudangPage() {
   const [warehouses, setWarehouses] = useState<WarehouseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isOffline, setIsOffline] = useState(false);
   const [search, setSearch] = useState("");
 
   const fetchWarehouses = async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
       setError("");
+      setIsOffline(false);
 
       const res = await gudangApi.getWarehouses();
       const data = res?.data?.data || res?.data || [];
       setWarehouses(Array.isArray(data) ? data : (data.data ?? []));
     } catch (err: any) {
       console.error("Error fetching warehouses:", err);
+      const isNetworkError =
+        !err?.response ||
+        err?.code === "ECONNREFUSED" ||
+        err?.code === "ERR_NETWORK";
+      if (isNetworkError) {
+        setIsOffline(true);
+      }
       setError("Gagal memuat data gudang dari server.");
     } finally {
       setLoading(false);
@@ -84,7 +93,7 @@ export default function DaftarGudangPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -105,43 +114,71 @@ export default function DaftarGudangPage() {
         </button>
       </div>
 
+      {/* Offline / Error Banner */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-2xl flex items-center gap-3">
-          <AlertCircle size={20} className="shrink-0" />
-          <p className="text-sm font-semibold">{error}</p>
+        <div
+          className={`rounded-2xl border p-4 flex items-start gap-3 ${
+            isOffline
+              ? "bg-orange-50 border-orange-200 text-orange-700"
+              : "bg-red-50 border-red-200 text-red-700"
+          }`}
+        >
+          <AlertCircle size={18} className="shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold">
+              {isOffline ? "⚡ Gudang Sedang Offline" : "Gagal Memuat Data"}
+            </p>
+            <p className="text-xs mt-0.5 opacity-80">
+              {isOffline
+                ? "Koneksi ke server tidak tersedia. Pastikan backend sudah berjalan, lalu coba segarkan."
+                : error}
+            </p>
+          </div>
+          <button
+            onClick={() => fetchWarehouses()}
+            className="ml-auto shrink-0 text-xs font-bold underline opacity-70 hover:opacity-100"
+          >
+            Coba Lagi
+          </button>
         </div>
       )}
 
-      {/* Search Bar */}
-      <div className="bg-white p-3 rounded-3xl border border-gray-100 shadow-sm">
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari berdasarkan nama gudang, kode, atau kota..."
-            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
-          />
+      {/* Search Bar — hanya tampil jika tidak offline */}
+      {!isOffline && (
+        <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Cari berdasarkan nama gudang, kode, atau kota..."
+              className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
       {loading ? (
-        <div className="bg-white rounded-3xl border border-gray-100 p-20 flex flex-col items-center justify-center gap-3">
-          <Loader2 size={40} className="animate-spin text-emerald-600" />
-          <p className="text-gray-400 font-medium">Memuat data gudang...</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-16 flex flex-col items-center justify-center gap-3">
+          <Loader2 size={32} className="animate-spin text-emerald-600" />
+          <p className="text-gray-400 font-medium text-sm">
+            Memuat data gudang...
+          </p>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-gray-100 p-20 text-center shadow-sm">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Warehouse className="text-gray-300 w-8 h-8" />
+      ) : filtered.length === 0 && !isOffline ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+          <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Warehouse className="text-gray-300 w-7 h-7" />
           </div>
-          <h3 className="text-gray-900 text-lg font-bold">Tidak Ada Gudang</h3>
-          <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
+          <h3 className="text-gray-900 text-base font-bold">
+            Tidak Ada Gudang
+          </h3>
+          <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
             {search
               ? "Tidak ada gudang yang cocok dengan pencarian Anda."
               : "Belum ada data gudang di sistem."}
@@ -149,19 +186,19 @@ export default function DaftarGudangPage() {
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="mt-4 text-emerald-600 font-bold hover:underline text-sm"
+              className="mt-3 text-emerald-600 font-bold hover:underline text-sm"
             >
               Bersihkan Pencarian
             </button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((gudang) => (
             <div
               key={gudang.id}
               onClick={() => router.push(`/admin/gudang/${gudang.id}`)}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group cursor-pointer"
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-emerald-200 transition-all duration-300 group cursor-pointer"
             >
               {/* Card Header */}
               <div className="p-5 pb-4">

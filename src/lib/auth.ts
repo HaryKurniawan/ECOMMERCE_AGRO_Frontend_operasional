@@ -62,10 +62,11 @@ export async function loginStaff(data: LoginRequest): Promise<AuthResponse> {
   return mapAuthResponse(resData);
 }
 
-export async function register(data: RegisterRequest): Promise<AuthResponse> {
+export async function register(
+  data: RegisterRequest,
+): Promise<{ message: string; email: string }> {
   const response = await authApi.register(data);
-  const resData = response.data?.data || response.data;
-  return mapAuthResponse(resData);
+  return response.data?.data || response.data;
 }
 
 export async function getProfile() {

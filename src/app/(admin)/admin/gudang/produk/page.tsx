@@ -69,6 +69,7 @@ export default function ProdukGudangPage() {
   });
 
   const loading = isLoading || isFetching;
+  const isOffline = isError; // treat any fetch error as potential offline
   const error = isError ? "Gagal memuat daftar produk gudang." : "";
 
   const filtered = useMemo(
@@ -83,7 +84,7 @@ export default function ProdukGudangPage() {
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -105,31 +106,52 @@ export default function ProdukGudangPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-2xl flex items-center gap-3">
-          <AlertCircle size={20} className="shrink-0" />
-          <p className="text-sm font-semibold">{error}</p>
+        <div
+          className={`rounded-2xl border p-4 flex items-start gap-3 ${
+            isOffline
+              ? "bg-orange-50 border-orange-200 text-orange-700"
+              : "bg-red-50 border-red-200 text-red-700"
+          }`}
+        >
+          <AlertCircle size={18} className="shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold">
+              {isOffline ? "⚡ Gudang Sedang Offline" : "Gagal Memuat Data"}
+            </p>
+            <p className="text-xs mt-0.5 opacity-80">
+              {isOffline
+                ? "Koneksi ke server tidak tersedia. Pastikan backend sudah berjalan, lalu coba segarkan."
+                : error}
+            </p>
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="ml-auto shrink-0 text-xs font-bold underline opacity-70 hover:opacity-100"
+          >
+            Coba Lagi
+          </button>
         </div>
       )}
 
       {/* Filter & Search */}
-      <div className="bg-white p-3 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-3">
+      <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-2">
         <div className="relative flex-1">
           <Search
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari produk berdasarkan nama atau gudang..."
-            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
           />
         </div>
         <select
           value={selectedGudang}
           onChange={(e) => setSelectedGudang(e.target.value)}
-          className="px-4 py-3 bg-gray-50 border border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all md:w-64"
+          className="px-3 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all md:w-52"
         >
           <option value="ALL">Semua Gudang</option>
           {warehouses.map((w: WarehouseItem) => (
@@ -142,28 +164,32 @@ export default function ProdukGudangPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="bg-white rounded-3xl border border-gray-100 p-20 flex flex-col items-center justify-center gap-3">
-          <Loader2 size={40} className="animate-spin text-emerald-600" />
-          <p className="text-gray-400 font-medium">Memuat produk gudang...</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-16 flex flex-col items-center justify-center gap-3">
+          <Loader2 size={32} className="animate-spin text-emerald-600" />
+          <p className="text-gray-400 font-medium text-sm">
+            Memuat produk gudang...
+          </p>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-gray-100 p-20 text-center shadow-sm">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Package className="text-gray-300 w-8 h-8" />
+      ) : filtered.length === 0 && !isOffline ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+          <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Package className="text-gray-300 w-7 h-7" />
           </div>
-          <h3 className="text-gray-900 text-lg font-bold">Tidak Ada Produk</h3>
-          <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
+          <h3 className="text-gray-900 text-base font-bold">
+            Tidak Ada Produk
+          </h3>
+          <p className="text-sm text-gray-500 mt-1 max-w-xs mx-auto">
             {search
               ? "Tidak ada produk yang cocok dengan pencarian Anda."
               : "Belum ada produk yang dijual gudang."}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((p: ProdukGudang) => (
             <div
               key={`${p.gudangId}-${p.id}`}
-              className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group"
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-emerald-200 transition-all duration-300 group"
             >
               {/* Image */}
               <div className="h-40 bg-gray-50 relative overflow-hidden border-b border-gray-100 flex-shrink-0">

@@ -28,6 +28,10 @@ export const gudangApi = {
     items: {
       produkGudangId: string;
       jumlahPermintaan: number;
+      ukuranKemasanKg?: number;
+      jumlahKemasan?: number;
+      totalKg?: number;
+      kemasanDetail?: { ukuranKg: number; jumlahKemasan: number }[];
     }[];
   }) => apiClient.post("/ecommerce/pengajuan-stok", data),
 

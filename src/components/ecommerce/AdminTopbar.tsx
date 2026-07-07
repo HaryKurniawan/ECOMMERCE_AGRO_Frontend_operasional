@@ -63,8 +63,20 @@ export default function AdminTopbar() {
         {/* Nav tabs (terpisah-pisah) */}
         <nav className="flex items-center gap-2 ml-2">
           {NAV_TABS.map((tab) => {
-            const isActive =
+            let isActive =
               pathname === tab.path || pathname.startsWith(tab.path + "/");
+
+            if (tab.label === "Dashboard") {
+              const inOtherTab = NAV_TABS.some(
+                (t) =>
+                  t.label !== "Dashboard" &&
+                  (pathname === t.path || pathname.startsWith(t.path + "/")),
+              );
+              if (pathname.startsWith("/admin") && !inOtherTab) {
+                isActive = true;
+              }
+            }
+
             const Icon = tab.icon;
             return (
               <button

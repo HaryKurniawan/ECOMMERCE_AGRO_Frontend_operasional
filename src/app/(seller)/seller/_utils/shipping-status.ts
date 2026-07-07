@@ -59,16 +59,16 @@ export const getNextStatus = (s: string) => {
 export const getStatusColor = (s: string) => {
   switch (s) {
     case "MENUNGGU_BAYAR":
-      return "bg-amber-100 text-amber-700";
+      return "bg-slate-100 text-slate-600 border border-slate-200";
     case "DIPROSES":
-      return "bg-blue-100 text-blue-700";
+      return "bg-emerald-50 text-emerald-600 border border-emerald-100";
     case "DIKIRIM":
-      return "bg-emerald-100 text-emerald-700";
+      return "bg-emerald-100 text-emerald-700 border border-emerald-200";
     case "SELESAI":
-      return "bg-gray-100 text-gray-500";
+      return "bg-slate-50 text-slate-400 border border-slate-100";
     case "DIBATALKAN":
-      return "bg-red-100 text-red-700";
+      return "bg-slate-100 text-slate-500 border border-slate-200";
     default:
-      return "bg-gray-100 text-gray-500";
+      return "bg-slate-100 text-slate-500 border border-slate-200";
   }
 };

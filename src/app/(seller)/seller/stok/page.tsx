@@ -319,28 +319,6 @@ export default function SellerStockManagementPage() {
               Pengelolaan Stok Produk
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-slate-400 font-medium">
-            Monitor kapasitas stok logistik yang terafiliasi dari pengajuan
-            resmi Anda
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 self-start md:self-center shrink-0">
-          <button
-            onClick={() => fetchData(true)}
-            className="px-4 py-2 border border-slate-100 rounded-xl text-xs font-medium hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-500 flex items-center gap-2 bg-white shadow-sm"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Perbarui
-          </button>
-
-          <button
-            onClick={() => router.push("/seller/pengajuan-stok/baru")}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4" />
-            Titip Stok Baru
-          </button>
         </div>
       </div>
 

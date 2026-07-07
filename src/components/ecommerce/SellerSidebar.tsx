@@ -14,6 +14,9 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { useSellerDashboard } from "@/hooks/seller/useSellerDashboard";
+import { useSellerGrosirOrders } from "@/hooks/seller/useSellerGrosirOrders";
+
 import AppSidebar, { SidebarMenuItem } from "./AppSidebar";
 
 const UTAMA_MENU: SidebarMenuItem[] = [
@@ -28,11 +31,13 @@ const UTAMA_MENU: SidebarMenuItem[] = [
     path: "/seller/pesanan",
     label: "Pesanan Masuk",
     icon: <ClipboardList size={17} />,
+    hasBadge: true,
   },
   {
     path: "/seller/pesanan-grosir",
     label: "Pembelian Grosiran",
     icon: <CreditCard size={17} />,
+    hasBadge: true,
   },
   {
     path: "/seller/rating",
@@ -86,11 +91,13 @@ const PESANAN_MENU: SidebarMenuItem[] = [
     path: "/seller/pesanan",
     label: "Pesanan Masuk",
     icon: <ClipboardList size={17} />,
+    hasBadge: true,
   },
   {
     path: "/seller/pesanan-grosir",
     label: "Pembelian Grosiran",
     icon: <CreditCard size={17} />,
+    hasBadge: true,
   },
   {
     path: "/seller/rating",
@@ -133,6 +140,8 @@ const TREN_MENU: SidebarMenuItem[] = [
 const SellerSidebar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { store, orders: regulerOrders } = useSellerDashboard();
+  const { orders: grosirOrders } = useSellerGrosirOrders(store?.id ?? "");
 
   // Determine context based on current path
   const isProdukSection =
@@ -145,11 +154,43 @@ const SellerSidebar: React.FC = () => {
     pathname.startsWith("/seller/tren") ||
     pathname.startsWith("/seller/laporan");
 
-  const menuItems = isProdukSection
+  const baseMenuItems = isProdukSection
     ? PRODUK_MENU
     : isTrenSection
       ? TREN_MENU
       : UTAMA_MENU;
+
+  // Calculate active orders
+  const activeReguler = regulerOrders.filter((o) =>
+    ["MENUNGGU_BAYAR", "MENUNGGU_KONFIRMASI_SELLER", "DIPROSES"].includes(
+      o.status,
+    ),
+  ).length;
+
+  const activeGrosir = grosirOrders.filter((o) =>
+    ["MENUNGGU_BAYAR", "MENUNGGU_KONFIRMASI_SELLER", "DIPROSES"].includes(
+      o.status,
+    ),
+  ).length;
+
+  // Inject dynamic badgeCount
+  const menuItems = baseMenuItems.map((item) => {
+    if (item.path === "/seller/pesanan") {
+      return {
+        ...item,
+        badgeCount: activeReguler > 0 ? activeReguler : undefined,
+        hasBadge: activeReguler > 0,
+      };
+    }
+    if (item.path === "/seller/pesanan-grosir") {
+      return {
+        ...item,
+        badgeCount: activeGrosir > 0 ? activeGrosir : undefined,
+        hasBadge: activeGrosir > 0,
+      };
+    }
+    return item;
+  });
 
   return (
     <AppSidebar

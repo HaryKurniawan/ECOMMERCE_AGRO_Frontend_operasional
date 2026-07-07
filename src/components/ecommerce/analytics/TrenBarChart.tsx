@@ -45,7 +45,7 @@ export default function TrenBarChart({
 
           return (
             <div
-              key={item.bulan}
+              key={item.bulan ?? idx}
               className="flex-1 flex flex-col items-center gap-1 group relative"
             >
               {/* Tooltip */}
@@ -97,16 +97,18 @@ export default function TrenBarChart({
 
       {/* X-axis labels */}
       <div className="flex gap-2 px-1 mt-1">
-        {data.map((item) => (
-          <div key={item.bulan} className="flex-1 text-center">
-            <p className="text-[10px] text-gray-400 truncate leading-tight">
-              {item.labelBulan.split(" ")[0]}
-            </p>
-            <p className="text-[10px] text-gray-300">
-              {item.labelBulan.split(" ")[1]}
-            </p>
-          </div>
-        ))}
+        {data.map((item, idx) => {
+          const label = item.labelBulan ?? item.bulan ?? "";
+          const parts = label.split(" ");
+          return (
+            <div key={item.bulan ?? idx} className="flex-1 text-center">
+              <p className="text-[10px] text-gray-400 truncate leading-tight">
+                {parts[0] ?? ""}
+              </p>
+              <p className="text-[10px] text-gray-300">{parts[1] ?? ""}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Legend: growth indicators */}

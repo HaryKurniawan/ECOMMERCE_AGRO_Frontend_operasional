@@ -73,7 +73,7 @@ export default function AdminLayout({
           className={`flex-1 ${pathname.startsWith("/admin/chat") ? "overflow-hidden" : "overflow-auto"} bg-gray-100 flex flex-col min-h-0`}
         >
           <div
-            className={`${pathname.startsWith("/admin/chat") ? "h-full" : "p-5"} flex-1 flex flex-col min-h-0`}
+            className={`${pathname.startsWith("/admin/chat") ? "h-full" : "py-6 px-6 lg:px-12"} flex-1 flex flex-col min-h-0`}
           >
             {children}
           </div>

@@ -11,7 +11,6 @@ import {
   ChevronRight,
   CheckCircle2,
   Star,
-  ShoppingCart,
 } from "lucide-react";
 
 import { gudangApi, storesApi } from "@/lib/ecommerce-api";
@@ -327,44 +326,38 @@ export default function SellerWarehouseProductsPage() {
 
   return (
     <div className="w-full space-y-5">
-      {/* ── Hero Header ─────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-emerald-700 to-emerald-800 rounded-3xl p-6 md:p-8 text-white shadow-lg shadow-emerald-900/20">
-        {/* Title row */}
-        <div className="flex items-center gap-4 mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 border border-white/25 flex items-center justify-center shrink-0 shadow-inner">
-            <ShoppingCart className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight">
-              Daftar Produk Gudang
-            </h1>
-            <p className="text-emerald-200/70 text-xs mt-0.5 font-normal">
-              Pilih produk &amp; tambahkan ke daftar ajukan
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="space-y-2.5">
+        {/* Title row + search in one line */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
+              Gudang
             </p>
+            <h1 className="text-base text-gray-800">Daftar Produk Gudang</h1>
           </div>
-        </div>
-
-        {/* Search bar */}
-        <div className="relative mb-4">
-          <input
-            type="text"
-            placeholder="Cari produk, komoditas, atau gudang..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/15 rounded-2xl text-white placeholder-emerald-200/40 focus:outline-none focus:bg-white/15 focus:border-white/30 text-sm transition-all"
-          />
-          <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-emerald-200/50" />
+          {/* Search bar — pojok kanan */}
+          <div className="relative w-56 shrink-0">
+            <input
+              type="text"
+              placeholder="Cari produk..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 bg-white border border-gray-100 rounded-xl text-xs text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-200 focus:ring-2 focus:ring-gray-50 transition-all"
+            />
+            <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-gray-300" />
+          </div>
         </div>
 
         {/* Filter chips gudang */}
         {affiliations.length > 1 && (
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-wrap gap-1.5 items-center">
             <button
               onClick={() => setSelectedGudangFilter("all")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all border ${
+              className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border ${
                 selectedGudangFilter === "all"
-                  ? "bg-white text-emerald-700 border-white shadow-sm"
-                  : "bg-white/15 text-white border-white/20 hover:bg-white/25"
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-white text-gray-500 border-gray-100 hover:border-gray-200 hover:text-gray-700"
               }`}
             >
               Semua
@@ -377,26 +370,21 @@ export default function SellerWarehouseProductsPage() {
                 <button
                   key={aff.gudangId}
                   onClick={() => setSelectedGudangFilter(aff.gudangId)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all border flex items-center gap-1.5 ${
+                  className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border flex items-center gap-1 ${
                     isActive
-                      ? "bg-white text-emerald-700 border-white shadow-sm"
-                      : "bg-white/15 text-white border-white/20 hover:bg-white/25"
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-white text-gray-500 border-gray-100 hover:border-gray-200 hover:text-gray-700"
                   }`}
                 >
                   {isFav && (
                     <Star
-                      className={`w-3 h-3 shrink-0 ${isActive ? "fill-amber-400 text-amber-400" : "fill-amber-200 text-amber-200"}`}
+                      className={`w-2.5 h-2.5 shrink-0 ${isActive ? "fill-amber-300 text-amber-300" : "fill-amber-400 text-amber-400"}`}
                     />
                   )}
                   {nama}
                 </button>
               );
             })}
-            {favoriteId && selectedGudangFilter === favoriteId && (
-              <span className="text-[10px] text-emerald-200/50 ml-1">
-                ⭐ favorit
-              </span>
-            )}
           </div>
         )}
       </div>

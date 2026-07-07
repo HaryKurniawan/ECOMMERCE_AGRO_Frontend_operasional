@@ -3,7 +3,6 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   Loader2,
@@ -12,10 +11,10 @@ import {
   Truck,
   MapPin,
   User,
-  ClipboardList,
-  ChevronRight,
   CheckCircle,
   Copy,
+  Calendar,
+  CreditCard,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -24,7 +23,7 @@ import { formatRupiah, formatTanggal, ordersApi } from "@/lib/ecommerce-api";
 const getStatusLabel = (s: string) => {
   switch (s) {
     case "PREPARING":
-      return "Disiapkan Seller";
+      return "Disiapkan";
     case "PICKUP_CONFIRMATION":
       return "Diserahkan ke Kurir";
     case "PICKED_UP":
@@ -32,25 +31,9 @@ const getStatusLabel = (s: string) => {
     case "IN_TRANSIT":
       return "Dalam Perjalanan";
     case "ARRIVED":
-      return "Sampai di Tujuan";
+      return "Sampai";
     default:
       return s;
-  }
-};
-const getStatusIcon = (s: string) => {
-  switch (s) {
-    case "PREPARING":
-      return "📦";
-    case "PICKUP_CONFIRMATION":
-      return "🤝";
-    case "PICKED_UP":
-      return "✅";
-    case "IN_TRANSIT":
-      return "🚚";
-    case "ARRIVED":
-      return "📍";
-    default:
-      return "";
   }
 };
 
@@ -105,24 +88,74 @@ interface OrderDetail {
   };
 }
 
-const statusColor = (s: string) => {
-  switch (s) {
-    case "MENUNGGU_BAYAR":
-      return "bg-amber-50 text-amber-600 border-amber-100/60";
-    case "DIPROSES":
-      return "bg-blue-50 text-blue-600 border-blue-100/60";
-    case "DIKIRIM":
-      return "bg-emerald-50 text-emerald-600 border-emerald-100/60";
-    case "SELESAI":
-      return "bg-amber-50 text-amber-600 border-amber-100/60";
-    case "DITUTUP":
-      return "bg-slate-50 text-slate-400 border-slate-200/60";
-    case "DIBATALKAN":
-      return "bg-rose-50/50 text-rose-600 border-rose-105/60";
-    default:
-      return "bg-slate-50 text-slate-500 border-slate-200/60";
-  }
+const statusConfig: Record<
+  string,
+  { label: string; color: string; dot: string }
+> = {
+  MENUNGGU_BAYAR: {
+    label: "Menunggu Bayar",
+    color: "text-amber-600 bg-amber-50",
+    dot: "bg-amber-400",
+  },
+  MENUNGGU_KONFIRMASI_SELLER: {
+    label: "Menunggu Konfirmasi",
+    color: "text-blue-600 bg-blue-50",
+    dot: "bg-blue-400",
+  },
+  DIPROSES: {
+    label: "Diproses",
+    color: "text-blue-600 bg-blue-50",
+    dot: "bg-blue-400",
+  },
+  DIKIRIM: {
+    label: "Dikirim",
+    color: "text-emerald-600 bg-emerald-50",
+    dot: "bg-emerald-500",
+  },
+  SELESAI: {
+    label: "Selesai",
+    color: "text-emerald-600 bg-emerald-50",
+    dot: "bg-emerald-500",
+  },
+  DITUTUP: {
+    label: "Ditutup",
+    color: "text-gray-500 bg-gray-50",
+    dot: "bg-gray-400",
+  },
+  DIBATALKAN: {
+    label: "Dibatalkan",
+    color: "text-rose-600 bg-rose-50",
+    dot: "bg-rose-400",
+  },
 };
+
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5 border-b border-gray-50 last:border-0">
+      <span className="text-xs text-gray-400 shrink-0">{label}</span>
+      <span className="text-xs text-gray-700 text-right">{value || "–"}</span>
+    </div>
+  );
+}
+
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ icon: Icon, label }: { icon: any; label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <Icon size={14} className="text-gray-300" />
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+        {label}
+      </p>
+    </div>
+  );
+}
 
 export default function DetailPesananSellerPage() {
   const params = useParams();
@@ -172,7 +205,6 @@ export default function DetailPesananSellerPage() {
         }
         setOrder(data);
       } catch (err) {
-        console.error("Failed to fetch order detail:", err);
         setError("Gagal memuat detail pesanan.");
       } finally {
         setLoading(false);
@@ -187,7 +219,6 @@ export default function DetailPesananSellerPage() {
       setConfirmLoading(true);
       await ordersApi.sellerConfirm(order.id);
       toast.success("Pesanan berhasil dikonfirmasi & ditutup!");
-      // Refresh order data
       const res = await ordersApi.getById(order.id);
       const data = res?.data?.data || res?.data;
       if (data) setOrder({ ...order, ...data, status: "DITUTUP" });
@@ -203,33 +234,24 @@ export default function DetailPesananSellerPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-          <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
-        </div>
-        <p className="text-sm text-slate-400 font-medium">
-          Memuat detail pesanan…
-        </p>
+        <Loader2 className="w-5 h-5 text-gray-300 animate-spin" />
+        <p className="text-xs text-gray-400">Memuat detail pesanan…</p>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
+          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
         >
-          <ArrowLeft size={14} /> Kembali
+          <ArrowLeft size={13} /> Kembali
         </button>
-        <div className="bg-rose-50/50 text-rose-700 p-6 rounded-2xl flex items-center gap-3 border border-rose-100/60 max-w-2xl mx-auto mt-10">
-          <AlertCircle size={20} />
-          <div>
-            <h3 className="font-medium text-sm">Terjadi Kesalahan</h3>
-            <p className="text-xs text-rose-600 mt-0.5">
-              {error || "Pesanan tidak ditemukan."}
-            </p>
-          </div>
+        <div className="bg-rose-50 text-rose-600 p-5 rounded-2xl flex items-center gap-3 border border-rose-100">
+          <AlertCircle size={16} />
+          <p className="text-sm">{error || "Pesanan tidak ditemukan."}</p>
         </div>
       </div>
     );
@@ -240,243 +262,242 @@ export default function DetailPesananSellerPage() {
     ? shipping.trackingHistory
     : [];
 
+  const sc = statusConfig[order.status] || {
+    label: order.status,
+    color: "text-gray-500 bg-gray-50",
+    dot: "bg-gray-400",
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-1">
         <button
           onClick={() => router.push("/seller/pesanan")}
-          className="p-2 hover:bg-gray-100 rounded-xl text-gray-500 transition-colors"
+          className="p-2 hover:bg-gray-100 rounded-xl text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={16} />
         </button>
-        <div>
-          <h1 className="text-xl font-display font-bold text-gray-900 flex items-center gap-2">
-            <ClipboardList size={20} className="text-amber-600" /> Detail
-            Pesanan
-          </h1>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <p className="text-xs text-gray-500 font-mono">#{order.id}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
+            Detail Pesanan
+          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs text-gray-500 font-mono truncate">
+              #{order.id}
+            </p>
             <button
               onClick={handleCopyId}
-              className="p-1 text-gray-400 hover:text-amber-600 rounded transition-colors"
-              title="Salin ID Pesanan"
+              className="p-0.5 text-gray-300 hover:text-gray-500 transition-colors"
+              title="Salin ID"
             >
               {copiedId ? (
-                <CheckCircle size={13} className="text-emerald-600" />
+                <CheckCircle size={11} className="text-emerald-500" />
               ) : (
-                <Copy size={13} />
+                <Copy size={11} />
               )}
             </button>
           </div>
         </div>
+        {/* Status badge */}
         <span
-          className={`ml-auto px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wide ${statusColor(order.status)}`}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium ${sc.color}`}
         >
-          {order.status}
+          <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+          {sc.label}
         </span>
       </div>
 
-      {/* Customer Info */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
-          <User size={16} className="text-gray-400" /> Informasi Pelanggan
-        </h3>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Nama</span>
-            <span className="font-semibold text-gray-900">
-              {order.customer?.name || "-"}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Email</span>
-            <span className="font-semibold text-gray-900">
-              {order.customer?.email || "-"}
-            </span>
-          </div>
-          {order.customer?.phone && (
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">No. Telepon</span>
-              <span className="font-semibold text-gray-900">
-                {order.customer.phone}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Customer */}
+      <SectionCard>
+        <SectionLabel icon={User} label="Pelanggan" />
+        <InfoRow label="Nama" value={order.customer?.name} />
+        <InfoRow label="Email" value={order.customer?.email} />
+        <InfoRow label="Telepon" value={order.customer?.phone} />
+      </SectionCard>
 
-      {/* Delivery Address */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
-          <MapPin size={16} className="text-gray-400" /> Alamat Pengiriman
-        </h3>
-        <p className="text-sm text-gray-800 font-medium">
-          {order.alamatKirim || "-"}
+      {/* Address */}
+      <SectionCard>
+        <SectionLabel icon={MapPin} label="Alamat Pengiriman" />
+        <p className="text-sm text-gray-700 leading-relaxed">
+          {order.alamatKirim || "–"}
         </p>
         {order.catatan && (
-          <p className="mt-2 text-xs text-amber-700 bg-amber-50 p-2 rounded-lg">
-            💬 Catatan: {order.catatan}
-          </p>
+          <div className="mt-3 pt-3 border-t border-gray-50 flex items-start gap-2">
+            <span className="text-[11px] text-gray-400 shrink-0 mt-0.5">
+              Catatan
+            </span>
+            <p className="text-[11px] text-gray-600">{order.catatan}</p>
+          </div>
         )}
-
         {order.alamatLat && order.alamatLng && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4 border-t border-gray-50">
             <a
               href={`https://www.google.com/maps?q=${order.alamatLat},${order.alamatLng}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl text-sm font-semibold hover:bg-emerald-100 hover:text-emerald-700 transition-colors"
+              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
             >
-              <MapPin size={16} /> Buka di Google Maps
+              <MapPin size={12} /> Buka di Google Maps
             </a>
           </div>
         )}
-      </div>
+      </SectionCard>
 
-      {/* Order Items */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
-          <Package size={16} className="text-gray-400" /> Item Pesanan
-        </h3>
-        <div className="space-y-3">
+      {/* Items */}
+      <SectionCard>
+        <SectionLabel icon={Package} label="Item Pesanan" />
+        <div className="space-y-0">
           {order.items?.map((item, i) => (
             <div
               key={item.id || i}
-              className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0"
+              className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0"
             >
-              <div className="w-12 h-12 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center text-xl flex-shrink-0">
+              <div className="w-10 h-10 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
                 {item.product?.gambarUrl ? (
                   <div className="relative w-full h-full">
                     <Image
                       src={item.product.gambarUrl}
                       alt={item.product.nama || "Produk"}
                       fill
-                      sizes="48px"
+                      sizes="40px"
                       className="object-cover"
                       unoptimized
                     />
                   </div>
                 ) : (
-                  "📦"
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package size={14} className="text-gray-300" />
+                  </div>
                 )}
               </div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 text-sm">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-800 truncate">
                   {item.product?.namaEtalase || item.product?.nama || "Produk"}
                 </p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {item.jumlah} {item.product?.satuan || "kg"} ×{" "}
+                  {formatRupiah(item.harga)}
                   {item.grade && (
-                    <span className="text-[10px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded font-semibold">
+                    <span className="ml-2 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
                       Grade {item.grade}
                     </span>
                   )}
-                  <span className="text-xs text-gray-500">
-                    {item.jumlah} {item.product?.satuan || "kg"} ×{" "}
-                    {formatRupiah(item.harga)}
-                  </span>
-                </div>
+                </p>
               </div>
-              <p className="font-bold text-gray-900 text-sm">
+              <p className="text-sm text-gray-700 shrink-0">
                 {formatRupiah(item.jumlah * Number(item.harga))}
               </p>
             </div>
           ))}
         </div>
-      </div>
+      </SectionCard>
 
-      {/* Payment Summary */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="font-semibold text-gray-700 text-sm mb-3">
-          Ringkasan Pembayaran
-        </h3>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Metode Bayar</span>
-            <span className="font-semibold text-gray-900">
-              {order.metodeBayar}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Tanggal Pesanan</span>
-            <span className="font-semibold text-gray-900">
-              {formatTanggal(order.createdAt)}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm pt-3 border-t border-gray-100">
-            <span className="font-bold text-gray-900">Total</span>
-            <span className="font-display font-black text-lg text-amber-700">
-              {formatRupiah(order.totalHarga)}
-            </span>
-          </div>
+      {/* Payment */}
+      <SectionCard>
+        <SectionLabel icon={CreditCard} label="Ringkasan Pembayaran" />
+        <InfoRow label="Metode Bayar" value={order.metodeBayar} />
+        <InfoRow
+          label="Tanggal Pesanan"
+          value={formatTanggal(order.createdAt)}
+        />
+        <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100">
+          <span className="text-xs text-gray-500">Total</span>
+          <span className="text-base text-gray-900">
+            {formatRupiah(order.totalHarga)}
+          </span>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Shipping Tracking */}
       {shipping && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h3 className="font-semibold text-gray-700 text-sm mb-3 flex items-center gap-2">
-            <Truck size={16} className="text-gray-400" /> Status Pengiriman
-          </h3>
+        <SectionCard>
+          <SectionLabel icon={Truck} label="Status Pengiriman" />
 
           {shipping.kurirName && (
-            <div className="bg-slate-50 rounded-xl p-3 mb-4 text-sm">
-              <p className="text-gray-600">
-                Kurir:{" "}
-                <span className="font-semibold">{shipping.kurirName}</span>
-                {shipping.kurirPhone && <span> • {shipping.kurirPhone}</span>}
-              </p>
+            <div className="flex items-center gap-2 mb-4 p-3 bg-gray-50 rounded-xl">
+              <div className="w-6 h-6 bg-white rounded-lg border border-gray-100 flex items-center justify-center">
+                <Truck size={12} className="text-gray-400" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-700">{shipping.kurirName}</p>
+                {shipping.kurirPhone && (
+                  <p className="text-[10px] text-gray-400">
+                    {shipping.kurirPhone}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Tracking Steps */}
-          <div className="flex items-center gap-1 flex-wrap mb-4">
+          {/* Step tracker */}
+          <div className="flex items-center gap-1 mb-4 overflow-x-auto pb-1">
             {TRACKING_STEPS.map((st, idx) => {
               const stepIdx = TRACKING_STEPS.indexOf(st);
               const currentIdx = TRACKING_STEPS.indexOf(shipping.status);
               const done = stepIdx < currentIdx;
               const current = shipping.status === st;
               return (
-                <div key={st} className="flex items-center gap-1">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium border ${
-                      current
-                        ? "bg-blue-100 text-blue-700 border-blue-200"
-                        : done
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-200"
-                          : "bg-gray-50 text-gray-400 border-gray-200"
-                    }`}
-                  >
-                    {getStatusIcon(st)} {getStatusLabel(st)}
-                  </span>
+                <div key={st} className="flex items-center gap-1 shrink-0">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        current
+                          ? "bg-blue-500"
+                          : done
+                            ? "bg-emerald-500"
+                            : "bg-gray-200"
+                      }`}
+                    />
+                    <span
+                      className={`text-[9px] whitespace-nowrap ${
+                        current
+                          ? "text-blue-600"
+                          : done
+                            ? "text-emerald-600"
+                            : "text-gray-400"
+                      }`}
+                    >
+                      {getStatusLabel(st)}
+                    </span>
+                  </div>
                   {idx < TRACKING_STEPS.length - 1 && (
-                    <ChevronRight size={12} className="text-gray-300" />
+                    <div
+                      className={`w-6 h-px mb-3 ${done || current ? "bg-emerald-200" : "bg-gray-100"}`}
+                    />
                   )}
                 </div>
               );
             })}
           </div>
 
-          {/* History */}
+          {/* History timeline */}
           {history.length > 0 && (
-            <div className="space-y-2 mt-3 border-t border-gray-100 pt-3">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+            <div className="border-t border-gray-50 pt-4 space-y-0">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">
                 Riwayat
               </p>
               {[...history].reverse().map((h, i) => (
-                <div key={i} className="flex gap-3 text-xs">
+                <div key={i} className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-1 flex-shrink-0" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 shrink-0" />
                     {i < history.length - 1 && (
-                      <div className="w-0.5 bg-gray-200 flex-1 mt-1" />
+                      <div
+                        className="w-px bg-gray-100 flex-1 mt-1 mb-0"
+                        style={{ minHeight: 20 }}
+                      />
                     )}
                   </div>
                   <div className="pb-3">
-                    <p className="font-semibold text-gray-800">
+                    <p className="text-xs text-gray-700">
                       {h.label || getStatusLabel(h.status)}
                     </p>
-                    {h.note && <p className="text-gray-500">{h.note}</p>}
-                    <p className="text-gray-400">
+                    {h.note && (
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        {h.note}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-gray-300 mt-0.5">
                       {formatTanggal(h.timestamp || h.createdAt || "")}
                     </p>
                   </div>
@@ -484,42 +505,40 @@ export default function DetailPesananSellerPage() {
               ))}
             </div>
           )}
-        </div>
+        </SectionCard>
       )}
 
+      {/* Seller Confirm — SELESAI */}
       {order.status === "SELESAI" && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-4">
-          <div className="flex items-start gap-3">
-            <CheckCircle
-              size={20}
-              className="text-amber-500 flex-shrink-0 mt-0.5"
-            />
+        <SectionCard>
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
+              <CheckCircle size={15} className="text-emerald-500" />
+            </div>
             <div>
-              <p className="text-sm font-bold text-amber-800">
+              <p className="text-sm text-gray-800">
                 Pembeli telah mengkonfirmasi penerimaan
               </p>
-              <p className="text-xs text-amber-600 mt-0.5">
-                Silakan periksa foto bukti pengiriman dari kurir, lalu klik
-                tombol konfirmasi untuk menutup pesanan ini.
+              <p className="text-xs text-gray-400 mt-0.5">
+                Periksa foto bukti pengiriman, lalu tutup pesanan ini.
               </p>
             </div>
           </div>
 
-          {/* Foto bukti dari kurir */}
           {shipping?.buktiKirimFoto && shipping.buktiKirimFoto.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-amber-700 mb-2">
-                📷 Foto Bukti Pengiriman Kurir
+            <div className="mb-4">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                Foto Bukti Pengiriman
               </p>
               <div className="flex gap-2 flex-wrap">
                 {shipping.buktiKirimFoto.map((foto, i) => (
                   <a key={i} href={foto} target="_blank" rel="noreferrer">
-                    <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-amber-200 hover:border-amber-400 transition-colors">
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 hover:border-emerald-200 transition-colors">
                       <Image
                         src={foto}
                         alt={`Bukti ${i + 1}`}
                         fill
-                        sizes="96px"
+                        sizes="80px"
                         className="object-cover"
                         unoptimized
                       />
@@ -528,15 +547,15 @@ export default function DetailPesananSellerPage() {
                 ))}
               </div>
               {shipping.buktiKirimCatatan && (
-                <p className="text-xs text-amber-600 mt-2">
-                  📝 {shipping.buktiKirimCatatan}
+                <p className="text-xs text-gray-500 mt-2">
+                  {shipping.buktiKirimCatatan}
                 </p>
               )}
             </div>
           )}
 
           {!shipping?.buktiKirimFoto?.length && (
-            <p className="text-xs text-amber-500 italic">
+            <p className="text-xs text-gray-400 mb-4">
               Kurir tidak mengunggah foto bukti pengiriman.
             </p>
           )}
@@ -544,22 +563,23 @@ export default function DetailPesananSellerPage() {
           <button
             onClick={handleSellerConfirm}
             disabled={confirmLoading}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white text-sm rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {confirmLoading ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2 size={14} className="animate-spin" />
             ) : (
-              <CheckCircle size={16} />
+              <CheckCircle size={14} />
             )}
             {confirmLoading ? "Memproses..." : "Konfirmasi & Tutup Pesanan"}
           </button>
-        </div>
+        </SectionCard>
       )}
 
+      {/* Ditutup */}
       {order.status === "DITUTUP" && (
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
-          <CheckCircle size={20} className="text-slate-400" />
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-2xl border border-gray-100">
+          <CheckCircle size={14} className="text-gray-400" />
+          <p className="text-xs text-gray-500">
             Pesanan ini sudah ditutup oleh seller.
           </p>
         </div>

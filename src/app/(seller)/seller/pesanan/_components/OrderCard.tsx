@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { Truck, ChevronRight, CheckCircle } from "lucide-react";
+import { Truck, ChevronRight, CheckCircle, Copy, Package } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { formatRupiah, formatTanggal } from "@/lib/ecommerce-api";
@@ -26,173 +26,163 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const router = useRouter();
   const shipping = order.shipping;
   const nextStatus = shipping ? getNextStatus(shipping.status) : null;
-  const history = Array.isArray(shipping?.trackingHistory)
-    ? shipping.trackingHistory
-    : [];
+
+  const customerName =
+    order.penerima ||
+    order.customer?.name ||
+    order.customer?.email ||
+    order.pembeli ||
+    "Pelanggan";
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 pb-4 border-b border-gray-50">
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-gray-900">
-              {order.penerima ||
-                order.customer?.name ||
-                order.customer?.email ||
-                order.pembeli ||
-                "Pelanggan"}
-            </p>
-            <span
-              className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-medium tracking-wider ${getStatusColor(order.status)}`}
-            >
-              {order.status}
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-            ID: <span className="font-mono">{order.id.slice(0, 8)}</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(order.id);
-              }}
-              className="text-gray-400 hover:text-emerald-600 transition-colors"
-              title="Salin ID Pesanan"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-            </button>
-            • {formatTanggal(order.createdAt)}
-          </p>
+    <div
+      onClick={() => router.push(`/seller/pesanan/${order.id}`)}
+      className="bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-md hover:shadow-slate-100/60 transition-all duration-200 cursor-pointer overflow-hidden"
+    >
+      {/* Header strip */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
+        <div className="flex items-center gap-2.5">
+          <p className="text-sm font-medium text-slate-800">{customerName}</p>
+          <span
+            className={`px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide ${getStatusColor(order.status)}`}
+          >
+            {order.status.replace(/_/g, " ")}
+          </span>
         </div>
-        <div className="mt-2 sm:mt-0 text-right">
-          <p className="font-medium text-lg text-emerald-600">
+        <div className="text-right">
+          <p className="text-sm font-semibold text-emerald-600">
             {formatRupiah(Number(order.totalHarga || 0))}
-          </p>
-          <p className="text-[10px] text-gray-400">
-            Metode: {order.metodeBayar}
           </p>
         </div>
       </div>
 
-      {/* Items — produk yang dibeli */}
-      <div className="space-y-2 mb-4">
+      {/* Body */}
+      <div className="px-5 py-4">
+        {/* Meta row */}
+        <div className="flex items-center gap-3 mb-4 text-[11px] text-slate-400">
+          <span className="font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
+            #{order.id.slice(0, 8).toUpperCase()}
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(order.id);
+            }}
+            title="Salin ID"
+            className="text-slate-300 hover:text-emerald-500 transition-colors"
+          >
+            <Copy size={11} />
+          </button>
+          <span>•</span>
+          <span>{formatTanggal(order.createdAt)}</span>
+          {order.metodeBayar && (
+            <>
+              <span>•</span>
+              <span>{order.metodeBayar}</span>
+            </>
+          )}
+        </div>
+
+        {/* Items */}
         {order.items && order.items.length > 0 ? (
-          <>
-            {order.items.slice(0, 3).map((item, i: number) => (
+          <div className="space-y-2.5">
+            {order.items.slice(0, 2).map((item, i: number) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center text-base flex-shrink-0 border border-gray-100">
+                <div className="w-9 h-9 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center text-sm flex-shrink-0 border border-slate-100">
                   {item.product?.gambarUrl ? (
                     <div className="relative w-full h-full">
                       <Image
                         src={item.product.gambarUrl}
                         alt={item.product.nama || "Produk"}
                         fill
-                        sizes="40px"
+                        sizes="36px"
                         className="object-cover"
                         unoptimized
                       />
                     </div>
                   ) : (
-                    "📦"
+                    <Package size={14} className="text-slate-300" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">
+                  <p className="text-[13px] font-medium text-slate-700 truncate">
                     {item.product?.namaEtalase || item.product?.nama || "—"}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-[11px] text-slate-400">
                     {item.jumlah} {item.product?.satuan || "kg"} ×{" "}
                     {formatRupiah(Number(item.harga))}
                   </p>
                 </div>
-                <p className="text-xs font-bold text-gray-700 whitespace-nowrap">
+                <p className="text-[12px] font-medium text-slate-600 whitespace-nowrap">
                   {formatRupiah(Number(item.jumlah) * Number(item.harga))}
                 </p>
               </div>
             ))}
-            {order.items.length > 3 && (
-              <p className="text-xs text-gray-400 pl-13">
-                +{order.items.length - 3} produk lainnya
+            {order.items.length > 2 && (
+              <p className="text-[11px] text-slate-400 pl-12">
+                +{order.items.length - 2} produk lainnya
               </p>
             )}
-          </>
+          </div>
         ) : (
-          <p className="text-xs text-gray-400 italic">
+          <p className="text-xs text-slate-400 italic">
             Data produk tidak tersedia
           </p>
         )}
       </div>
 
-      {/* Address */}
-      <div className="bg-gray-50 p-3 rounded-xl mb-4 text-xs">
-        <span className="text-gray-500 font-medium">Alamat: </span>
-        <span className="font-normal text-gray-700">{order.alamatKirim}</span>
-      </div>
+      {/* Footer actions */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex items-center justify-between gap-2 px-5 py-3 bg-slate-50/60 border-t border-slate-100/80"
+      >
+        <div className="flex items-center gap-2 flex-wrap">
+          {order.status === "DIPROSES" && !shipping && (
+            <button
+              onClick={() => onInitShipping(order)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
+            >
+              <Truck size={13} /> Proses Pengiriman
+            </button>
+          )}
+          {shipping && nextStatus && (
+            <button
+              onClick={() => onAdvanceStatus(order)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
+            >
+              <ChevronRight size={13} /> {getStatusLabel(nextStatus)}
+            </button>
+          )}
+          {shipping?.status === "ARRIVED" && order.status !== "SELESAI" && (
+            <span className="text-[11px] text-slate-500 font-medium">
+              ⏳ Menunggu konfirmasi pembeli
+            </span>
+          )}
+          {order.status === "SELESAI" && (
+            <button
+              onClick={() => router.push(`/seller/pesanan/${order.id}`)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
+            >
+              <CheckCircle size={13} /> Cek & Konfirmasi
+            </button>
+          )}
+          {shipping?.kurirPenggunaId && (
+            <button
+              onClick={() =>
+                router.push(`/seller/kurir/${shipping.kurirPenggunaId}`)
+              }
+              className="flex items-center gap-1.5 px-3 py-1.5 text-slate-500 text-xs font-medium rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
+            >
+              <Truck size={13} /> Kurir
+            </button>
+          )}
+        </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2 pt-2 flex-wrap">
-        {order.status === "DIPROSES" && !shipping && (
-          <button
-            onClick={() => onInitShipping(order)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-xl hover:bg-blue-700 transition-all"
-          >
-            <Truck size={14} /> Proses Pengiriman
-          </button>
-        )}
-        {shipping && nextStatus && (
-          <button
-            onClick={() => onAdvanceStatus(order)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
-          >
-            <ChevronRight size={14} /> {getStatusLabel(nextStatus)}
-          </button>
-        )}
-        {shipping?.status === "ARRIVED" && order.status !== "SELESAI" && (
-          <span className="text-xs text-amber-600 font-medium">
-            ⏳ Menunggu konfirmasi pembeli
-          </span>
-        )}
-        {order.status === "SELESAI" && (
-          <button
-            onClick={() => router.push(`/seller/pesanan/${order.id}`)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 text-white text-xs font-semibold rounded-xl hover:bg-amber-600 transition-all"
-          >
-            <CheckCircle size={14} /> Cek & Konfirmasi
-          </button>
-        )}
-        {order.status === "DITUTUP" && (
-          <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
-            <CheckCircle size={12} /> Ditutup
-          </span>
-        )}
-        {shipping?.kurirPenggunaId && (
-          <button
-            onClick={() =>
-              router.push(`/seller/kurir/${shipping.kurirPenggunaId}`)
-            }
-            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-medium rounded-xl hover:bg-gray-50 transition-all flex items-center gap-1.5"
-          >
-            <Truck size={14} /> Aktivitas Kurir
-          </button>
-        )}
         <button
           onClick={() => router.push(`/seller/pesanan/${order.id}`)}
-          className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-medium rounded-xl hover:bg-gray-50 transition-all"
+          className="flex items-center gap-1 text-xs text-slate-400 hover:text-emerald-600 font-medium transition-colors whitespace-nowrap"
         >
-          Lihat Detail
+          Detail <ChevronRight size={13} />
         </button>
       </div>
     </div>

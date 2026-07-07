@@ -7,6 +7,7 @@ import { Package, Loader2, AlertCircle, ChevronRight } from "lucide-react";
 import { useSellerGrosirOrders } from "@/hooks/seller/useSellerGrosirOrders";
 import { useSellerDashboard } from "@/hooks/seller/useSellerDashboard";
 import { formatRupiah, formatTanggal } from "@/lib/ecommerce-api";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 type OrderGrosirDto = {
   id: string;
@@ -67,26 +68,26 @@ const GrosirOrdersPage: React.FC = () => {
   const statusColor = (s: string) => {
     switch (s) {
       case "MENUNGGU_KONFIRMASI_SELLER":
-        return "bg-amber-50/50 text-amber-600 border-amber-100/60";
+        return "bg-slate-100 text-slate-600 border-slate-200";
       case "MENUNGGU_BAYAR":
-        return "bg-blue-50/50 text-blue-600 border-blue-100/60";
+        return "bg-slate-100 text-slate-600 border-slate-200";
       case "DIPROSES":
-        return "bg-indigo-50/50 text-indigo-600 border-indigo-100/60";
+        return "bg-emerald-50 text-emerald-600 border-emerald-100";
       case "DIKIRIM":
-        return "bg-sky-50/50 text-sky-600 border-sky-100/60";
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
       case "SELESAI":
-        return "bg-emerald-50/50 text-emerald-600 border-emerald-100/60";
+        return "bg-slate-50 text-slate-400 border-slate-100";
       case "DIBATALKAN":
-        return "bg-red-50/50 text-red-500 border-red-100/60";
+        return "bg-slate-100 text-slate-500 border-slate-200";
       default:
-        return "bg-gray-50/50 text-gray-500 border-gray-100/60";
+        return "bg-slate-50 text-slate-500 border-slate-100";
     }
   };
 
   return (
-    <div className="w-full space-y-8">
+    <div className="w-full space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-6 border-b border-slate-100/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1.5">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
@@ -104,30 +105,43 @@ const GrosirOrdersPage: React.FC = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="bg-slate-50 p-1.5 rounded-2xl border border-slate-100/50 inline-flex gap-1 overflow-x-auto max-w-full shadow-sm">
-        {[
-          "semua",
-          "MENUNGGU_KONFIRMASI_SELLER",
-          "MENUNGGU_BAYAR",
-          "DIPROSES",
-          "SELESAI",
-        ].map((s) => (
-          <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
-            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${
-              filterStatus === s
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            {s === "semua"
-              ? "Semua Pesanan"
-              : s === "MENUNGGU_KONFIRMASI_SELLER"
-                ? "Perlu Konfirmasi"
-                : s.replace(/_/g, " ")}
-          </button>
-        ))}
+      <div className="py-1.5">
+        <SegmentedControl
+          value={filterStatus}
+          onChange={setFilterStatus}
+          options={[
+            { id: "semua", label: "Semua Pesanan" },
+            { id: "MENUNGGU_KONFIRMASI_SELLER", label: "Perlu Konfirmasi" },
+            { id: "MENUNGGU_BAYAR", label: "Menunggu Bayar" },
+            { id: "DIPROSES", label: "Diproses" },
+          ].map((tab) => {
+            const count =
+              tab.id === "semua"
+                ? typedOrders.filter(
+                    (o) => !["SELESAI", "DIBATALKAN"].includes(o.status),
+                  ).length
+                : typedOrders.filter((o) => o.status === tab.id).length;
+            const isActive = filterStatus === tab.id;
+
+            return {
+              value: tab.id,
+              label: (
+                <div className="flex items-center gap-2">
+                  <span>{tab.label}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-200 text-slate-500"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </div>
+              ),
+            };
+          })}
+        />
       </div>
 
       {/* Main Content Grid */}

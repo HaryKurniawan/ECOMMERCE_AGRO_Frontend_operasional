@@ -96,7 +96,7 @@ const UserTable: React.FC<UserTableProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm py-20 text-center">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm py-20 text-center">
         <div className="flex flex-col items-center gap-2">
           <Loader2 size={32} className="animate-spin text-emerald-600" />
           <p className="text-gray-400 font-medium">Memuat data pengguna...</p>
@@ -107,7 +107,7 @@ const UserTable: React.FC<UserTableProps> = ({
 
   if (users.length === 0) {
     return (
-      <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm py-20 text-center">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm py-20 text-center">
         <div className="max-w-xs mx-auto">
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users size={32} className="text-gray-200" />
@@ -130,7 +130,7 @@ const UserTable: React.FC<UserTableProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
       <div className="overflow-x-auto text-[13px]">
         <table className="w-full text-left">
           <thead>

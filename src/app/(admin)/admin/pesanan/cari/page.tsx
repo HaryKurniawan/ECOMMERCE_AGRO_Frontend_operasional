@@ -110,7 +110,7 @@ export default function AdminSearchTransactionPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 space-y-8">
+    <div className="w-full pb-20 space-y-6">
       {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-2">
@@ -130,7 +130,7 @@ export default function AdminSearchTransactionPage() {
       {/* Search Input Bar */}
       <form
         onSubmit={handleSearch}
-        className="flex gap-3 bg-white p-2.5 rounded-2xl border border-gray-200 shadow-sm"
+        className="flex gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm"
       >
         <div className="flex-1 flex items-center gap-2 px-3">
           <Search size={18} className="text-gray-400 shrink-0" />
@@ -145,7 +145,7 @@ export default function AdminSearchTransactionPage() {
         <button
           type="submit"
           disabled={loading || !searchId.trim()}
-          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-100 disabled:opacity-50 disabled:shadow-none"
+          className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-100 disabled:opacity-50 disabled:shadow-none"
         >
           {loading ? (
             <Loader2 size={16} className="animate-spin" />
@@ -159,7 +159,7 @@ export default function AdminSearchTransactionPage() {
 
       {/* Error state */}
       {error && (
-        <div className="bg-red-50 text-red-600 p-5 rounded-2xl flex items-start gap-3 border border-red-100 shadow-sm">
+        <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-start gap-3 border border-red-100 shadow-sm">
           <AlertCircle size={20} className="shrink-0 mt-0.5" />
           <div>
             <h3 className="font-bold text-sm">Transaksi Tidak Ditemukan</h3>
@@ -170,7 +170,7 @@ export default function AdminSearchTransactionPage() {
 
       {/* Initial Empty State */}
       {!loading && !error && !order && (
-        <div className="bg-white rounded-3xl border border-gray-100 p-16 flex flex-col items-center text-center shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 flex flex-col items-center text-center shadow-sm">
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
             <ClipboardList size={28} className="text-gray-300" />
           </div>
@@ -183,7 +183,7 @@ export default function AdminSearchTransactionPage() {
 
       {/* Result Card */}
       {order && (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-md overflow-hidden animate-slide-up">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-slide-up">
           {/* Card Header */}
           <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -323,7 +323,7 @@ export default function AdminSearchTransactionPage() {
               onClick={() => {
                 router.push("/admin/pesanan");
               }}
-              className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl flex items-center gap-2 transition-all active:scale-95 border border-gray-200"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-lg flex items-center gap-2 transition-all active:scale-95 border border-gray-200"
             >
               Kembali ke Pesanan
               <ChevronRight size={14} />

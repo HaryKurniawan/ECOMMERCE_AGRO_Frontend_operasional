@@ -9,6 +9,8 @@ import {
   TrendingDown,
   Minus,
   AlertCircle,
+  BarChart2,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -76,30 +78,19 @@ export default function ProdukTrenPage() {
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
-      <div>
-        <Link
-          href="/seller/tren"
-          className="text-xs text-gray-400 hover:text-emerald-600 inline-flex items-center gap-1 mb-2 font-medium"
-        >
-          <ArrowLeft size={12} /> Kembali ke Tren Bulanan
-        </Link>
-        <div className="flex items-center gap-2 mb-1">
-          <Package size={22} className="text-emerald-600" />
-          <h1 className="text-2xl font-bold text-gray-900">
-            Tren & Pertumbuhan Produk
-          </h1>
-        </div>
-        <p className="text-gray-500 text-sm">
-          Analisis produk terlaris per bulan serta tingkat pertumbuhan penjualan
-          produk toko <strong>{store?.nama}</strong>
-        </p>
+      <div className="pb-4 border-b border-slate-100 flex flex-col gap-2">
+        <h1 className="text-2xl md:text-3xl font-medium text-slate-800 flex items-center gap-2">
+          <TrendingUp size={24} className="text-emerald-600" /> Tren &
+          Pertumbuhan Produk
+        </h1>
       </div>
 
       {/* Section 1: Pertumbuhan Produk */}
       <div>
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            🚀 Pertumbuhan Produk Tercepat & Lambat
+          <h2 className="text-lg font-medium text-slate-800 flex items-center gap-2">
+            <Zap size={20} className="text-amber-500" /> Pertumbuhan Produk
+            Tercepat & Lambat
           </h2>
           <p className="text-xs text-gray-400">
             Perbandingan total revenue{" "}
@@ -144,8 +135,9 @@ export default function ProdukTrenPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-50">
           <div>
-            <h2 className="text-base font-bold text-gray-800">
-              📊 Top 10 Produk Terlaris{" "}
+            <h2 className="text-base font-medium text-slate-800 flex items-center gap-2">
+              <BarChart2 size={18} className="text-emerald-600" /> Top 10 Produk
+              Terlaris{" "}
               {periodType === "WEEK"
                 ? "Mingguan"
                 : periodType === "MONTH"

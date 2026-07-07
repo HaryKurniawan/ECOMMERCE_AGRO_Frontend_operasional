@@ -23,7 +23,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div>
-        <h1 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-display font-medium text-slate-800 flex items-center gap-2">
           {Icon && <Icon size={26} className={iconColor} />}
           {title}
         </h1>

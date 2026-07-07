@@ -28,6 +28,7 @@ export interface SidebarMenuItem {
   icon?: React.ReactNode;
   children?: SidebarSubItem[];
   isHeader?: boolean;
+  hasBadge?: boolean;
 }
 
 interface AppSidebarProps {
@@ -317,7 +318,18 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
               >
                 {item.icon}
               </span>
-              {!collapsed && <span className="truncate">{item.label}</span>}
+              {!collapsed && (
+                <>
+                  <span className="truncate flex-1 text-left">
+                    {item.label}
+                  </span>
+                  {item.hasBadge && (
+                    <span className="w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm shrink-0">
+                      {item.badgeCount || 0}
+                    </span>
+                  )}
+                </>
+              )}
             </button>
           );
         })}

@@ -61,6 +61,16 @@ export default function SellerTopbar() {
               isTabActive = dashboardRoutes.some(
                 (r) => pathname === r || pathname.startsWith(r + "/"),
               );
+            } else if (tab.path === "/seller/produk") {
+              const produkRoutes = [
+                "/seller/produk",
+                "/seller/stok",
+                "/seller/gudang",
+                "/seller/pengajuan-stok",
+              ];
+              isTabActive = produkRoutes.some(
+                (r) => pathname === r || pathname.startsWith(r + "/"),
+              );
             } else if (tab.path === "/seller/tren") {
               isTabActive =
                 pathname === tab.path ||
@@ -90,29 +100,26 @@ export default function SellerTopbar() {
         </nav>
       </div>
 
-      {/* ── Right: Avatar/Email Dropdown ── */}
-      <div className="flex items-center gap-2">
-        <NotifBell />
+      {/* ── Right: Profile + Notif ── */}
+      <div className="flex items-center gap-1.5">
+        {/* Profile Dropdown */}
         <div className="relative">
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all text-right group"
+            className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl transition-all group"
           >
-            <div className="hidden sm:flex items-center gap-2">
-              <p className="text-[12px] font-medium text-gray-600 group-hover:text-gray-800 transition-colors tracking-tight">
-                {email}
-              </p>
-              <ChevronDown
-                size={12}
-                className={`text-gray-500 group-hover:text-gray-700 transition-transform duration-200 ${
-                  isProfileOpen ? "rotate-180" : ""
-                }`}
-              />
+            {/* Name — kiri */}
+            <div className="hidden sm:flex items-center h-full mr-1">
+              <span className="text-[14px] font-medium text-slate-800 tracking-tight leading-none mt-px">
+                {displayName}
+              </span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-50 group-hover:border-primary-100 transition-all duration-200 shadow-sm">
+
+            {/* Avatar icon — kanan */}
+            <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/60 group-hover:bg-emerald-50 group-hover:border-emerald-100/50 flex items-center justify-center flex-shrink-0 transition-colors">
               <UserIcon
-                size={15}
-                className="text-gray-400 group-hover:text-primary-600 transition-colors"
+                size={18}
+                className="text-slate-600 group-hover:text-emerald-600 transition-colors"
               />
             </div>
           </button>
@@ -125,28 +132,49 @@ export default function SellerTopbar() {
                 onClick={() => setIsProfileOpen(false)}
                 aria-label="Close profile menu"
               />
-              <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 z-50 animate-in fade-in zoom-in duration-200">
-                <button
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    router.push("/seller/profil-toko");
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-700 hover:bg-gray-50 text-[12px] font-medium transition-all"
-                >
-                  <Store size={14} className="text-gray-500" />
-                  Profil Toko
-                </button>
-                <div className="h-px bg-gray-100 my-1 mx-2" />
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 text-[12px] font-medium transition-all"
-                >
-                  <LogOut size={14} />
-                  Keluar Sesi
-                </button>
+              <div className="absolute right-0 mt-1.5 w-52 bg-white border border-slate-100 rounded-2xl shadow-lg shadow-slate-200/40 overflow-hidden z-50">
+                {/* User Info Header */}
+                <div className="px-4 py-3 border-b border-slate-50">
+                  <p className="text-[12px] font-semibold text-slate-800 leading-none mb-0.5">
+                    {displayName}
+                  </p>
+                  <p className="text-[10px] text-slate-400 truncate leading-none mb-2">
+                    {email}
+                  </p>
+                  <span className="inline-block text-[9px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                    Seller
+                  </span>
+                </div>
+
+                {/* Menu Items */}
+                <div className="p-1.5">
+                  <button
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      router.push("/seller/profil-toko");
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 text-[12px] font-medium transition-all"
+                  >
+                    <Store size={14} className="text-slate-400" />
+                    Profil Toko
+                  </button>
+                  <div className="h-px bg-slate-100 my-1 mx-1" />
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 text-[12px] font-medium transition-all"
+                  >
+                    <LogOut size={14} />
+                    Keluar Sesi
+                  </button>
+                </div>
               </div>
             </>
           )}
+        </div>
+
+        {/* Notification Bell - Hidden on mobile, visible on tablet+ */}
+        <div className="hidden md:block">
+          <NotifBell />
         </div>
       </div>
     </div>
