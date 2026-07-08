@@ -10,6 +10,7 @@ import {
   Star,
   MessageSquare,
   Edit,
+  ImageIcon,
   Eye,
   EyeOff,
   Loader2,
@@ -28,6 +29,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import {
   productsApi,
   storesApi,
@@ -573,9 +575,10 @@ export default function KelolaProdukPage({
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                   Kelola Produk
-                  <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-sm font-semibold border border-emerald-100 flex items-center gap-1.5">
-                    <Package size={14} />
-                    {product.namaEtalase || product.nama}
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-xs font-bold ${statusColor(product.status)}`}
+                  >
+                    {product.status}
                   </span>
                 </h1>
               </div>
@@ -583,7 +586,7 @@ export default function KelolaProdukPage({
           </div>
 
           {/* ── Product Card Summary ── */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-5 flex items-center gap-4 shadow-sm">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6 flex items-center gap-4 shadow-sm">
             <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center text-2xl">
               {product.gambarUrl ? (
                 <div className="relative w-full h-full">
@@ -601,22 +604,23 @@ export default function KelolaProdukPage({
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-900 truncate">{product.nama}</p>
-              <p className="text-xs text-gray-500">
-                {product.category?.nama || "Tanpa Kategori"}
-              </p>
+              <div className="flex items-center gap-2 overflow-hidden">
+                <p className="font-bold text-gray-900 truncate">
+                  {product.nama}
+                </p>
+                {product.category?.nama && (
+                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-[10px] font-semibold text-gray-600 shrink-0">
+                    {product.category.nama}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span
-                  className={`px-2 py-0.5 rounded-md text-xs font-bold ${statusColor(product.status)}`}
-                >
-                  {product.status}
-                </span>
                 {product.diskonPersen && product.diskonPersen > 0 && (
                   <span className="flex items-center gap-0.5 text-[11px] font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md">
                     <Tag size={9} /> {product.diskonPersen}% OFF
                   </span>
                 )}
-                <span className="text-xs font-bold text-emerald-700">
+                <span className="text-lg font-bold text-emerald-700">
                   {formatRupiah(product.harga)}
                 </span>
                 {product.rating !== undefined && (
@@ -652,52 +656,57 @@ export default function KelolaProdukPage({
           </div>
 
           {/* ── Tabs ── */}
-          <div className="flex items-center gap-1 mb-6 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("etalase")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all rounded-lg ${
-                activeTab === "etalase"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <Store size={16} />
-              Atur Etalase
-            </button>
-            <button
-              onClick={() => setActiveTab("margin")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all rounded-lg ${
-                activeTab === "margin"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <Percent size={16} />
-              Margin & Harga
-            </button>
-
-            <button
-              onClick={() => setActiveTab("riwayat")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-all rounded-lg ${
-                activeTab === "riwayat"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <Package size={16} />
-              Riwayat Harga
-            </button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <SegmentedControl
+              value={activeTab}
+              onChange={(val) =>
+                setActiveTab(val as "etalase" | "review" | "riwayat" | "margin")
+              }
+              options={[
+                {
+                  value: "etalase",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <Store size={16} />
+                      <span>Atur Etalase</span>
+                    </div>
+                  ),
+                },
+                {
+                  value: "margin",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <Percent size={16} />
+                      <span>Margin & Harga</span>
+                    </div>
+                  ),
+                },
+                {
+                  value: "riwayat",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <Package size={16} />
+                      <span>Riwayat Harga</span>
+                    </div>
+                  ),
+                },
+                {
+                  value: "review",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <MessageSquare size={16} />
+                      <span>Ulasan</span>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </div>
           {/* ────────────────────────────────────────────────────────────────────── */}
           {/* TAB: ATUR ETALASE                                                    */}
           {/* ────────────────────────────────────────────────────────────────────── */}
           {activeTab === "etalase" && (
             <div className="animate-fade-in space-y-4">
-              {/* Quick actions - Removed Atur Diskon */}
-              <div className="flex gap-2 flex-wrap">
-                {/* Button Atur Diskon dihapus */}
-              </div>
-
               {/* Edit Form */}
               <form
                 onSubmit={handleSaveEtalase}
@@ -841,51 +850,6 @@ export default function KelolaProdukPage({
                   </div>
                 )}
 
-                {/* Harga & Stok */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                      Harga Default (Rp)
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-700 flex items-center justify-between">
-                        <span>Rp {editForm.harga.toLocaleString("id-ID")}</span>
-                        <span className="text-[9px] bg-gray-200/60 text-gray-400 px-2 py-0.5 rounded uppercase tracking-wider font-medium">
-                          Read-Only
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("margin")}
-                        className="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm"
-                      >
-                        <Edit size={14} />
-                        Edit
-                      </button>
-                    </div>
-                    <span className="text-[10px] text-gray-400 block mt-1 font-normal leading-normal">
-                      Harga total per varian kemasan akan ditambah dengan Biaya
-                      Tambahan di atas.
-                    </span>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                      Total Stok ({product.satuan || "kg"})
-                    </label>
-                    <div className="w-full px-3 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium text-gray-500 flex items-center justify-between">
-                      <span>
-                        {editForm.stok} {product.satuan || "kg"}
-                      </span>
-                      <span className="text-[9px] bg-gray-200/60 text-gray-400 px-2 py-0.5 rounded uppercase tracking-wider font-medium">
-                        Read-Only
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-gray-400 block mt-1 font-normal leading-normal">
-                      Stok bertambah otomatis saat Pengajuan Stok disetujui.
-                    </span>
-                  </div>
-                </div>
-
                 {/* Deskripsi */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
@@ -940,308 +904,291 @@ export default function KelolaProdukPage({
                 </div>
 
                 {/* Foto Produk */}
-                <div className="space-y-3 pt-1 border-t border-gray-100">
+                <div className="space-y-4 pt-5 border-t border-gray-100">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-semibold text-gray-600">
-                      Foto Produk (Maks 3)
+                    <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <ImageIcon size={18} className="text-emerald-600" />
+                      Foto Produk
+                      <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                        Maks 3
+                      </span>
                     </span>
-                    <div className="flex items-center gap-2">
-                      {editForm.images.length < 3 && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              images: [
-                                ...prev.images,
-                                { type: "link", value: "" },
-                              ],
-                            }))
-                          }
-                          className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-lg"
-                        >
-                          <Plus size={12} /> Tambah Foto
-                        </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveField("images", editForm.images)}
+                      disabled={savingField === "images"}
+                      className="text-xs font-bold text-white disabled:opacity-50 flex items-center gap-1.5 bg-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-all shadow-sm"
+                    >
+                      {savingField === "images" ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Save size={14} />
                       )}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSaveField("images", editForm.images)
-                        }
-                        disabled={savingField === "images"}
-                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 disabled:opacity-50 flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors"
-                      >
-                        {savingField === "images" ? (
-                          <Loader2 size={12} className="animate-spin" />
-                        ) : (
-                          <Save size={12} />
-                        )}
-                        Simpan
-                      </button>
-                    </div>
+                      Simpan Foto
+                    </button>
                   </div>
                   {fieldFeedback?.field === "images" && (
                     <div
-                      className={`flex items-center gap-2 p-2 rounded-lg text-xs border ${
+                      className={`flex items-center gap-2 p-3 rounded-xl text-xs font-medium border ${
                         fieldFeedback.type === "success"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : "bg-red-50 text-red-700 border-red-200"
                       }`}
                     >
                       {fieldFeedback.type === "success" ? (
-                        <CheckCircle2 size={13} />
+                        <CheckCircle2 size={16} className="text-emerald-500" />
                       ) : (
-                        <AlertCircle size={13} />
+                        <AlertCircle size={16} className="text-red-500" />
                       )}
                       {fieldFeedback.msg}
                     </div>
                   )}
-                  {editForm.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="flex gap-2 items-start bg-gray-50 p-3 rounded-xl border border-gray-100 relative"
-                    >
-                      {editForm.images.length > 1 ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              images: prev.images.filter((_, i) => i !== idx),
-                            }))
-                          }
-                          className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-sm border border-gray-100 hover:bg-red-50 z-10"
-                        >
-                          <X size={12} />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              images: [{ type: "link", value: "" }],
-                            }))
-                          }
-                          className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-sm border border-gray-100 hover:bg-red-50 z-10"
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
-                      <div className="flex-1 space-y-2">
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                images: prev.images.map((im, i) =>
-                                  i === idx ? { type: "link", value: "" } : im,
-                                ),
-                              }))
-                            }
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${img.type === "link" ? "bg-emerald-600 text-white" : "bg-white text-gray-500 border border-gray-200"}`}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[0, 1, 2].map((idx) => {
+                      const img = editForm.images[idx];
+                      if (img) {
+                        return (
+                          <div
+                            key={idx}
+                            className="relative group bg-white border border-gray-200 rounded-2xl overflow-hidden flex flex-col hover:border-emerald-400 transition-all shadow-sm min-h-[240px]"
                           >
-                            Link URL
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                images: prev.images.map((im, i) =>
-                                  i === idx ? { type: "file", value: "" } : im,
-                                ),
-                              }))
-                            }
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${img.type === "file" ? "bg-emerald-600 text-white" : "bg-white text-gray-500 border border-gray-200"}`}
-                          >
-                            Upload File
-                          </button>
-                        </div>
-                        {img.type === "link" ? (
-                          <div className="space-y-2">
-                            <input
-                              type="url"
-                              value={img.value}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setEditForm((prev) => ({
-                                  ...prev,
-                                  images: prev.images.map((im, i) =>
-                                    i === idx ? { ...im, value: val } : im,
-                                  ),
-                                }));
-                              }}
-                              placeholder="https://example.com/image.png"
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                            />
-                            {img.value && (
-                              <div className="mt-2 relative inline-block">
+                            {/* Top Right Buttons */}
+                            <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    images: prev.images.map((im, i) =>
+                                      i === idx
+                                        ? {
+                                            ...im,
+                                            isEditing: !(im as any).isEditing,
+                                          }
+                                        : im,
+                                    ),
+                                  }))
+                                }
+                                className="bg-white/95 text-gray-700 p-2 rounded-xl shadow hover:text-emerald-600 transition-colors"
+                                title="Edit Foto"
+                              >
+                                <Edit size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    images:
+                                      prev.images.length > 1
+                                        ? prev.images.filter(
+                                            (_, i) => i !== idx,
+                                          )
+                                        : [{ type: "link", value: "" }],
+                                  }))
+                                }
+                                className="bg-white/95 text-red-600 p-2 rounded-xl shadow hover:text-red-700 transition-colors"
+                                title="Hapus Foto"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+
+                            {/* Image Preview Container */}
+                            <div className="relative flex-1 bg-gray-50 w-full flex items-center justify-center overflow-hidden">
+                              {img.value ? (
                                 <Image
                                   src={img.value}
-                                  alt="Preview"
-                                  width={100}
-                                  height={100}
-                                  className="w-24 h-24 object-cover rounded-md border border-gray-200"
+                                  alt={`Preview ${idx + 1}`}
+                                  fill
+                                  className="object-cover"
                                   unoptimized
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none";
                                   }}
                                 />
-                                <div className="flex gap-2 mt-2">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEditForm((prev) => ({
-                                        ...prev,
-                                        images: prev.images.map((im, i) =>
-                                          i === idx ? { ...im, value: "" } : im,
-                                        ),
-                                      }))
-                                    }
-                                    className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 font-semibold"
-                                  >
-                                    Ganti URL
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEditForm((prev) => ({
-                                        ...prev,
-                                        images:
-                                          prev.images.length > 1
-                                            ? prev.images.filter(
-                                                (_, i) => i !== idx,
-                                              )
-                                            : [{ type: "link", value: "" }],
-                                      }))
-                                    }
-                                    className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100 font-semibold"
-                                  >
-                                    Hapus Foto
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div>
-                            {img.value ? (
-                              <div className="space-y-2">
-                                <Image
-                                  src={img.value}
-                                  alt="Preview"
-                                  width={100}
-                                  height={100}
-                                  className="w-24 h-24 object-cover rounded-md border border-gray-200"
-                                  unoptimized
-                                />
-                                <div className="flex gap-2 items-center">
-                                  <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded">
-                                    ✔️ File Terpilih
+                              ) : (
+                                <div className="text-gray-300 flex flex-col items-center">
+                                  <ImageIcon size={32} />
+                                  <span className="text-[10px] mt-2 font-semibold tracking-wide uppercase">
+                                    Belum ada file
                                   </span>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEditForm((prev) => ({
-                                        ...prev,
-                                        images: prev.images.map((im, i) =>
-                                          i === idx ? { ...im, value: "" } : im,
-                                        ),
-                                      }))
-                                    }
-                                    className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 font-semibold"
-                                  >
-                                    Ganti File
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setEditForm((prev) => ({
-                                        ...prev,
-                                        images:
-                                          prev.images.length > 1
-                                            ? prev.images.filter(
-                                                (_, i) => i !== idx,
-                                              )
-                                            : [{ type: "link", value: "" }],
-                                      }))
-                                    }
-                                    className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100 font-semibold"
-                                  >
-                                    Hapus Foto
-                                  </button>
                                 </div>
-                              </div>
-                            ) : (
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    // Validasi maksimal 2 MB
-                                    if (file.size > 2 * 1024 * 1024) {
-                                      alert(
-                                        `Ukuran file ${file.name} terlalu besar! Maksimal 2 MB per foto.`,
-                                      );
-                                      setFieldFeedback({
-                                        field: "images",
-                                        type: "error",
-                                        msg: `Ukuran file ${file.name} terlalu besar! Maksimal 2 MB per foto.`,
-                                      });
-                                      e.target.value = "";
-                                      return;
-                                    }
-                                    setFieldFeedback(null);
+                              )}
+                            </div>
 
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      const val = reader.result as string;
+                            {/* Edit Panel */}
+                            {((img as any).isEditing || !img.value) && (
+                              <div className="p-3 border-t border-gray-100 bg-white animate-fade-in">
+                                {/* Toggle Link / File */}
+                                <div className="flex bg-gray-100 rounded-lg p-1 mb-3">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
                                       setEditForm((prev) => ({
                                         ...prev,
                                         images: prev.images.map((im, i) =>
                                           i === idx
-                                            ? { ...im, value: val }
+                                            ? { ...im, type: "link" }
                                             : im,
                                         ),
-                                      }));
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
-                                className="text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 w-full"
-                              />
+                                      }))
+                                    }
+                                    className={`flex-1 text-[10px] font-bold py-1.5 rounded-md uppercase tracking-wider transition-all ${img.type === "link" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500"}`}
+                                  >
+                                    Link URL
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEditForm((prev) => ({
+                                        ...prev,
+                                        images: prev.images.map((im, i) =>
+                                          i === idx
+                                            ? { ...im, type: "file" }
+                                            : im,
+                                        ),
+                                      }))
+                                    }
+                                    className={`flex-1 text-[10px] font-bold py-1.5 rounded-md uppercase tracking-wider transition-all ${img.type === "file" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500"}`}
+                                  >
+                                    Upload File
+                                  </button>
+                                </div>
+
+                                {img.type === "link" ? (
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="url"
+                                      value={img.value || ""}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setEditForm((prev) => ({
+                                          ...prev,
+                                          images: prev.images.map((im, i) =>
+                                            i === idx
+                                              ? { ...im, value: val }
+                                              : im,
+                                          ),
+                                        }));
+                                      }}
+                                      placeholder="https://..."
+                                      className="flex-1 px-2.5 py-2 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 outline-none bg-gray-50/50"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setEditForm((prev) => ({
+                                          ...prev,
+                                          images: prev.images.map((im, i) =>
+                                            i === idx
+                                              ? { ...im, isEditing: false }
+                                              : im,
+                                          ),
+                                        }))
+                                      }
+                                      className="bg-emerald-50 text-emerald-600 px-3 rounded-lg hover:bg-emerald-100 flex items-center justify-center transition-colors"
+                                      title="Selesai Edit"
+                                    >
+                                      <CheckCircle2 size={16} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col gap-1.5">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          if (file.size > 2 * 1024 * 1024) {
+                                            setFieldFeedback({
+                                              field: "images",
+                                              type: "error",
+                                              msg: `Ukuran file ${file.name} terlalu besar! Maksimal 2 MB.`,
+                                            });
+                                            e.target.value = "";
+                                            return;
+                                          }
+                                          setFieldFeedback(null);
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => {
+                                            const val = reader.result as string;
+                                            setEditForm((prev) => ({
+                                              ...prev,
+                                              images: prev.images.map(
+                                                (im, i) =>
+                                                  i === idx
+                                                    ? {
+                                                        ...im,
+                                                        value: val,
+                                                        isEditing: false,
+                                                      }
+                                                    : im,
+                                              ),
+                                            }));
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }}
+                                      className="w-full text-[10px] text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                                    />
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                        );
+                      } else if (idx === editForm.images.length) {
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                images: [
+                                  ...prev.images,
+                                  { type: "link", value: "" },
+                                ],
+                              }))
+                            }
+                            className="h-[240px] bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all text-gray-400 hover:text-emerald-600 group"
+                          >
+                            <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center group-hover:scale-110 group-hover:shadow-md transition-all mb-4 text-emerald-600">
+                              <Plus size={24} />
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-wider">
+                              Tambah Foto
+                            </span>
+                            <span className="text-[10px] text-gray-400 mt-1">
+                              Slot {idx + 1}
+                            </span>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div
+                            key={idx}
+                            className="h-[240px] bg-gray-50/50 border border-gray-100 rounded-2xl flex flex-col items-center justify-center opacity-50"
+                          >
+                            <ImageIcon
+                              size={24}
+                              className="text-gray-300 mb-2"
+                            />
+                            <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">
+                              Slot {idx + 1}
+                            </span>
+                          </div>
+                        );
+                      }
+                    })}
+                  </div>
                 </div>
 
                 {/* Submit */}
-                <div className="flex gap-3 pt-2 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-sm"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={editLoading}
-                    className="flex-[2] py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 text-sm shadow-md shadow-emerald-200"
-                  >
-                    {editLoading ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Save size={16} />
-                    )}
-                    Simpan Perubahan
-                  </button>
+                <div className="flex gap-3 pt-2 border-t border-gray-100 hidden">
+                  {/* Buttons deleted per user request */}
                 </div>
               </form>
             </div>
@@ -1458,6 +1405,89 @@ export default function KelolaProdukPage({
 
           {/* ────────────────────────────────────────────────────────────────────── */}
           {/* TAB: RIWAYAT HARGA                                                   */}
+          {/* ────────────────────────────────────────────────────────────────────── */}
+          {activeTab === "riwayat" && (
+            <div className="animate-fade-in space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                <div className="flex items-center gap-2 pb-3 border-b border-gray-100 mb-4">
+                  <Package size={16} className="text-emerald-600" />
+                  <span className="font-semibold text-gray-900 text-sm">
+                    Riwayat Perubahan Stok & Harga
+                  </span>
+                </div>
+                {stockHistoryLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="w-7 h-7 text-emerald-600 animate-spin" />
+                  </div>
+                ) : stockHistory.length === 0 ? (
+                  <div className="text-center py-10">
+                    <Package className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                    <p className="font-semibold text-gray-700">
+                      Belum Ada Riwayat
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Produk ini belum memiliki riwayat perubahan stok atau
+                      harga.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {stockHistory.map((history: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex items-start justify-between bg-gray-50 p-3.5 rounded-xl border border-gray-100"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">
+                            {history.tipe === "IN"
+                              ? "Stok Masuk"
+                              : history.tipe === "OUT"
+                                ? "Stok Keluar"
+                                : history.catatan || "Pembaruan Stok/Harga"}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {new Date(
+                              history.createdAt || new Date(),
+                            ).toLocaleString("id-ID", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                          {history.pengguna?.nama && (
+                            <p className="text-[11px] text-gray-500 mt-1 font-medium bg-gray-200/50 inline-block px-2 py-0.5 rounded-md">
+                              Oleh: {history.pengguna.nama}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          {history.kuantitas !== undefined &&
+                            history.kuantitas !== 0 && (
+                              <span
+                                className={`text-sm font-bold ${history.tipe === "IN" ? "text-emerald-600" : history.tipe === "OUT" ? "text-red-600" : "text-gray-700"}`}
+                              >
+                                {history.tipe === "IN"
+                                  ? "+"
+                                  : history.tipe === "OUT"
+                                    ? "-"
+                                    : ""}
+                                {Math.abs(history.kuantitas)}{" "}
+                                {product.satuan || "unit"}
+                              </span>
+                            )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ────────────────────────────────────────────────────────────────────── */}
+          {/* TAB: ULASAN                                                          */}
           {/* ────────────────────────────────────────────────────────────────────── */}
           {activeTab === "review" && (
             <div className="animate-fade-in space-y-3">

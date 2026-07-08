@@ -49,7 +49,7 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
     >
       {/* Animated Background Pill */}
       <div
-        className="absolute top-1 bottom-1 bg-emerald-600 rounded-xl transition-all duration-300 ease-out"
+        className="absolute top-1 bottom-1 bg-primary-600 rounded-xl transition-all duration-300 ease-out"
         style={{
           left: highlightStyle.left,
           width: highlightStyle.width,
