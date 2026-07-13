@@ -1,10 +1,12 @@
 "use client";
 
 import React, { use } from "react";
-import { ArrowLeft, TrendingUp } from "lucide-react";
+import { ArrowLeft, TrendingUp, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
 import { ProfitReportTab } from "@/components/profit-report";
+import { productsApi } from "@/lib/ecommerce-api";
 
 interface PageParams {
   id: string;
@@ -18,11 +20,22 @@ export default function LaporanKeuntunganProdukDetail({
   const router = useRouter();
   const { id } = use(params);
 
+  const { data: productRes, isLoading } = useQuery({
+    queryKey: ["product", id],
+    queryFn: () => productsApi.getById(id),
+  });
+
+  const product = productRes?.data?.data || productRes?.data;
+
+  const isVariant = product?.nama?.includes(" - ");
+  const baseName = isVariant ? product.nama.split(" - ")[0] : product?.nama;
+  const variantName = isVariant ? product.nama.split(" - ")[1] : null;
+
   return (
-    <div className="w-full h-full overflow-y-auto overscroll-contain pb-12">
-      <div className="px-6 py-6 max-w-4xl mx-auto space-y-6">
-        {/* ── Back + Header ── */}
-        <div className="flex items-center gap-3 mb-2">
+    <div className="space-y-8 pb-10">
+      {/* ── Back + Header ── */}
+      <div className="pb-4 border-b border-slate-100 flex flex-col gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
             className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition-colors"
@@ -36,10 +49,45 @@ export default function LaporanKeuntunganProdukDetail({
             </h1>
           </div>
         </div>
+      </div>
 
-        <div className="animate-fade-in">
-          <ProfitReportTab produkId={id} />
+      {/* ── Product Info ── */}
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-emerald-600 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <Loader2 size={18} className="animate-spin" />
+          <span className="text-sm">Memuat data produk...</span>
         </div>
+      ) : product ? (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+          {product.fotoUrls && product.fotoUrls[0] ? (
+            <img
+              src={product.fotoUrls[0]}
+              alt={product.nama}
+              className="w-16 h-16 rounded-lg object-cover bg-gray-50 border border-gray-100"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl border border-emerald-100">
+              {product.nama.charAt(0)}
+            </div>
+          )}
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-slate-800">{baseName}</h2>
+              {variantName && (
+                <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase tracking-wider">
+                  {variantName}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Kategori: {product.kategori?.nama || "-"}
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="animate-fade-in">
+        <ProfitReportTab produkId={id} />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Truck,
   MapPin,
@@ -18,11 +18,135 @@ import {
   TrendingUp,
   CheckCheck,
   PackageCheck,
+  Bell,
+  ArrowUpDown,
+  ChevronDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { formatRupiah, ordersApi, deliveryBatchApi } from "@/lib/ecommerce-api";
 import { useAuthStore } from "@/store/auth-store";
+
+function MobileSegmentedControl({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: React.ReactNode }[];
+  value: string;
+  onChange: (val: string) => void;
+}) {
+  const activeIndex = options.findIndex((opt) => opt.value === value) || 0;
+  const pillWidth = 100 / options.length;
+  const pillLeft = activeIndex * pillWidth;
+
+  return (
+    <div className="relative flex p-1 bg-white rounded-xl border border-slate-200 overflow-x-auto w-full hide-scrollbar">
+      {/* Animated Pill */}
+      <div
+        className="absolute top-1 bottom-1 bg-emerald-600 rounded-lg transition-all duration-300 ease-out"
+        style={{
+          width: `calc(${pillWidth}% - 4px)`, // -4px accounts for the 2px padding on each side (p-1 is 4px total)
+          left: `calc(${pillLeft}% + 2px)`, // +2px for the p-1 offset
+        }}
+      />
+
+      {options.map((opt) => {
+        const isActive = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`relative z-10 flex-1 flex justify-center items-center py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors duration-300 ${
+              isActive ? "text-white" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CustomSortDropdown({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((o) => o.value === value) || options[0];
+
+  return (
+    <div className="relative h-[42px] group shrink-0" ref={ref}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-[42px] h-[42px] flex items-center justify-center bg-white border shadow-sm rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${
+          isOpen
+            ? "border-emerald-500 ring-4 ring-emerald-500/10"
+            : "border-slate-200 hover:border-emerald-300"
+        }`}
+        title={selectedOption?.label}
+      >
+        <ArrowUpDown
+          size={16}
+          className={`transition-colors ${
+            isOpen
+              ? "text-emerald-600"
+              : "text-slate-500 group-hover:text-emerald-600"
+          }`}
+          strokeWidth={2.5}
+        />
+      </button>
+
+      <div
+        className={`absolute z-50 mt-1.5 w-40 right-0 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden transition-all duration-200 origin-top ${
+          isOpen
+            ? "opacity-100 scale-y-100 translate-y-0"
+            : "opacity-0 scale-y-95 -translate-y-2 pointer-events-none"
+        }`}
+      >
+        <div className="py-1">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-3 text-xs font-semibold transition-colors flex items-center justify-between ${
+                value === opt.value
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              {opt.label}
+              {value === opt.value && (
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Types ─── */
 interface TrackingItem {
@@ -103,6 +227,7 @@ export default function KurirTasksPage() {
   const [errorText, setErrorText] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "done">("active");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [batches, setBatches] = useState<any[]>([]);
 
@@ -179,7 +304,13 @@ export default function KurirTasksPage() {
       o.shipping?.status === "ARRIVED" &&
       new Date(o.createdAt).toDateString() === today,
   );
-  const displayed = activeTab === "active" ? activeOrders : doneOrders;
+  const displayed = (activeTab === "active" ? activeOrders : doneOrders).sort(
+    (a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+    },
+  );
 
   const stats = {
     pending: orders.filter((o) =>
@@ -196,26 +327,26 @@ export default function KurirTasksPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ── Clean Minimalist Header (Sticky) ── */}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
+      <div className="sticky top-0 z-20 bg-emerald-700 text-white shadow-sm rounded-b-2xl">
         {/* Top Bar */}
-        <div className="px-6 py-3 border-b border-gray-100">
+        <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                <Truck size={18} className="text-gray-700" strokeWidth={2} />
+              <div className="w-10 h-10 bg-emerald-500/50 rounded-xl flex items-center justify-center border border-emerald-400/30">
+                <Truck size={18} className="text-white" strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-600">
+                <p className="text-xs font-bold text-emerald-50 tracking-wider">
                   KURIR INTERNAL
                 </p>
               </div>
             </div>
             <button
-              onClick={() => router.push("/kurir/chat")}
-              className="w-10 h-10 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors relative"
+              onClick={() => router.push("/kurir/notifikasi")}
+              className="w-10 h-10 bg-emerald-500/50 border border-emerald-400/30 rounded-xl flex items-center justify-center text-white hover:bg-emerald-500/70 transition-colors relative"
             >
-              <MessageCircle size={16} strokeWidth={2} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white text-[9px] font-bold flex items-center justify-center text-white">
+              <Bell size={18} strokeWidth={2.5} />
+              <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 px-1.5 bg-red-500 rounded-full border-2 border-emerald-600 text-[10px] font-bold flex items-center justify-center text-white shadow-sm">
                 3
               </span>
             </button>
@@ -223,103 +354,85 @@ export default function KurirTasksPage() {
         </div>
 
         {/* Clean Stats Grid */}
-        <div className="px-6 py-3">
+        <div className="px-6 pb-5">
           <div className="grid grid-cols-3 gap-3">
             {[
-              {
-                label: "Menunggu",
-                val: stats.pending,
-                icon: Clock,
-                bg: "bg-gray-50",
-                iconColor: "text-gray-600",
-                textColor: "text-gray-900",
-              },
-              {
-                label: "Dikirim",
-                val: stats.ongoing,
-                icon: TrendingUp,
-                bg: "bg-emerald-50",
-                iconColor: "text-emerald-600",
-                textColor: "text-emerald-700",
-                highlight: true,
-              },
-              {
-                label: "Selesai",
-                val: stats.done,
-                icon: CheckCheck,
-                bg: "bg-gray-50",
-                iconColor: "text-gray-600",
-                textColor: "text-gray-900",
-              },
-            ].map((s) => {
-              const Icon = s.icon;
-              return (
-                <div
-                  key={s.label}
-                  className={`${s.bg} rounded-lg p-3 border ${s.highlight ? "border-emerald-200" : "border-gray-200"}`}
-                >
-                  <Icon
-                    size={14}
-                    className={`${s.iconColor} mb-2`}
-                    strokeWidth={2}
-                  />
-                  <p className={`text-xl font-bold mb-0.5 ${s.textColor}`}>
-                    {s.val}
-                  </p>
-                  <p className="text-[9px] font-medium text-gray-500 uppercase tracking-wide">
-                    {s.label}
-                  </p>
-                </div>
-              );
-            })}
+              { label: "Menunggu", val: stats.pending },
+              { label: "Dikirim", val: stats.ongoing },
+              { label: "Selesai", val: stats.done },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="bg-emerald-500/30 rounded-xl p-3 flex flex-col justify-center items-center border border-white/25 shadow-sm"
+              >
+                <p className="text-2xl font-bold text-white mb-0.5">{s.val}</p>
+                <p className="text-xs font-medium text-emerald-50 tracking-wide">
+                  {s.label}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
       {/* ── Content (Scrollable) ── */}
       <div className="px-5 pt-5 pb-28">
-        {/* Clean Tabs - Smaller */}
-        <div className="flex bg-white rounded-md p-0.5 border border-gray-200 mb-5 gap-0.5">
-          {[
-            {
-              id: "active" as const,
-              label: "Tugas Aktif",
-              icon: PackageCheck,
-              count: activeOrders.length,
-            },
-            {
-              id: "done" as const,
-              label: "Selesai Hari Ini",
-              icon: CheckCircle2,
-              count: doneOrders.length,
-            },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const active = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-2 rounded-md flex items-center justify-center gap-1.5 text-xs font-semibold transition-colors
-                  ${
-                    active
-                      ? "bg-emerald-600 text-white"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                <Icon size={14} strokeWidth={2} />
-                <span className="hidden sm:inline">{tab.label}</span>
-                {tab.count > 0 && (
-                  <span
-                    className={`min-w-[18px] h-4 px-1 rounded-md text-[9px] font-bold flex items-center justify-center
-                    ${active ? "bg-emerald-700 text-white" : "bg-gray-100 text-gray-600"}`}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div className="flex flex-row items-center justify-between gap-3 mb-5">
+          <MobileSegmentedControl
+            value={activeTab}
+            onChange={(val) => setActiveTab(val as "active" | "done")}
+            options={[
+              {
+                value: "active",
+                label: (
+                  <div className="flex items-center gap-2">
+                    <PackageCheck size={14} />
+                    <span>Tugas Aktif</span>
+                    {activeOrders.length > 0 && (
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${
+                          activeTab === "active"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {activeOrders.length}
+                      </span>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                value: "done",
+                label: (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={14} />
+                    <span>Selesai Hari Ini</span>
+                    {doneOrders.length > 0 && (
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${
+                          activeTab === "done"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {doneOrders.length}
+                      </span>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
+
+          <CustomSortDropdown
+            value={sortOrder}
+            onChange={(val) => setSortOrder(val as "desc" | "asc")}
+            options={[
+              { value: "desc", label: "Urutkan: Terbaru" },
+              { value: "asc", label: "Urutkan: Terlama" },
+            ]}
+          />
         </div>
 
         {errorText && (
@@ -424,7 +537,7 @@ function OrderCard({
   const resiId = toResiId(order.id);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-emerald-200 transition-colors">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-emerald-200 transition-colors shadow-sm">
       {/* Card Header - Nama Penerima + Status (Clickable) */}
       <div
         role="button"
@@ -445,25 +558,11 @@ function OrderCard({
       <div
         role="button"
         onClick={() => router.push(`/kurir/pesanan/${order.id}`)}
-        className="p-4 space-y-3 cursor-pointer hover:bg-gray-50/50 transition-colors"
+        className="px-4 py-3 cursor-pointer hover:bg-gray-50/50 transition-colors"
       >
-        {/* Address Only */}
-        <div className="space-y-2 bg-gray-50 rounded-lg p-3 border border-gray-100">
-          <div className="flex items-start gap-2">
-            <MapPin
-              size={11}
-              className="text-red-500 flex-shrink-0 mt-0.5"
-              strokeWidth={2}
-            />
-            <p className="text-xs text-gray-700 leading-relaxed flex-1">
-              {order.alamatKirim}
-            </p>
-          </div>
-        </div>
-
         {/* Items Summary */}
         {order.items && order.items.length > 0 && (
-          <div className="border-t border-gray-100 pt-3 space-y-1">
+          <div className="space-y-1">
             {order.items.slice(0, 2).map((item, idx) => (
               <div key={idx} className="flex items-center justify-between py-1">
                 <span className="text-xs text-gray-700 truncate mr-3 flex-1">
@@ -491,37 +590,45 @@ function OrderCard({
 
       {/* Footer Action */}
       <div className="px-4 pb-4 space-y-2 relative z-10">
-        {/* BIG BUTTON: Maps */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/kurir/pesanan/${order.id}/peta`);
-          }}
-          className="w-full py-3 rounded-lg font-semibold text-white text-sm flex items-center justify-center gap-2 transition-colors bg-emerald-600 hover:bg-emerald-700"
-        >
-          <MapPin size={15} strokeWidth={2} />
-          Buka Peta & Rute
-          <ArrowRight size={13} strokeWidth={2} />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/kurir/pesanan/${order.id}`);
+            }}
+            className="flex-1 py-2.5 rounded-lg font-semibold text-slate-700 text-sm flex items-center justify-center gap-2 transition-colors bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-sm"
+          >
+            Lihat Detail
+          </button>
 
-        {/* SMALL BUTTONS */}
-        <div className="flex gap-2 pt-2">
-          {/* Hubungi */}
           {order.customer?.phoneNumber ? (
             <a
               href={`tel:${order.customer.phoneNumber}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-slate-200"
+              className="w-[42px] shrink-0 rounded-lg flex items-center justify-center transition-colors bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-sm"
+              title="Hubungi"
             >
-              <Phone size={14} strokeWidth={2} />
-              Hubungi
+              <Phone size={16} strokeWidth={2.5} />
             </a>
           ) : (
-            <div className="flex-1 py-2.5 rounded-lg bg-gray-50 text-gray-400 font-semibold text-xs flex items-center justify-center gap-1.5 border border-gray-100 cursor-not-allowed">
-              <Phone size={14} strokeWidth={2} />
-              Hubungi
+            <div
+              className="w-[42px] shrink-0 rounded-lg flex items-center justify-center bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed shadow-sm"
+              title="Nomor Tidak Tersedia"
+            >
+              <Phone size={16} strokeWidth={2.5} />
             </div>
           )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/kurir/pesanan/${order.id}/peta`);
+            }}
+            className="w-[42px] shrink-0 rounded-lg flex items-center justify-center transition-colors bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-sm"
+            title="Buka Peta & Rute"
+          >
+            <MapPin size={16} strokeWidth={2.5} />
+          </button>
         </div>
 
         {!isCompleted && status === "PREPARING" && (
@@ -684,19 +791,9 @@ function StatusBadge({ status }: { status: string }) {
   const step = STEPS.find((s) => s.key === status);
   const label = step?.label || status;
 
-  const styleMap: Record<string, string> = {
-    PREPARING: "bg-amber-50 text-amber-700 border-amber-200",
-    PICKUP_CONFIRMATION: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    PICKED_UP: "bg-blue-50 text-blue-700 border-blue-200",
-    IN_TRANSIT: "bg-cyan-50 text-cyan-700 border-cyan-200",
-    ARRIVED: "bg-gray-100 text-gray-700 border-gray-200",
-  };
-
   return (
-    <span
-      className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-md border ${styleMap[status] || "bg-gray-50 text-gray-600 border-gray-200"}`}
-    >
-      {step?.icon} {label}
+    <span className="text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-200 bg-white text-emerald-600 shadow-sm">
+      {label}
     </span>
   );
 }

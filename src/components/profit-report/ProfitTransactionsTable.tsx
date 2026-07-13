@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Loader2,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Inbox,
+} from "lucide-react";
 
 import { ProfitTransaction, Pagination } from "@/types/profit-report";
 
@@ -15,12 +23,13 @@ interface ProfitTransactionsTableProps {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  MENUNGGU_KONFIRMASI_SELLER: "bg-amber-100 text-amber-700",
-  MENUNGGU_BAYAR: "bg-amber-100 text-amber-700",
-  DIPROSES: "bg-blue-100 text-blue-700",
-  DIKIRIM: "bg-cyan-100 text-cyan-700",
-  SELESAI: "bg-emerald-100 text-emerald-700",
-  DIBATALKAN: "bg-red-100 text-red-600",
+  MENUNGGU_KONFIRMASI_SELLER:
+    "bg-amber-50 text-amber-600 border border-amber-100",
+  MENUNGGU_BAYAR: "bg-amber-50 text-amber-600 border border-amber-100",
+  DIPROSES: "bg-blue-50 text-blue-600 border border-blue-100",
+  DIKIRIM: "bg-cyan-50 text-cyan-600 border border-cyan-100",
+  SELESAI: "bg-emerald-50 text-emerald-600 border border-emerald-100",
+  DIBATALKAN: "bg-red-50 text-red-500 border border-red-100",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -66,9 +75,15 @@ export function ProfitTransactionsTable({
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-400">
-        <p className="text-sm font-medium">Tidak ada data transaksi</p>
-        <p className="text-xs mt-1">Coba ubah filter tanggal atau status</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+          <Inbox className="w-8 h-8 text-gray-300" />
+        </div>
+        <p className="text-gray-800 font-semibold mb-1">Hening di Laporan</p>
+        <p className="text-sm text-gray-400 max-w-[250px]">
+          Belum ada riwayat transaksi atau silakan coba ubah filter yang Anda
+          pilih.
+        </p>
       </div>
     );
   }
@@ -76,9 +91,9 @@ export function ProfitTransactionsTable({
   return (
     <>
       <div className="overflow-x-auto">
-        <table className="w-full text-xs">
+        <table className="w-full text-left">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase tracking-wider">
+            <tr className="bg-gray-50/50 border-y border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               {[
                 "Tanggal",
                 "No. Pesanan",
@@ -92,55 +107,66 @@ export function ProfitTransactionsTable({
               ].map((h) => (
                 <th
                   key={h}
-                  className={`py-3 px-4 font-medium text-left ${["Qty (kg)", "Harga Beli", "Harga Jual", "Keuntungan", "Margin"].includes(h) ? "text-right" : ""}`}
+                  className={`py-3.5 px-5 ${["Qty (kg)", "Harga Beli", "Harga Jual", "Keuntungan", "Margin"].includes(h) ? "text-right" : ""}`}
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-gray-50 text-[13px]">
             {transactions.map((tx) => (
-              <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="py-3 px-4 text-gray-600">
+              <tr
+                key={tx.id}
+                className="hover:bg-slate-50/50 transition-colors group"
+              >
+                <td className="py-4 px-5 text-gray-500 whitespace-nowrap">
                   {fmtDate(tx.tanggalTransaksi)}
                 </td>
-                <td className="py-3 px-4 font-mono text-blue-600">
-                  #{tx.nomorPesanan.substring(0, 8)}
-                </td>
-                <td className="py-3 px-4 text-right text-gray-700">
-                  {tx.jumlahTerjual.toFixed(2)}
-                </td>
-                <td className="py-3 px-4 text-right text-gray-600">
-                  {fmt(tx.hargaBeli)}
-                </td>
-                <td className="py-3 px-4 text-right text-gray-700">
-                  {fmt(tx.hargaJual)}
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <span
-                    className={`font-semibold ${tx.keuntungan >= 0 ? "text-emerald-600" : "text-red-500"}`}
-                  >
-                    {fmt(tx.keuntungan)}
+                <td className="py-4 px-5">
+                  <span className="font-mono text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md text-xs font-medium border border-emerald-100/50">
+                    #{tx.nomorPesanan.substring(0, 8)}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-right text-gray-500">
+                <td className="py-4 px-5 text-right font-medium text-slate-700">
+                  {tx.jumlahTerjual.toFixed(2)}
+                </td>
+                <td className="py-4 px-5 text-right text-slate-500">
+                  {fmt(tx.hargaBeli)}
+                </td>
+                <td className="py-4 px-5 text-right text-slate-700 font-medium">
+                  {fmt(tx.hargaJual)}
+                </td>
+                <td className="py-4 px-5 text-right">
+                  <div
+                    className={`inline-flex items-center gap-1.5 font-bold ${tx.keuntungan >= 0 ? "text-emerald-600" : "text-red-500"}`}
+                  >
+                    {tx.keuntungan >= 0 ? (
+                      <TrendingUp size={14} strokeWidth={2.5} />
+                    ) : (
+                      <TrendingDown size={14} strokeWidth={2.5} />
+                    )}
+                    {fmt(tx.keuntungan)}
+                  </div>
+                </td>
+                <td className="py-4 px-5 text-right font-semibold text-slate-400">
                   {tx.persenKeuntungan.toFixed(1)}%
                 </td>
-                <td className="py-3 px-4">
+                <td className="py-4 px-5">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${STATUS_COLOR[tx.statusPesanan] ?? "bg-gray-100 text-gray-500"}`}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase ${STATUS_COLOR[tx.statusPesanan] ?? "bg-gray-50 text-gray-500 border border-gray-100"}`}
                   >
                     {STATUS_LABEL[tx.statusPesanan] ?? tx.statusPesanan}
                   </span>
                 </td>
-                <td className="py-3 px-4">
+                <td className="py-4 px-5">
                   {tx.batchDetails.length > 0 && (
                     <button
                       onClick={() => setSelected(tx)}
-                      className="text-blue-500 hover:text-blue-700 flex items-center gap-1 text-[11px] font-medium"
+                      className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 p-2 rounded-xl flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                      title="Lihat Detail Batch"
                     >
-                      <Eye size={13} /> Detail
+                      <Eye size={16} />
                     </button>
                   )}
                 </td>

@@ -23,14 +23,14 @@ export function ProfitReportFilters({
   onFiltersChange,
   loading,
 }: ProfitReportFiltersProps) {
-  const inputCls = `w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white
-    focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all
-    disabled:opacity-50 disabled:bg-gray-50`;
+  const inputCls = `w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs bg-white text-gray-700
+    focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all
+    disabled:opacity-50 disabled:bg-gray-50/50 hover:border-gray-300`;
 
   return (
-    <div className="flex flex-wrap gap-3 items-end">
-      <div>
-        <label className="block text-[11px] font-medium text-gray-500 mb-1">
+    <div className="flex flex-wrap gap-4 items-end">
+      <div className="flex-1 min-w-[150px] max-w-[200px]">
+        <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
           Dari Tanggal
         </label>
         <input
@@ -47,8 +47,8 @@ export function ProfitReportFilters({
           className={inputCls}
         />
       </div>
-      <div>
-        <label className="block text-[11px] font-medium text-gray-500 mb-1">
+      <div className="flex-1 min-w-[150px] max-w-[200px]">
+        <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
           Sampai Tanggal
         </label>
         <input
@@ -65,8 +65,8 @@ export function ProfitReportFilters({
           className={inputCls}
         />
       </div>
-      <div>
-        <label className="block text-[11px] font-medium text-gray-500 mb-1">
+      <div className="flex-1 min-w-[150px] max-w-[220px]">
+        <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
           Status Pesanan
         </label>
         <select
@@ -91,9 +91,9 @@ export function ProfitReportFilters({
       <button
         disabled={loading}
         onClick={() => onFiltersChange({ page: 1, limit: filters.limit ?? 20 })}
-        className="px-4 py-2 text-xs font-medium border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-all"
+        className="px-5 py-2.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors disabled:opacity-50 active:scale-95 border border-slate-200"
       >
-        Reset
+        Reset Filter
       </button>
     </div>
   );

@@ -3,13 +3,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Star,
-  Edit,
   Trash2,
   Eye,
   EyeOff,
   Loader2,
   Percent,
   ChevronRight,
+  BarChart2,
+  Edit,
 } from "lucide-react";
 
 import { formatRupiah } from "@/lib/ecommerce-api";
@@ -18,7 +19,6 @@ import { ProductItem } from "../_hooks/useSellerProducts";
 
 interface EtalaseCardProps {
   product: ProductItem;
-  onEdit: (product: ProductItem) => void;
   onToggleStatus: (product: ProductItem) => void;
   onRemoveFromEtalase: (id: string) => void;
   isActionLoading: boolean;
@@ -27,7 +27,6 @@ interface EtalaseCardProps {
 
 const EtalaseCard: React.FC<EtalaseCardProps> = ({
   product,
-  onEdit,
   onToggleStatus,
   onRemoveFromEtalase,
   isActionLoading,
@@ -42,6 +41,8 @@ const EtalaseCard: React.FC<EtalaseCardProps> = ({
     }
     router.push(`/seller/produk/${product.id}`);
   };
+
+  const displayProductName = product.nama.replace(" - ", " ");
 
   return (
     <div
@@ -69,19 +70,8 @@ const EtalaseCard: React.FC<EtalaseCardProps> = ({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h3 className="font-medium text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
-                {product.nama}
+                {displayProductName}
               </h3>
-              <div className="flex items-center gap-1.5 mt-1">
-                {product.masterProduk?.nama ? (
-                  <span className="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">
-                    {product.masterProduk.nama}
-                  </span>
-                ) : (
-                  <p className="text-[11px] font-normal text-gray-400 uppercase tracking-widest">
-                    {product.category?.nama || "General"}
-                  </p>
-                )}
-              </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span
@@ -138,11 +128,16 @@ const EtalaseCard: React.FC<EtalaseCardProps> = ({
 
       <div className="flex gap-2 mt-auto">
         <button
-          onClick={() => onEdit(product)}
-          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-xs font-medium hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/seller/produk/${product.id}`);
+          }}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-xs font-medium hover:bg-gray-50 transition-all active:scale-95 shadow-sm"
+          title="Lihat Detail"
         >
-          <Edit size={14} /> Atur
+          <Edit size={14} /> Lihat Detail
         </button>
+
         <button
           onClick={() => onToggleStatus(product)}
           disabled={isActionLoading}
@@ -155,18 +150,6 @@ const EtalaseCard: React.FC<EtalaseCardProps> = ({
             <EyeOff size={16} />
           ) : (
             <Eye size={16} />
-          )}
-        </button>
-        <button
-          onClick={() => onRemoveFromEtalase(product.id)}
-          disabled={isActionLoading}
-          className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all active:scale-90 disabled:opacity-50 border border-red-100"
-          title="Kembalikan ke Gudang"
-        >
-          {isActionLoading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Trash2 size={16} />
           )}
         </button>
       </div>

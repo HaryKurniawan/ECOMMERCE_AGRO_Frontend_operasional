@@ -130,11 +130,6 @@ const TREN_MENU: SidebarMenuItem[] = [
     label: "Riwayat Pesanan",
     icon: <ClipboardList size={17} />,
   },
-  {
-    path: "/seller/laporan/produk",
-    label: "Laporan per Produk",
-    icon: <Package size={17} />,
-  },
 ];
 
 const SellerSidebar: React.FC = () => {

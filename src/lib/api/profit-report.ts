@@ -38,8 +38,8 @@ export async function fetchProfitReport(
   const queryString = params.toString();
   const url = `/ecommerce/profit-report/produk/${produkId}${queryString ? `?${queryString}` : ""}`;
 
-  const response = await apiClient.get<ProfitReportResponseDto>(url);
-  return response.data;
+  const response = await apiClient.get(url);
+  return response.data?.data || response.data;
 }
 
 /**
@@ -60,8 +60,8 @@ export async function fetchProfitSummary(
   const queryString = params.toString();
   const url = `/ecommerce/profit-report/toko/${tokoId}/summary${queryString ? `?${queryString}` : ""}`;
 
-  const response = await apiClient.get<ProfitSummaryResponseDto>(url);
-  return response.data;
+  const response = await apiClient.get(url);
+  return response.data?.data || response.data;
 }
 
 /**

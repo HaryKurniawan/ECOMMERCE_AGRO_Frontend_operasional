@@ -19,6 +19,7 @@ import {
 import { useAuthStore } from "@/store/auth-store";
 
 import NotifBell from "./NotifBell";
+import FullScreenButton from "./FullScreenButton";
 
 const NAV_TABS = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -82,14 +83,27 @@ export default function AdminTopbar() {
               <button
                 key={tab.path}
                 onClick={() => router.push(tab.path)}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 border ${
+                className={`relative flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors duration-300 border ${
                   isActive
-                    ? "bg-primary-600 text-white border-primary-600 shadow-sm"
+                    ? "text-white border-primary-600 shadow-sm bg-primary-600/10"
                     : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-800"
                 }`}
               >
-                <Icon size={11} />
-                {tab.label}
+                {/* Active Sweep Background */}
+                <div className="absolute -inset-[1px] rounded-full overflow-hidden z-0">
+                  <div
+                    className={`absolute inset-0 bg-primary-600 ${
+                      isActive
+                        ? "transition-transform duration-500 ease-out translate-x-0"
+                        : "-translate-x-[105%]"
+                    }`}
+                  />
+                </div>
+
+                <div className="relative z-10 flex items-center gap-1.5">
+                  <Icon size={13} />
+                  {tab.label}
+                </div>
               </button>
             );
           })}
@@ -99,29 +113,20 @@ export default function AdminTopbar() {
       {/* ── Right: Avatar/Email Dropdown ── */}
       <div className="flex items-center gap-2">
         <NotifBell />
-        <div className="relative">
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all text-right group"
-          >
-            {/* Email and Chevron */}
-            <div className="hidden sm:flex items-center gap-2">
-              <p className="text-[12px] font-medium text-gray-600 group-hover:text-gray-800 transition-colors tracking-tight">
-                {email}
-              </p>
-              <ChevronDown
-                size={12}
-                className={`text-gray-500 group-hover:text-gray-700 transition-transform duration-200 ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </div>
-
+        <div className="hidden md:flex items-center gap-2">
+          <FullScreenButton />
+        </div>
+        <div
+          className="relative"
+          onMouseEnter={() => setIsDropdownOpen(true)}
+          onMouseLeave={() => setIsDropdownOpen(false)}
+        >
+          <button className="relative z-50 flex items-center gap-2.5 rounded-full transition-all group outline-none">
             {/* Avatar Circle with User Icon */}
-            <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-50 group-hover:border-primary-100 transition-all duration-200 shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-white border border-gray-300 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:border-primary-600 transition-all duration-200 shadow-sm">
               <UserIcon
                 size={15}
-                className="text-gray-400 group-hover:text-primary-600 transition-colors"
+                className="text-gray-600 group-hover:text-white transition-colors"
               />
             </div>
           </button>
@@ -129,20 +134,32 @@ export default function AdminTopbar() {
           {/* Floating Dropdown Menus */}
           {isDropdownOpen && (
             <>
-              <button
-                type="button"
-                className="fixed inset-0 z-40 cursor-default"
-                onClick={() => setIsDropdownOpen(false)}
-                aria-label="Close dropdown"
-              />
-              <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5 z-50 animate-in fade-in zoom-in duration-200">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-red-500 hover:bg-red-50 text-[12px] font-medium transition-all"
-                >
-                  <LogOut size={14} />
-                  Keluar Sesi
-                </button>
+              {/* Backdrop */}
+              <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 pointer-events-none animate-in fade-in duration-300" />
+
+              <div className="absolute right-0 top-full pt-2 w-64 z-50 animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300 ease-out">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 p-1.5">
+                  {/* User Info Header */}
+                  <div className="px-4 py-3 border-b border-gray-50 mb-1.5 flex flex-col items-start text-left">
+                    <p className="text-[14px] font-bold text-gray-800 leading-none mb-1 w-full truncate">
+                      {displayName}
+                    </p>
+                    <p className="text-[12px] text-gray-500 truncate leading-none mb-2.5 w-full">
+                      {email}
+                    </p>
+                    <span className="inline-block text-[11px] font-medium text-primary-600 bg-primary-50 border border-primary-100 px-2.5 py-0.5 rounded-full">
+                      Admin
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-start gap-3 px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 text-[14px] font-semibold transition-all"
+                  >
+                    <LogOut size={18} />
+                    Keluar Sesi
+                  </button>
+                </div>
               </div>
             </>
           )}

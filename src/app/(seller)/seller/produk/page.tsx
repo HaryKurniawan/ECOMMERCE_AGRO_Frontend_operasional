@@ -8,7 +8,6 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useSellerProducts, ProductItem } from "./_hooks/useSellerProducts";
 import EtalaseCard from "./_components/EtalaseCard";
 import SellerProductHeader from "./_components/SellerProductHeader";
-import EditProductModal from "./_components/EditProductModal";
 
 const ProdukSayaPage: React.FC = () => {
   // Hook
@@ -27,35 +26,6 @@ const ProdukSayaPage: React.FC = () => {
   } = useSellerProducts();
 
   // Local UI State
-  const [editProduct, setEditProduct] = useState<ProductItem | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleEditSubmit = async (formData: {
-    harga: number | string;
-    deskripsi: string;
-    images: Array<{ value: string }>;
-  }) => {
-    if (!editProduct) return;
-    setIsSubmitting(true);
-    try {
-      await handleUpdateProduct(editProduct.id, {
-        harga: Number(formData.harga),
-        deskripsi: formData.deskripsi,
-        gambarUrl: formData.images[0]?.value || undefined,
-        fotoLainnya: formData.images
-          .slice(1)
-          .map((img: { value: string }) => img.value)
-          .filter(Boolean),
-      });
-      setIsEditModalOpen(false);
-    } catch (err: unknown) {
-      const error = err as Error;
-      alert(error?.message || "Gagal menyimpan perubahan.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const getStatusColor = (s: string) => {
     const status = s.toLowerCase();
@@ -156,10 +126,6 @@ const ProdukSayaPage: React.FC = () => {
               <EtalaseCard
                 key={p.id}
                 product={p}
-                onEdit={(prod) => {
-                  setEditProduct(prod);
-                  setIsEditModalOpen(true);
-                }}
                 onToggleStatus={handleToggleStatus}
                 onRemoveFromEtalase={handleRemoveFromEtalase}
                 isActionLoading={actionLoadingId === p.id}
@@ -169,15 +135,6 @@ const ProdukSayaPage: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Modals */}
-      <EditProductModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        product={editProduct}
-        onSubmit={handleEditSubmit}
-        loading={isSubmitting}
-      />
     </div>
   );
 };

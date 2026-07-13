@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { SortDropdown } from "@/components/ecommerce/SortDropdown";
 
 import { useSellerOrders, OrderItem } from "./_hooks/useSellerOrders";
 import OrderCard from "./_components/OrderCard";
@@ -137,19 +138,15 @@ export default function PesananMasukPage() {
             })}
           />
 
-          <div className="relative flex items-center gap-2 bg-white border border-slate-200 hover:border-emerald-300 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 rounded-xl px-3.5 py-1.5 shadow-sm transition-all shrink-0 w-full md:w-auto self-start md:self-auto cursor-pointer group">
-            <ArrowUpDown
-              size={14}
-              className="text-slate-400 group-hover:text-emerald-500 transition-colors"
-            />
-            <select
+          <div className="shrink-0 w-full md:w-auto self-start md:self-auto z-20">
+            <SortDropdown
               value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as "desc" | "asc")}
-              className="bg-transparent text-[12px] font-medium text-slate-700 focus:outline-none cursor-pointer w-full appearance-none pr-2"
-            >
-              <option value="desc">Urutkan: Terbaru</option>
-              <option value="asc">Urutkan: Terlama</option>
-            </select>
+              onChange={(val) => setSortOrder(val as "desc" | "asc")}
+              options={[
+                { value: "desc", label: "Urutkan: Terbaru" },
+                { value: "asc", label: "Urutkan: Terlama" },
+              ]}
+            />
           </div>
         </div>
       </div>

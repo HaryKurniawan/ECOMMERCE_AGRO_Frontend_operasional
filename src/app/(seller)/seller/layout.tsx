@@ -54,7 +54,10 @@ export default function SellerLayout({
         {/* Main Content */}
         <main
           className={`flex-1 ${
-            pathname.startsWith("/seller/chat")
+            pathname.startsWith("/seller/chat") ||
+            (pathname.startsWith("/seller/produk/") &&
+              pathname !== "/seller/produk/margin" &&
+              pathname !== "/seller/produk")
               ? "overflow-hidden"
               : "overflow-auto"
           } bg-gray-100 flex flex-col min-h-0`}

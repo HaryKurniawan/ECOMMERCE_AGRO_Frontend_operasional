@@ -31,31 +31,30 @@ export default function KurirChatPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50/50 pb-28">
       {/* --- Header --- */}
-      <header className="bg-white px-6 py-6 border-b border-gray-100">
-        <h2 className="font-bold text-xl text-gray-900">Pusat Pesan</h2>
-        <p className="text-xs text-gray-400 mt-1">
-          Pilih saluran komunikasi operasional
-        </p>
+      <header className="px-6 py-4 bg-white border-b border-gray-100">
+        <h2 className="font-medium text-lg text-gray-800 tracking-tight text-left">
+          Pusat Pesan
+        </h2>
       </header>
 
-      <div className="p-5 space-y-4">
+      <div className="px-5 py-6 space-y-3">
         {/* Chat Option: Admin */}
         <button
           onClick={() => router.push("/kurir/chat/admin")}
-          className="w-full bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:border-emerald-200 transition-all active:scale-95 group"
+          className="w-full bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:border-emerald-300 transition-all active:scale-[0.98] group"
         >
-          <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors">
-            <Shield size={28} />
+          <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+            <Shield size={24} strokeWidth={2} />
           </div>
           <div className="flex-1 text-left">
-            <p className="font-bold text-gray-800 text-base">
+            <p className="font-bold text-gray-800 text-sm tracking-wide">
               Admin Operasional
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Lapor masalah sistem & bantuan umum
+            <p className="text-xs text-gray-500 mt-0.5">
+              Lapor masalah & bantuan umum
             </p>
           </div>
-          <MessageCircle size={20} className="text-gray-300" />
+          <MessageCircle size={18} className="text-gray-300" />
         </button>
 
         {/* Chat Option: Seller */}
@@ -65,34 +64,32 @@ export default function KurirChatPage() {
             affiliatedTokoId &&
             router.push(`/kurir/chat/seller/${affiliatedTokoId}`)
           }
-          className={`w-full bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 transition-all active:scale-95 group ${!affiliatedTokoId ? "opacity-60 grayscale" : "hover:border-primary-200"}`}
+          className={`w-full bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 transition-all active:scale-[0.98] group ${!affiliatedTokoId ? "opacity-60 grayscale" : "hover:border-emerald-300"}`}
         >
-          <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 group-hover:bg-primary-100 transition-colors">
+          <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
             {loading ? (
-              <Loader2 size={24} className="animate-spin" />
+              <Loader2 size={20} className="animate-spin" />
             ) : (
-              <Store size={28} />
+              <Store size={24} strokeWidth={2} />
             )}
           </div>
           <div className="flex-1 text-left">
-            <p className="font-bold text-gray-800 text-base">Seller / Toko</p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="font-bold text-gray-800 text-sm tracking-wide">
+              Seller / Toko
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">
               {!loading && !affiliatedTokoId
-                ? "Anda belum terhubung ke toko manapun"
-                : "Koordinasi pickup & stok barang"}
+                ? "Belum terhubung ke toko"
+                : "Koordinasi pickup & stok"}
             </p>
           </div>
-          <MessageCircle size={20} className="text-gray-300" />
+          <MessageCircle size={18} className="text-gray-300" />
         </button>
       </div>
 
-      <div className="mt-10 px-10 text-center">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <MessageCircle size={32} className="text-gray-300" />
-        </div>
-        <p className="text-[11px] text-gray-400 leading-relaxed">
-          Semua percakapan diawasi oleh sistem untuk menjamin kualitas layanan
-          operasional.
+      <div className="mt-8 px-10 text-center">
+        <p className="text-[10px] text-gray-400 leading-relaxed font-medium">
+          Percakapan diawasi oleh sistem untuk kualitas layanan.
         </p>
       </div>
     </div>

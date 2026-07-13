@@ -22,6 +22,7 @@ import {
 
 import { useTrenBulanan } from "@/hooks/seller/useSellerTren";
 import { useSellerDashboard } from "@/hooks/seller/useSellerDashboard";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -119,12 +120,12 @@ export default function SellerTrenPage() {
       {/* ── Header ── */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <BarChart3 size={22} className="text-emerald-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Tren Penjualan</h1>
+          <BarChart3 size={24} className="text-emerald-600" />
+          <h1 className="text-3xl font-medium text-slate-800">
+            Tren Penjualan
+          </h1>
         </div>
-        <p className="text-gray-500 text-sm">
-          Histori penjualan per bulan — <strong>{store?.nama ?? "..."}</strong>
-        </p>
+        <p className="text-slate-500 text-sm">Histori penjualan per bulan</p>
       </div>
 
       {isLoading_ ? (
@@ -140,36 +141,38 @@ export default function SellerTrenPage() {
                 label: "Total Revenue",
                 value: fmtRpFull(totalRevenue),
                 sub: `${nonZeroMonths.length} bulan aktif`,
-                color: "text-emerald-700",
+                color: "text-slate-800",
               },
               {
                 label: "Rata-rata / Bulan",
                 value: fmtRp(avgRevenue),
                 sub: "Rata-rata revenue",
-                color: "text-blue-700",
+                color: "text-slate-800",
               },
               {
                 label: "Total Qty Terjual",
                 value: `${totalQty.toFixed(1)} kg`,
                 sub: "Seluruh periode",
-                color: "text-indigo-700",
+                color: "text-slate-800",
               },
               {
                 label: "Bulan Terbaik",
                 value: bestMonth?.labelBulan ?? "-",
                 sub: bestMonth ? fmtRp(bestMonth.totalRevenue) : "-",
-                color: "text-amber-700",
+                color: "text-slate-800",
               },
             ].map((s) => (
               <div
                 key={s.label}
-                className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
+                className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm"
               >
-                <p className="text-xs text-gray-400 mb-1">{s.label}</p>
-                <p className={`text-lg font-bold ${s.color} leading-tight`}>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                  {s.label}
+                </p>
+                <p className={`text-xl font-bold ${s.color} leading-tight`}>
                   {s.value}
                 </p>
-                <p className="text-[11px] text-gray-400 mt-0.5">{s.sub}</p>
+                <p className="text-[11px] text-slate-400 mt-1">{s.sub}</p>
               </div>
             ))}
           </div>
@@ -179,75 +182,42 @@ export default function SellerTrenPage() {
             {/* Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
-                <h2 className="text-sm font-bold text-gray-800">
+                <h2 className="text-lg font-medium text-slate-800">
                   Visualisasi Tren
                 </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Pilih periode dan tipe visualisasi
-                </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3">
                 {/* Periode */}
-                <div className="flex bg-gray-50 border border-gray-100 rounded-xl p-1 gap-1">
-                  {[3, 6, 12].map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setBulanKe(n)}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                        bulanKe === n
-                          ? "bg-white shadow-sm text-emerald-700"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`}
-                    >
-                      {n} Bln
-                    </button>
-                  ))}
-                </div>
+                <SegmentedControl
+                  value={String(bulanKe)}
+                  onChange={(val) => setBulanKe(Number(val))}
+                  options={[
+                    { label: "3 Bln", value: "3" },
+                    { label: "6 Bln", value: "6" },
+                    { label: "12 Bln", value: "12" },
+                  ]}
+                />
 
                 {/* Metrik */}
-                <div className="flex bg-gray-50 border border-gray-100 rounded-xl p-1 gap-1">
-                  {(
-                    [
-                      ["revenue", "Revenue"],
-                      ["qty", "Qty (kg)"],
-                      ["both", "Keduanya"],
-                    ] as const
-                  ).map(([v, l]) => (
-                    <button
-                      key={v}
-                      onClick={() => setMode(v)}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                        mode === v
-                          ? "bg-white shadow-sm text-emerald-700"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
+                <SegmentedControl
+                  value={mode}
+                  onChange={(val) => setMode(val as Mode)}
+                  options={[
+                    { label: "Revenue", value: "revenue" },
+                    { label: "Qty (kg)", value: "qty" },
+                    { label: "Keduanya", value: "both" },
+                  ]}
+                />
 
                 {/* Tipe chart */}
-                <div className="flex bg-gray-50 border border-gray-100 rounded-xl p-1 gap-1">
-                  {(
-                    [
-                      ["area", "Area"],
-                      ["bar", "Bar"],
-                    ] as const
-                  ).map(([v, l]) => (
-                    <button
-                      key={v}
-                      onClick={() => setChartType(v)}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                        chartType === v
-                          ? "bg-white shadow-sm text-emerald-700"
-                          : "text-gray-400 hover:text-gray-600"
-                      }`}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
+                <SegmentedControl
+                  value={chartType}
+                  onChange={(val) => setChartType(val as ChartType)}
+                  options={[
+                    { label: "Area", value: "area" },
+                    { label: "Bar", value: "bar" },
+                  ]}
+                />
               </div>
             </div>
 
@@ -491,20 +461,17 @@ export default function SellerTrenPage() {
           )}
 
           {/* ── Tabel rincian ── */}
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-50">
-              <h2 className="text-sm font-bold text-gray-800">
+          <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-50">
+              <h2 className="text-lg font-medium text-slate-800">
                 Tabel Rincian Bulanan
               </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Data angka komparatif per bulan
-              </p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider">
-                    <th className="py-3 px-5 text-left font-medium">Bulan</th>
+                  <tr className="bg-slate-50/50 border-b border-slate-100 text-xs text-slate-500 uppercase tracking-wider">
+                    <th className="py-4 px-6 text-left font-medium">Bulan</th>
                     <th className="py-3 px-5 text-right font-medium">
                       Revenue
                     </th>

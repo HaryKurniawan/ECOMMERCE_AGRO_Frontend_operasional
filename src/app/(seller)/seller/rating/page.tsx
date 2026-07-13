@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { SortDropdown } from "@/components/ecommerce/SortDropdown";
 import { storesApi, productsApi, reviewsApi } from "@/lib/ecommerce-api";
 import { extractArray } from "@/lib/api-helpers";
 
@@ -250,10 +252,10 @@ export default function SellerRatingPage() {
   return (
     <div className="w-full space-y-8 animate-fade-in font-sans">
       {/* Page Header and Overall Stats */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 pb-6 border-b border-slate-100">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 pb-2 border-b border-slate-100">
         <div className="space-y-1.5">
           <h1 className="text-2xl md:text-3xl font-medium text-slate-800 tracking-tight flex items-center gap-3">
-            <Store className="text-emerald-650" size={24} /> Rating & Ulasan
+            <Store className="text-emerald-600" size={24} /> Rating & Ulasan
             Toko
           </h1>
           <p className="text-xs md:text-sm text-slate-400 font-medium">
@@ -263,9 +265,12 @@ export default function SellerRatingPage() {
         </div>
 
         {/* Global Rating Stats Widget */}
-        <div className="flex items-center gap-3 bg-gradient-to-r from-emerald-50/60 to-emerald-50/10 border border-emerald-100/50 rounded-2xl p-4 shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-white border border-emerald-100/30 flex items-center justify-center text-emerald-600 shrink-0">
-            <Star className="fill-emerald-550 stroke-emerald-550" size={20} />
+        <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+            <Star
+              className="fill-emerald-500 stroke-emerald-500 text-emerald-500"
+              size={20}
+            />
           </div>
           <div className="space-y-0.5">
             <div className="flex items-center gap-1.5 leading-none">
@@ -284,28 +289,80 @@ export default function SellerRatingPage() {
         </div>
       </div>
 
-      {/* Tabs Switcher */}
-      <div className="flex gap-4 border-b border-slate-100 mb-2">
-        <button
-          onClick={() => setActiveTab("products")}
-          className={`pb-3 px-1 flex items-center gap-2 font-medium text-xs md:text-sm border-b-2 transition-all ${
-            activeTab === "products"
-              ? "border-emerald-600 text-emerald-650"
-              : "border-transparent text-slate-400 hover:text-slate-650"
-          }`}
-        >
-          <ShoppingBag size={16} /> Daftar Rating Produk
-        </button>
-        <button
-          onClick={() => setActiveTab("reviews")}
-          className={`pb-3 px-1 flex items-center gap-2 font-medium text-xs md:text-sm border-b-2 transition-all ${
-            activeTab === "reviews"
-              ? "border-emerald-600 text-emerald-650"
-              : "border-transparent text-slate-400 hover:text-slate-650"
-          }`}
-        >
-          <MessageSquare size={16} /> Semua Ulasan & Rating
-        </button>
+      {/* Tabs Switcher and Global Filters */}
+      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-20">
+        <SegmentedControl
+          value={activeTab}
+          onChange={(val) => setActiveTab(val as "products" | "reviews")}
+          options={[
+            {
+              value: "products",
+              label: (
+                <div className="flex items-center gap-2 text-sm">
+                  <ShoppingBag size={15} /> Daftar Rating Produk
+                </div>
+              ),
+            },
+            {
+              value: "reviews",
+              label: (
+                <div className="flex items-center gap-2 text-sm">
+                  <MessageSquare size={15} /> Semua Ulasan & Rating
+                </div>
+              ),
+            },
+          ]}
+        />
+
+        {/* Global Review Filters (Visible only when in reviews tab) */}
+        {activeTab === "reviews" && (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-56 md:w-64">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Cari ulasan / pembeli..."
+                className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm"
+              />
+            </div>
+
+            <div className="w-full sm:w-auto flex shrink-0">
+              <SortDropdown
+                value={starFilter.toString()}
+                onChange={(val) =>
+                  setStarFilter(val === "all" ? "all" : Number(val))
+                }
+                options={[
+                  { value: "all", label: "Semua Bintang" },
+                  { value: "5", label: "5 Bintang" },
+                  { value: "4", label: "4 Bintang" },
+                  { value: "3", label: "3 Bintang" },
+                  { value: "2", label: "2 Bintang" },
+                  { value: "1", label: "1 Bintang" },
+                ]}
+              />
+            </div>
+
+            {(selectedProductId || starFilter !== "all" || searchText) && (
+              <button
+                onClick={() => {
+                  setSelectedProductId(null);
+                  setStarFilter("all");
+                  setSearchText("");
+                }}
+                className="text-[10px] font-medium text-red-500 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-100 px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors whitespace-nowrap shrink-0 shadow-sm"
+              >
+                Reset <X size={12} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* TAB CONTENT: PRODUCTS LIST */}
@@ -400,123 +457,52 @@ export default function SellerRatingPage() {
 
       {/* TAB CONTENT: REVIEWS STREAM */}
       {activeTab === "reviews" && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-          {/* Sidebar Filters */}
-          <div className="lg:col-span-1 bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-50">
-              <span className="font-medium text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
-                <Filter size={14} className="text-emerald-500" /> Filter
-              </span>
-              {(selectedProductId || starFilter !== "all" || searchText) && (
+        <div className="space-y-6">
+          {/* Product Focus Banner */}
+          {selectedProductId && selectedProduct && (
+            <div className="bg-emerald-50/30 rounded-2xl p-4 border border-emerald-100/50 space-y-3">
+              <div className="flex justify-between items-start">
+                <span className="text-[9px] font-medium text-emerald-700 uppercase tracking-wider">
+                  Fokus Produk
+                </span>
                 <button
-                  onClick={() => {
-                    setSelectedProductId(null);
-                    setStarFilter("all");
-                    setSearchText("");
-                  }}
-                  className="text-[10px] font-medium text-red-500 hover:underline flex items-center gap-1"
+                  onClick={() => setSelectedProductId(null)}
+                  className="text-slate-400 hover:text-slate-650"
                 >
-                  Reset <X size={10} />
+                  <X size={12} />
                 </button>
-              )}
-            </div>
-
-            {/* Keyword Search */}
-            <div className="space-y-2">
-              <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-                Cari Kata Kunci
-              </label>
-              <div className="relative">
-                <Search
-                  size={13}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Ulasan/pembeli..."
-                  className="w-full pl-8 pr-4 py-2 border border-slate-100 rounded-xl text-xs font-medium focus:outline-none focus:border-emerald-250 bg-slate-50/40 focus:bg-white transition-all focus:ring-1 focus:ring-emerald-100"
-                />
               </div>
-            </div>
-
-            {/* Star Filters */}
-            <div className="space-y-2">
-              <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-                Filter Rating
-              </label>
-              <div className="flex flex-col gap-1">
-                {[
-                  { label: "Semua Bintang", val: "all" },
-                  { label: "5 Bintang", val: 5 },
-                  { label: "4 Bintang", val: 4 },
-                  { label: "3 Bintang", val: 3 },
-                  { label: "2 Bintang", val: 2 },
-                  { label: "1 Bintang", val: 1 },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={() => setStarFilter(item.val as any)}
-                    className={`text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                      starFilter === item.val
-                        ? "bg-emerald-50/50 text-emerald-650 border border-emerald-100/30"
-                        : "text-slate-500 hover:bg-slate-50 border border-transparent"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Product Focus Banner */}
-            {selectedProductId && selectedProduct && (
-              <div className="bg-emerald-50/30 rounded-2xl p-4 border border-emerald-100/50 space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="text-[9px] font-medium text-emerald-700 uppercase tracking-wider">
-                    Fokus Produk
-                  </span>
-                  <button
-                    onClick={() => setSelectedProductId(null)}
-                    className="text-slate-400 hover:text-slate-650"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-                <div className="flex gap-3">
-                  <div className="relative w-9 h-9 rounded-lg bg-white border border-slate-100 overflow-hidden shrink-0">
-                    {selectedProduct.gambarUrl ? (
-                      <Image
-                        src={selectedProduct.gambarUrl}
-                        alt={selectedProduct.nama}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-350 bg-white">
-                        <ShoppingBag size={12} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <h5 className="font-medium text-slate-750 text-xs truncate">
-                      {selectedProduct.nama}
-                    </h5>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      {renderStars(selectedProduct.rating, 9)}
-                      <span className="text-[10px] font-medium text-slate-500">
-                        ({selectedProduct.rating})
-                      </span>
+              <div className="flex gap-3">
+                <div className="relative w-9 h-9 rounded-lg bg-white border border-slate-100 overflow-hidden shrink-0">
+                  {selectedProduct.gambarUrl ? (
+                    <Image
+                      src={selectedProduct.gambarUrl}
+                      alt={selectedProduct.nama}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-350 bg-white">
+                      <ShoppingBag size={12} />
                     </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h5 className="font-medium text-slate-750 text-xs truncate">
+                    {selectedProduct.nama}
+                  </h5>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {renderStars(selectedProduct.rating, 9)}
+                    <span className="text-[10px] font-medium text-slate-500">
+                      ({selectedProduct.rating})
+                    </span>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-
+            </div>
+          )}
           {/* Reviews List Stream */}
-          <div className="lg:col-span-3 space-y-4">
+          <div className="space-y-4 relative z-0">
             {/* Focus / Filter Active Indicators */}
             {selectedProductId && selectedProduct && (
               <div className="bg-white border border-slate-100 rounded-3xl p-4 flex items-center justify-between shadow-sm">
@@ -539,8 +525,8 @@ export default function SellerRatingPage() {
             )}
 
             {filteredReviews.length === 0 ? (
-              <div className="bg-white rounded-3xl py-20 text-center border border-slate-100 shadow-sm max-w-xl mx-auto space-y-4">
-                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100/50 text-slate-300">
+              <div className="py-20 text-center max-w-xl mx-auto space-y-4">
+                <div className="w-14 h-14 bg-slate-100/50 rounded-2xl flex items-center justify-center mx-auto text-slate-400">
                   <MessageSquare size={24} />
                 </div>
                 <div className="space-y-1">

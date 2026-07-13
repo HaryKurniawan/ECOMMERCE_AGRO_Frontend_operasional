@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { gudangApi } from "@/lib/ecommerce-api";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 interface RequestItem {
   id: string;
@@ -304,30 +305,15 @@ export default function SellerStockRequestsPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-100/80 pb-0 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("active")}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === "active"
-              ? "border-emerald-600 text-emerald-600"
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          <Loader2 className="w-4 h-4" />
-          Pesanan Aktif
-        </button>
-
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap ${
-            activeTab === "orders"
-              ? "border-emerald-600 text-emerald-600"
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          <FileSpreadsheet className="w-4 h-4" />
-          Riwayat Pesanan
-        </button>
+      <div className="flex justify-center sm:justify-start">
+        <SegmentedControl
+          value={activeTab}
+          onChange={(val) => setActiveTab(val as TabType)}
+          options={[
+            { label: "Pesanan Aktif", value: "active" },
+            { label: "Riwayat Pesanan", value: "orders" },
+          ]}
+        />
       </div>
 
       {error && (

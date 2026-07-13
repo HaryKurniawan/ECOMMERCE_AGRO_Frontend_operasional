@@ -34,6 +34,7 @@ export function ProfitSummaryCards({
       icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
+      border: "group-hover:border-emerald-200",
     },
     {
       label: "Total Penjualan",
@@ -41,13 +42,15 @@ export function ProfitSummaryCards({
       icon: DollarSign,
       color: "text-blue-600",
       bg: "bg-blue-50",
+      border: "group-hover:border-blue-200",
     },
     {
       label: "Total Harga Beli",
       value: fmt(summary?.totalHargaBeli ?? 0),
       icon: ShoppingCart,
       color: "text-slate-600",
-      bg: "bg-slate-100",
+      bg: "bg-slate-50",
+      border: "group-hover:border-slate-200",
     },
     {
       label: "Rata-rata Margin",
@@ -55,29 +58,36 @@ export function ProfitSummaryCards({
       icon: Percent,
       color: "text-amber-600",
       bg: "bg-amber-50",
+      border: "group-hover:border-amber-200",
     },
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map(({ label, value, icon: Icon, color, bg }) => (
+      {cards.map(({ label, value, icon: Icon, color, bg, border }) => (
         <div
           key={label}
-          className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"
+          className={`group bg-white border border-gray-100/60 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 ${border}`}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`p-1.5 rounded-lg ${bg}`}>
-              <Icon size={15} className={color} />
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`p-2 rounded-xl ${bg} ${color} transition-transform duration-300 group-hover:scale-110`}
+            >
+              <Icon size={16} strokeWidth={2.5} />
             </div>
-            <p className="text-xs text-gray-400">{label}</p>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              {label}
+            </p>
           </div>
           {loading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 size={14} className="animate-spin text-gray-300" />
-              <div className="h-5 w-20 bg-gray-100 rounded animate-pulse" />
+            <div className="flex items-center gap-2 mt-2">
+              <Loader2 size={16} className="animate-spin text-gray-300" />
+              <div className="h-6 w-24 bg-gray-100 rounded animate-pulse" />
             </div>
           ) : (
-            <p className={`text-lg font-bold ${color}`}>{value}</p>
+            <p className={`text-2xl font-bold tracking-tight ${color}`}>
+              {value}
+            </p>
           )}
         </div>
       ))}

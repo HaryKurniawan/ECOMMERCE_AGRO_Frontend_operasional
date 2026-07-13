@@ -127,12 +127,12 @@ export default function NotifBell() {
     <>
       <div className="relative" ref={dropdownRef}>
         <button
-          onClick={() => setIsOpen(true)}
-          className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200/60 hover:bg-emerald-50 hover:border-emerald-100/50 transition-colors flex items-center justify-center relative group"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:bg-primary-600 hover:border-primary-600 transition-colors flex items-center justify-center relative group shadow-sm"
         >
           <Bell
             size={18}
-            className="text-slate-600 group-hover:text-emerald-600 transition-colors"
+            className="text-slate-700 group-hover:text-white transition-colors"
           />
           {unreadCount > 0 && (
             <div className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">

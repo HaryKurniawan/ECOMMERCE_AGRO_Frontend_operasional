@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Home, ClipboardList, User } from "lucide-react";
+import { Home, ClipboardList, User, MessageCircle } from "lucide-react";
 import { useEffect } from "react";
 
 import { useAuthStore } from "@/store/auth-store";
@@ -27,6 +27,7 @@ export default function CourierLayout({
 
   const tabs = [
     { id: "home", label: "Home", icon: Home, path: "/kurir/pesanan" },
+    { id: "chat", label: "Chat", icon: MessageCircle, path: "/kurir/chat" },
     {
       id: "riwayat",
       label: "Riwayat",

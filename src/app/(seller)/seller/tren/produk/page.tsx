@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   Package,
@@ -11,15 +11,13 @@ import {
   AlertCircle,
   BarChart2,
   Zap,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import {
-  useTrenProdukBulanan,
-  usePertumbuhanProduk,
-} from "@/hooks/seller/useSellerTren";
+import { useTrenProdukBulanan } from "@/hooks/seller/useSellerTren";
 import { useSellerDashboard } from "@/hooks/seller/useSellerDashboard";
-import ProductGrowthCard from "@/components/ecommerce/analytics/ProductGrowthCard";
 
 function formatRupiah(n: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -44,7 +42,69 @@ const MONTHS_LIST = [
   { value: 12, label: "Desember" },
 ];
 
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  minWidth = "140px",
+}: {
+  value: any;
+  onChange: (val: any) => void;
+  options: { value: any; label: string }[];
+  minWidth?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((o) => o.value === value) || options[0];
+
+  return (
+    <div className="relative" ref={ref} style={{ minWidth }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between bg-white border shadow-sm rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer ${isOpen ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-gray-200 hover:bg-gray-50 hover:border-gray-300"}`}
+      >
+        <span className="truncate">{selectedOption?.label}</span>
+        <ChevronDown
+          size={16}
+          className={`text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <div
+        className={`absolute z-50 mt-1 w-full bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top ${isOpen ? "opacity-100 scale-y-100 translate-y-0" : "opacity-0 scale-y-95 -translate-y-2 pointer-events-none"}`}
+      >
+        <div className="max-h-60 overflow-y-auto py-1 custom-scrollbar">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${value === opt.value ? "bg-emerald-50 text-emerald-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProdukTrenPage() {
+  const router = useRouter();
   const { store } = useSellerDashboard();
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(
@@ -58,18 +118,12 @@ export default function ProdukTrenPage() {
     "WEEK" | "MONTH" | "SIX_MONTHS" | "YEAR"
   >("MONTH");
 
-  const { data: growthData, isLoading: isGrowthLoading } = usePertumbuhanProduk(
-    store?.id ?? "",
-    periodType,
-    selectedMonth,
-    selectedYear,
-  );
   const { data: topProductsData, isLoading: isTopLoading } =
     useTrenProdukBulanan(
       store?.id ?? "",
       selectedMonth,
       selectedYear,
-      10,
+      100, // Menampilkan semua (atau setidaknya 100 teratas)
       periodType,
     );
 
@@ -85,59 +139,13 @@ export default function ProdukTrenPage() {
         </h1>
       </div>
 
-      {/* Section 1: Pertumbuhan Produk */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-medium text-slate-800 flex items-center gap-2">
-            <Zap size={20} className="text-amber-500" /> Pertumbuhan Produk
-            Tercepat & Lambat
-          </h2>
-          <p className="text-xs text-gray-400">
-            Perbandingan total revenue{" "}
-            {periodType === "WEEK"
-              ? "7 hari terakhir vs 7 hari sebelumnya"
-              : periodType === "MONTH"
-                ? "bulan ini vs bulan sebelumnya"
-                : periodType === "SIX_MONTHS"
-                  ? "6 bulan terakhir vs 6 bulan sebelumnya"
-                  : "tahun ini vs tahun sebelumnya"}{" "}
-            untuk mendeteksi tren produk secara cepat
-          </p>
-        </div>
-
-        {isGrowthLoading ? (
-          <div className="flex items-center justify-center py-10 bg-white border border-gray-100 rounded-2xl">
-            <Loader2 size={24} className="animate-spin text-emerald-500" />
-          </div>
-        ) : growthData && growthData.data && growthData.data.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {growthData.data.map((item) => (
-              <ProductGrowthCard key={item.produk.id} item={item} />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center text-sm text-gray-400">
-            <AlertCircle className="mx-auto text-gray-300 mb-1" size={24} />
-            Belum ada data pertumbuhan produk yang memadai untuk periode{" "}
-            {periodType === "WEEK"
-              ? "7 hari terakhir"
-              : periodType === "MONTH"
-                ? `${MONTHS_LIST.find((m) => m.value === selectedMonth)?.label} ${selectedYear}`
-                : periodType === "SIX_MONTHS"
-                  ? "6 bulan terakhir"
-                  : `Tahun ${selectedYear}`}
-            .
-          </div>
-        )}
-      </div>
-
       {/* Section 2: Top Products Monthly Breakdown */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-50">
           <div>
             <h2 className="text-base font-medium text-slate-800 flex items-center gap-2">
-              <BarChart2 size={18} className="text-emerald-600" /> Top 10 Produk
-              Terlaris{" "}
+              <BarChart2 size={18} className="text-emerald-600" /> Peringkat
+              Seluruh Produk{" "}
               {periodType === "WEEK"
                 ? "Mingguan"
                 : periodType === "MONTH"
@@ -158,63 +166,47 @@ export default function ProdukTrenPage() {
             </p>
           </div>
 
-          {/* Selectors */}
           <div className="flex items-center gap-2">
-            <select
+            <CustomSelect
               value={periodType}
-              onChange={(e) =>
-                setPeriodType(
-                  e.target.value as "WEEK" | "MONTH" | "SIX_MONTHS" | "YEAR",
-                )
-              }
-              className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-xs font-semibold text-emerald-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            >
-              <option value="WEEK">7 Hari Terakhir</option>
-              <option value="MONTH">Per Bulan</option>
-              <option value="SIX_MONTHS">6 Bulan Terakhir</option>
-              <option value="YEAR">Per Tahun</option>
-            </select>
+              onChange={(val) => setPeriodType(val as any)}
+              minWidth="160px"
+              options={[
+                { value: "WEEK", label: "7 Hari Terakhir" },
+                { value: "MONTH", label: "Per Bulan" },
+                { value: "SIX_MONTHS", label: "6 Bulan Terakhir" },
+                { value: "YEAR", label: "Per Tahun" },
+              ]}
+            />
 
             {periodType === "MONTH" && (
               <>
-                <select
+                <CustomSelect
                   value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                  className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                >
-                  {MONTHS_LIST.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedMonth(Number(val))}
+                  minWidth="130px"
+                  options={MONTHS_LIST}
+                />
 
-                <select
+                <CustomSelect
                   value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                >
-                  {yearsList.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedYear(Number(val))}
+                  minWidth="110px"
+                  options={yearsList.map((y) => ({
+                    value: y,
+                    label: String(y),
+                  }))}
+                />
               </>
             )}
 
             {periodType === "YEAR" && (
-              <select
+              <CustomSelect
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              >
-                {yearsList.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedYear(Number(val))}
+                minWidth="110px"
+                options={yearsList.map((y) => ({ value: y, label: String(y) }))}
+              />
             )}
           </div>
         </div>
@@ -257,7 +249,10 @@ export default function ProdukTrenPage() {
                   return (
                     <tr
                       key={item.produk.id}
-                      className="hover:bg-gray-50/30 transition-colors group"
+                      onClick={() =>
+                        router.push(`/seller/laporan/produk/${item.produk.id}`)
+                      }
+                      className="hover:bg-gray-50/30 transition-colors group cursor-pointer"
                     >
                       <td className="py-4 px-4 text-center font-bold text-gray-400 group-hover:text-emerald-500 transition-colors">
                         {item.rank === 1

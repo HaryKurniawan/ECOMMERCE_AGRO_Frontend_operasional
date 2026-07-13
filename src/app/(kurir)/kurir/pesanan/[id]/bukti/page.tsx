@@ -100,6 +100,8 @@ export default function DeliveryProofPage() {
     );
   };
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const handleSubmit = async () => {
     if (photos.length === 0) {
       message.error("Minimal 1 foto wajib dilampirkan");
@@ -123,9 +125,7 @@ export default function DeliveryProofPage() {
         buktiKirimLng: coords?.lng,
       });
 
-      message.success("Bukti pengiriman berhasil dikirim");
-      reset();
-      router.push(`/kurir/pesanan/${orderId}`);
+      setShowSuccessModal(true);
     } catch (err: any) {
       message.error(
         err?.response?.data?.message ||
@@ -135,6 +135,11 @@ export default function DeliveryProofPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleGoHome = () => {
+    // Gunakan replace agar tidak bisa di-back ke halaman upload bukti
+    router.replace(`/kurir/pesanan`);
   };
 
   if (!_hasHydrated || loading) {
@@ -305,6 +310,28 @@ export default function DeliveryProofPage() {
           </button>
         </div>
       </div>
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col items-center text-center shadow-xl animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Paket Terkirim
+            </h3>
+            <p className="text-gray-500 text-sm mb-6">
+              Bukti Penerimaan Tersimpan. Pesanan berhasil diselesaikan.
+            </p>
+            <button
+              onClick={handleGoHome}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors"
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

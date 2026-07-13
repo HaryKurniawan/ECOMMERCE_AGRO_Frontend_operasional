@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   ChevronRight,
@@ -99,39 +99,91 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     return activeGroup;
   });
 
+  const navRef = useRef<HTMLElement>(null);
+  const [activeRect, setActiveRect] = useState<{
+    top: number;
+    height: number;
+    left: number;
+    width: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const updateRect = () => {
+      const activeEl = navRef.current?.querySelector(
+        ".sidebar-item-active",
+      ) as HTMLElement;
+      if (activeEl) {
+        setActiveRect({
+          top: activeEl.offsetTop - 2, // slightly shift up by 2px
+          height: activeEl.offsetHeight + 4, // add 4px total padding
+          left: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+        });
+      } else {
+        setActiveRect(null);
+      }
+    };
+
+    // Initial update
+    updateRect();
+
+    // Add small delay to ensure DOM is fully rendered/expanded
+    const timeoutId = setTimeout(updateRect, 50);
+
+    // Observe nav container for resize during transitions (collapsing/expanding)
+    let resizeObserver: ResizeObserver | null = null;
+    if (navRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updateRect();
+      });
+      resizeObserver.observe(navRef.current);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [pathname, collapsed, expanded, menuItems]);
+
   const accent = {
     emerald: {
-      active: "bg-white text-primary-700 shadow-sm border border-gray-100",
+      activeBg: "bg-white shadow-sm border border-gray-100",
+      activeText: "text-primary-700 font-semibold",
       activeDot: "bg-primary-500",
       icon: "text-primary-600",
       iconBg: "bg-primary-50",
       iconActiveBg: "bg-primary-100",
       subActive: "text-primary-700 font-semibold",
       subDot: "bg-primary-500",
-      hover: "hover:bg-white hover:text-gray-800",
-      logoutHover: "hover:bg-white hover:text-red-500",
+      hover: "hover:text-primary-600 z-10",
+      iconHover: "group-hover:text-primary-600",
+      logoutHover: "hover:text-red-500",
     },
     blue: {
-      active: "bg-white text-blue-700 shadow-sm border border-gray-100",
+      activeBg: "bg-white shadow-sm border border-gray-100",
+      activeText: "text-blue-700 font-semibold",
       activeDot: "bg-blue-500",
       icon: "text-blue-600",
       iconBg: "bg-blue-50",
       iconActiveBg: "bg-blue-100",
       subActive: "text-blue-700 font-semibold",
       subDot: "bg-blue-500",
-      hover: "hover:bg-white hover:text-gray-800",
-      logoutHover: "hover:bg-white hover:text-red-500",
+      hover: "hover:text-blue-600 z-10",
+      iconHover: "group-hover:text-blue-600",
+      logoutHover: "hover:text-red-500",
     },
     indigo: {
-      active: "bg-white text-indigo-700 shadow-sm border border-gray-100",
+      activeBg: "bg-white shadow-sm border border-gray-100",
+      activeText: "text-indigo-700 font-semibold",
       activeDot: "bg-indigo-500",
       icon: "text-indigo-600",
       iconBg: "bg-indigo-50",
       iconActiveBg: "bg-indigo-100",
       subActive: "text-indigo-700 font-semibold",
       subDot: "bg-indigo-500",
-      hover: "hover:bg-white hover:text-gray-800",
-      logoutHover: "hover:bg-white hover:text-red-500",
+      hover: "hover:text-indigo-600 z-10",
+      iconHover: "group-hover:text-indigo-600",
+      logoutHover: "hover:text-red-500",
     },
   }[theme];
 
@@ -176,7 +228,23 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       )}
 
       {/* ── Navigation ─────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 scrollbar-thin scrollbar-thumb-gray-100">
+      <nav
+        ref={navRef}
+        className="flex-1 relative overflow-y-auto overflow-x-hidden py-3 px-2 space-y-1.5 scrollbar-thin scrollbar-thumb-gray-100"
+      >
+        {/* Floating Active Background */}
+        {activeRect && (
+          <div
+            className={`absolute ${accent.activeBg} rounded-xl transition-all duration-200 ease-out z-0`}
+            style={{
+              top: `${activeRect.top}px`,
+              left: `${activeRect.left}px`,
+              width: `${activeRect.width}px`,
+              height: `${activeRect.height}px`,
+            }}
+          />
+        )}
+
         {menuItems.map((item) => {
           if (item.isHeader) {
             if (collapsed) {
@@ -216,9 +284,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                       toggleGroup(item.label);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group relative ${
+                  className={`w-full flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group relative z-10 ${
+                    collapsed ? "justify-center" : "gap-3 px-3"
+                  } ${
                     isGroupActive
-                      ? `${accent.active} font-semibold`
+                      ? `${accent.activeText} sidebar-item-active`
                       : `text-gray-500 ${accent.hover}`
                   }`}
                   title={collapsed ? item.label : undefined}
@@ -227,7 +297,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                     className={`flex-shrink-0 transition-colors ${
                       isGroupActive
                         ? accent.icon
-                        : "text-gray-400 group-hover:text-gray-600"
+                        : `text-gray-400 ${accent.iconHover}`
                     }`}
                   >
                     {item.icon}
@@ -257,7 +327,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                     }`}
                   >
                     <div className="overflow-hidden">
-                      <div className="ml-9 space-y-0.5 border-l border-gray-300 pl-2 py-0.5">
+                      <div className="ml-9 space-y-1 border-l border-gray-300 pl-2 py-1">
                         {item.children!.map((child) => {
                           // Handle divider
                           if (child.divider) {
@@ -275,12 +345,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                             <button
                               key={child.path}
                               onClick={() => navigate(child.path)}
-                              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-[12.5px] transition-all duration-200 ${
+                              className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-[12.5px] transition-all duration-200 relative z-10 ${
                                 child.indent ? "ml-3" : ""
                               } ${
                                 isChildActive
-                                  ? accent.subActive
-                                  : "text-gray-400 hover:text-gray-700 hover:bg-white"
+                                  ? `${accent.subActive} sidebar-item-active`
+                                  : `text-gray-400 ${accent.hover}`
                               }`}
                             >
                               <span className="text-left truncate">
@@ -303,18 +373,18 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
             <button
               key={item.path || item.label}
               onClick={() => navigate(item.path || "")}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group relative ${
+              className={`w-full flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group relative z-10 ${
+                collapsed ? "justify-center" : "gap-3 px-3"
+              } ${
                 isActive
-                  ? `${accent.active} font-semibold`
+                  ? `${accent.activeText} sidebar-item-active`
                   : `text-gray-500 ${accent.hover}`
               }`}
               title={collapsed ? item.label : undefined}
             >
               <span
                 className={`flex-shrink-0 transition-colors ${
-                  isActive
-                    ? accent.icon
-                    : "text-gray-400 group-hover:text-gray-600"
+                  isActive ? accent.icon : `text-gray-400 ${accent.iconHover}`
                 }`}
               >
                 {item.icon}
@@ -340,7 +410,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       <div className="p-2 border-t border-gray-200 space-y-0.5">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-white text-xs transition-all"
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-gray-400 text-xs transition-all ${accent.hover}`}
         >
           {collapsed ? (
             <ChevronRight size={14} className="mx-auto" />
