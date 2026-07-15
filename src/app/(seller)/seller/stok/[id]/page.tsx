@@ -106,7 +106,7 @@ export default function SellerProductStockDetailPage() {
             return {
               id: log.id,
               produkId: log.produkId,
-              produkNama: prodData.nama,
+              produkNama: prodData.nama?.replace(" - ", " "),
               gambarUrl: prodData.gambarUrl,
               change: log.tipe === "OUT" ? -log.kuantitas : log.kuantitas,
               tipe: logType,
@@ -260,7 +260,7 @@ export default function SellerProductStockDetailPage() {
             <span className="text-slate-500">Detail & Penyesuaian</span>
           </div>
           <h1 className="text-lg md:text-xl font-medium tracking-tight text-slate-800">
-            {product.nama}
+            {product.nama?.replace(" - ", " ")}
           </h1>
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function SellerProductStockDetailPage() {
                 {product.gambarUrl ? (
                   <img
                     src={product.gambarUrl}
-                    alt={product.nama}
+                    alt={product.nama?.replace(" - ", " ")}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -290,7 +290,7 @@ export default function SellerProductStockDetailPage() {
                   </span>
                 </div>
                 <h4 className="text-[14px] font-medium text-slate-800 truncate leading-none">
-                  {product.nama}
+                  {product.nama?.replace(" - ", " ")}
                 </h4>
                 <p className="text-[11px] text-slate-400 font-medium">
                   Rp {Number(product.harga).toLocaleString("id-ID")}
@@ -362,7 +362,7 @@ export default function SellerProductStockDetailPage() {
                   {product.gambarUrl ? (
                     <img
                       src={product.gambarUrl}
-                      alt={product.nama}
+                      alt={product.nama?.replace(" - ", " ")}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -374,7 +374,7 @@ export default function SellerProductStockDetailPage() {
                     {product.category?.nama || "Lainnya"}
                   </span>
                   <h4 className="text-[13px] font-medium text-slate-800 truncate leading-tight">
-                    {product.nama}
+                    {product.nama?.replace(" - ", " ")}
                   </h4>
                   <p className="text-[11px] text-slate-400 font-medium">
                     Rp {Number(product.harga).toLocaleString("id-ID")}

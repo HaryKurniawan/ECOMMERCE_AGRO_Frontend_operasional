@@ -183,7 +183,7 @@ export default function DiskonPage({
               Pengaturan Diskon
             </h1>
             <p className="text-xs text-gray-500 truncate max-w-[200px] sm:max-w-none">
-              {product.nama}
+              {product.nama?.replace(" - ", " ")}
             </p>
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function DiskonPage({
               <div className="relative w-full h-full">
                 <Image
                   src={product.gambarUrl}
-                  alt={product.nama}
+                  alt={product.nama?.replace(" - ", " ")}
                   fill
                   sizes="64px"
                   className="object-cover"
@@ -209,7 +209,9 @@ export default function DiskonPage({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-gray-900 truncate">{product.nama}</p>
+            <p className="font-bold text-gray-900 truncate">
+              {product.nama?.replace(" - ", " ")}
+            </p>
             <p className="text-xs text-gray-500 mt-0.5">
               {product.category?.nama || "Tanpa Kategori"}
             </p>

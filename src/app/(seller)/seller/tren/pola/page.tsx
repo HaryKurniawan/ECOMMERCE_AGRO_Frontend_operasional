@@ -153,7 +153,7 @@ function DailyOrdersPanel({
                           {it.produk?.gambarUrl ? (
                             <img
                               src={it.produk.gambarUrl}
-                              alt={it.produk.nama}
+                              alt={it.produk.nama?.replace(" - ", " ")}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -165,7 +165,7 @@ function DailyOrdersPanel({
                         {/* Product info */}
                         <div className="flex-1 min-w-0">
                           <p className="text-[12px] font-semibold text-gray-700 truncate">
-                            {it.produk?.nama || "Produk"}
+                            {it.produk?.nama?.replace(" - ", " ") || "Produk"}
                           </p>
                           <p className="text-[10px] text-gray-400 mt-0.5">
                             {it.jumlah} kg &times; {formatRupiah(it.harga)}

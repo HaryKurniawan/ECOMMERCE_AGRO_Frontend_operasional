@@ -722,7 +722,7 @@ const DashboardAdminPage: React.FC = () => {
                   {p.gambarUrl || p.gambar ? (
                     <Image
                       src={(p.gambarUrl || p.gambar) as string}
-                      alt={p.nama ?? ""}
+                      alt={p.nama?.replace(" - ", " ") ?? ""}
                       fill
                       className="object-cover"
                       unoptimized
@@ -735,7 +735,7 @@ const DashboardAdminPage: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[12px] font-medium text-gray-800 truncate leading-tight">
-                    {p.nama}
+                    {p.nama?.replace(" - ", " ")}
                   </p>
                   <p className="text-[10.5px] text-gray-400 truncate mt-0.5">
                     {p.store?.nama || p.tokoNama || "—"}

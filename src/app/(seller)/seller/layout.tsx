@@ -59,7 +59,7 @@ export default function SellerLayout({
               pathname !== "/seller/produk/margin" &&
               pathname !== "/seller/produk")
               ? "overflow-hidden"
-              : "overflow-auto"
+              : `overflow-auto ${pathname === "/seller/dashboard" ? "scrollbar-hide" : ""}`
           } bg-gray-100 flex flex-col min-h-0`}
         >
           <div

@@ -358,7 +358,7 @@ export default function DetailPesananSellerPage() {
                   <div className="relative w-full h-full">
                     <Image
                       src={item.product.gambarUrl}
-                      alt={item.product.nama || "Produk"}
+                      alt={item.product.nama?.replace(" - ", " ") || "Produk"}
                       fill
                       sizes="40px"
                       className="object-cover"
@@ -373,7 +373,9 @@ export default function DetailPesananSellerPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-800 truncate">
-                  {item.product?.namaEtalase || item.product?.nama || "Produk"}
+                  {item.product?.namaEtalase ||
+                    item.product?.nama?.replace(" - ", " ") ||
+                    "Produk"}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   {item.jumlah} {item.product?.satuan || "kg"} ×{" "}

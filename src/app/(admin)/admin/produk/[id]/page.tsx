@@ -220,7 +220,7 @@ export default function AdminDetailProdukPage() {
                       product.gambarUtama ||
                       ""
                     }
-                    alt={product.nama}
+                    alt={product.nama?.replace(" - ", " ")}
                     className="object-cover"
                     fill
                     unoptimized
@@ -233,7 +233,7 @@ export default function AdminDetailProdukPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-display font-bold mb-2">
-                  {product.nama}
+                  {product.nama?.replace(" - ", " ")}
                 </h1>
                 <p className="text-emerald-100 text-sm flex items-center gap-1.5 opacity-90 mb-3">
                   <Store size={16} />{" "}
@@ -345,7 +345,7 @@ export default function AdminDetailProdukPage() {
                       >
                         <Image
                           src={src}
-                          alt={`${product.nama} foto ${idx + 1}`}
+                          alt={`${product.nama?.replace(" - ", " ")} foto ${idx + 1}`}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                           unoptimized

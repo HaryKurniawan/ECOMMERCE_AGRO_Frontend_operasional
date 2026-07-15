@@ -420,7 +420,7 @@ export default function DetailGudangPage() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-medium text-gray-900">
-                        {req.produk?.nama || "—"}
+                        {req.produk?.nama?.replace(" - ", " ") || "—"}
                       </p>
                       {req.produk?.satuan && (
                         <p className="text-xs text-gray-400 mt-0.5">

@@ -700,7 +700,7 @@ export default function KelolaProdukPage({
                   <div className="relative w-full h-full">
                     <Image
                       src={product.gambarUrl}
-                      alt={product.nama}
+                      alt={product.nama?.replace(" - ", " ")}
                       fill
                       sizes="64px"
                       className="object-cover"

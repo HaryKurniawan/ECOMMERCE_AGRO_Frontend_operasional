@@ -61,7 +61,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {product.gambarUrl ? (
           <Image
             src={product.gambarUrl}
-            alt={product.nama}
+            alt={product.nama?.replace(" - ", " ")}
             fill
             sizes="(max-width: 768px) 50vw, 33vw"
             className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -82,7 +82,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Info */}
       <div className="p-4 flex flex-col flex-1">
         <h3 className="font-semibold text-sm text-gray-900 leading-tight group-hover:text-primary-700 transition-colors truncate">
-          {product.nama}
+          {product.nama?.replace(" - ", " ")}
         </h3>
 
         {/* Price */}
@@ -127,7 +127,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               if (onAddToCart) onAddToCart(product);
             }}
             className={`w-full mt-4 py-2 bg-white border border-primary-300 hover:border-primary-500 hover:bg-primary-50 text-primary-600 rounded-xl text-xs font-bold items-center justify-center gap-1.5 transition-all active:scale-95 ${hideCartOnMobile ? "hidden lg:flex" : "flex"}`}
-            aria-label={`Tambah ${product.nama} ke keranjang`}
+            aria-label={`Tambah ${product.nama?.replace(" - ", " ")} ke keranjang`}
           >
             <Plus size={14} /> Keranjang
           </button>

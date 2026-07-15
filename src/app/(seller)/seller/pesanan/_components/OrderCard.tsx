@@ -93,7 +93,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     <div className="relative w-full h-full">
                       <Image
                         src={item.product.gambarUrl}
-                        alt={item.product.nama || "Produk"}
+                        alt={item.product.nama?.replace(" - ", " ") || "Produk"}
                         fill
                         sizes="36px"
                         className="object-cover"
@@ -106,7 +106,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-medium text-slate-700 truncate">
-                    {item.product?.namaEtalase || item.product?.nama || "—"}
+                    {item.product?.namaEtalase ||
+                      item.product?.nama?.replace(" - ", " ") ||
+                      "—"}
                   </p>
                   <p className="text-[11px] text-slate-400">
                     {item.jumlah} {item.product?.satuan || "kg"} ×{" "}

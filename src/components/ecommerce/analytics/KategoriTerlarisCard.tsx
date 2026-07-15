@@ -67,7 +67,7 @@ function ProdukRow({
         {item.produk.gambarUrl ? (
           <img
             src={item.produk.gambarUrl}
-            alt={item.produk.nama}
+            alt={item.produk.nama?.replace(" - ", " ")}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -80,7 +80,7 @@ function ProdukRow({
       {/* Info produk */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-800 truncate">
-          {item.produk.nama}
+          {item.produk.nama?.replace(" - ", " ")}
         </p>
         {item.toko && (
           <p className="text-xs text-gray-400 truncate">{item.toko.nama}</p>

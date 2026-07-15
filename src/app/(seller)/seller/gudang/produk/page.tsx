@@ -305,7 +305,7 @@ export default function SellerWarehouseProductsPage() {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (p) =>
-          p.nama.toLowerCase().includes(q) ||
+          p.nama?.replace(" - ", " ").toLowerCase().includes(q) ||
           p.varianProduk?.toLowerCase().includes(q) ||
           p.gudangNama.toLowerCase().includes(q),
       );
@@ -436,7 +436,7 @@ export default function SellerWarehouseProductsPage() {
                 {product.gambarUrl ? (
                   <img
                     src={product.gambarUrl}
-                    alt={product.nama}
+                    alt={product.nama?.replace(" - ", " ")}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -450,12 +450,12 @@ export default function SellerWarehouseProductsPage() {
               <div className="p-4 flex flex-col flex-1 gap-2">
                 <h3 className="font-semibold text-sm text-slate-800 line-clamp-1">
                   {product.varianProduk
-                    ? `${product.nama} ${product.varianProduk}`
-                    : product.nama}
+                    ? `${product.nama?.replace(" - ", " ")} ${product.varianProduk}`
+                    : product.nama?.replace(" - ", " ")}
                 </h3>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">
-                    {product.nama}
+                    {product.nama?.replace(" - ", " ")}
                   </span>
                   {product.varianProduk && (
                     <span className="text-[9px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100 uppercase tracking-wider">

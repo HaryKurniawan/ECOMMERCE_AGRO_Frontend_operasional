@@ -397,8 +397,9 @@ export default function SellerGudangDetailPage() {
                         className="text-[10px] bg-slate-50 text-slate-500 px-2 py-0.5 rounded border border-slate-100"
                       >
                         {item.produk?.varianProduk
-                          ? `${item.produk.nama} ${item.produk.varianProduk}`
-                          : item.produk?.nama || "Produk"}{" "}
+                          ? `${item.produk.nama?.replace(" - ", " ")} ${item.produk.varianProduk}`
+                          : item.produk?.nama?.replace(" - ", " ") ||
+                            "Produk"}{" "}
                         &mdash; {item.jumlahPermintaan.toLocaleString("id-ID")}{" "}
                         kg
                       </span>

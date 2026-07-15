@@ -13,7 +13,7 @@ export const useProfile = (isAuthenticated: boolean, _hasHydrated: boolean) => {
       const p = res?.data?.data || res?.data;
       return {
         ...p,
-        name: p.nama || p.name,
+        name: p.nama?.replace(" - ", " ") || p.name,
         phone:
           p.noTelepon ||
           p.profilPetani?.noTelepon ||

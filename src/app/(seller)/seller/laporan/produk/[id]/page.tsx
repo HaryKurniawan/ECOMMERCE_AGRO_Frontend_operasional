@@ -27,9 +27,13 @@ export default function LaporanKeuntunganProdukDetail({
 
   const product = productRes?.data?.data || productRes?.data;
 
-  const isVariant = product?.nama?.includes(" - ");
-  const baseName = isVariant ? product.nama.split(" - ")[0] : product?.nama;
-  const variantName = isVariant ? product.nama.split(" - ")[1] : null;
+  const isVariant = product?.nama?.replace(" - ", " ")?.includes(" - ");
+  const baseName = isVariant
+    ? product.nama?.replace(" - ", " ").split(" - ")[0]
+    : product?.nama?.replace(" - ", " ");
+  const variantName = isVariant
+    ? product.nama?.replace(" - ", " ").split(" - ")[1]
+    : null;
 
   return (
     <div className="space-y-8 pb-10">
@@ -62,12 +66,12 @@ export default function LaporanKeuntunganProdukDetail({
           {product.fotoUrls && product.fotoUrls[0] ? (
             <img
               src={product.fotoUrls[0]}
-              alt={product.nama}
+              alt={product.nama?.replace(" - ", " ")}
               className="w-16 h-16 rounded-lg object-cover bg-gray-50 border border-gray-100"
             />
           ) : (
             <div className="w-16 h-16 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl border border-emerald-100">
-              {product.nama.charAt(0)}
+              {product.nama?.replace(" - ", " ").charAt(0)}
             </div>
           )}
           <div>

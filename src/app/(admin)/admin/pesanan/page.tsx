@@ -290,8 +290,8 @@ export default function ManajemenPesananPage() {
                   const allItems = order.items || order.item || [];
                   const firstItem = allItems[0];
                   const productName =
-                    firstItem?.produk?.nama ||
-                    firstItem?.product?.nama ||
+                    firstItem?.produk?.nama?.replace(" - ", " ") ||
+                    firstItem?.product?.nama?.replace(" - ", " ") ||
                     firstItem?.nama ||
                     "—";
                   const moreItems =

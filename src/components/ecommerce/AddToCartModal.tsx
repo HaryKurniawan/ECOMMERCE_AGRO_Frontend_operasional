@@ -105,7 +105,7 @@ const AddToCartModal: React.FC<AddToCartModalProps> = ({
                 <div className="relative w-full h-full">
                   <Image
                     src={product.gambarUrl}
-                    alt={product.nama}
+                    alt={product.nama?.replace(" - ", " ")}
                     fill
                     sizes="80px"
                     className="object-cover"
@@ -118,7 +118,7 @@ const AddToCartModal: React.FC<AddToCartModalProps> = ({
             </div>
             <div className="flex-1 min-w-0 pr-8">
               <p className="font-display font-semibold text-sm text-gray-900 line-clamp-2">
-                {product.nama}
+                {product.nama?.replace(" - ", " ")}
               </p>
               <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest mt-0.5">
                 {product.satuan}

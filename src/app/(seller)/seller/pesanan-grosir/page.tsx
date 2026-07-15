@@ -322,7 +322,7 @@ const GrosirOrdersPage: React.FC = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[13px] font-medium text-slate-700 truncate">
-                            {item.produk?.nama || "—"}
+                            {item.produk?.nama?.replace(" - ", " ") || "—"}
                           </p>
                           <p className="text-[11px] text-slate-400">
                             {item.jumlah} kg ×{" "}

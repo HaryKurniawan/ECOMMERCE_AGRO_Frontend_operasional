@@ -98,7 +98,7 @@ export default function SellerStockManagementPage() {
       initialLogs.push({
         id: `log-in-${p.id}-${idx}`,
         produkId: p.id,
-        produkNama: p.nama,
+        produkNama: p.nama?.replace(" - ", " "),
         gambarUrl: p.gambarUrl,
         change: 120 + idx * 15,
         tipe: "MASUK",
@@ -111,7 +111,7 @@ export default function SellerStockManagementPage() {
       initialLogs.push({
         id: `log-out-${p.id}-${idx}`,
         produkId: p.id,
-        produkNama: p.nama,
+        produkNama: p.nama?.replace(" - ", " "),
         gambarUrl: p.gambarUrl,
         change: -1 * (2 + (idx % 3)),
         tipe: "KELUAR",
@@ -125,7 +125,7 @@ export default function SellerStockManagementPage() {
         initialLogs.push({
           id: `log-out-audit-${p.id}-${idx}`,
           produkId: p.id,
-          produkNama: p.nama,
+          produkNama: p.nama?.replace(" - ", " "),
           gambarUrl: p.gambarUrl,
           change: -1,
           tipe: "KELUAR",
@@ -142,7 +142,7 @@ export default function SellerStockManagementPage() {
         initialLogs.push({
           id: `log-change-init-${p.id}-${idx}`,
           produkId: p.id,
-          produkNama: p.nama,
+          produkNama: p.nama?.replace(" - ", " "),
           gambarUrl: p.gambarUrl,
           change: idx % 4 === 0 ? 5 : -2,
           tipe: "PERUBAHAN",
@@ -203,7 +203,9 @@ export default function SellerStockManagementPage() {
                 return {
                   id: log.id,
                   produkId: log.produkId,
-                  produkNama: log.produk?.nama || "Produk Tidak Dikenal",
+                  produkNama:
+                    log.produk?.nama?.replace(" - ", " ") ||
+                    "Produk Tidak Dikenal",
                   gambarUrl: log.produk?.gambarUrl,
                   change: log.tipe === "OUT" ? -log.kuantitas : log.kuantitas,
                   tipe: logType,
@@ -271,7 +273,10 @@ export default function SellerStockManagementPage() {
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchSearch =
-        p.nama.toLowerCase().includes(search.toLowerCase()) ||
+        p.nama
+          ?.replace(" - ", " ")
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
         (p.category?.nama || "").toLowerCase().includes(search.toLowerCase());
 
       const q = Number(p.stok) || 0;
@@ -489,7 +494,7 @@ export default function SellerStockManagementPage() {
                           {p.gambarUrl ? (
                             <img
                               src={p.gambarUrl}
-                              alt={p.nama}
+                              alt={p.nama?.replace(" - ", " ")}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -498,7 +503,7 @@ export default function SellerStockManagementPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-[13px] font-medium text-slate-800 truncate group-hover:text-emerald-600 transition-colors leading-snug">
-                            {p.nama}
+                            {p.nama?.replace(" - ", " ")}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded bg-slate-50 text-slate-500 font-medium">

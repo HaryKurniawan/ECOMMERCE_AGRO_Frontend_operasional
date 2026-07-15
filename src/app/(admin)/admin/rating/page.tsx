@@ -429,7 +429,7 @@ export default function AdminRatingPage() {
                     {review.produk.gambarUrl ? (
                       <Image
                         src={review.produk.gambarUrl}
-                        alt={review.produk.nama}
+                        alt={review.produk.nama?.replace(" - ", " ")}
                         fill
                         className="object-cover"
                       />
@@ -444,7 +444,7 @@ export default function AdminRatingPage() {
                       Produk
                     </span>
                     <span className="font-bold text-gray-800 text-[11px] line-clamp-1">
-                      {review.produk.nama}
+                      {review.produk.nama?.replace(" - ", " ")}
                     </span>
                   </div>
                 </div>

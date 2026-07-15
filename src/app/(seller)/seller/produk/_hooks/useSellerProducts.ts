@@ -157,7 +157,10 @@ export const useSellerProducts = () => {
 
   const filteredEtalase = useMemo(() => {
     return products.filter((p) => {
-      const matchSearch = p.nama.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = p.nama
+        ?.replace(" - ", " ")
+        .toLowerCase()
+        .includes(search.toLowerCase());
       const matchStatus =
         filterStatus === "semua" ||
         p.status.toLowerCase() === filterStatus.toLowerCase();
@@ -168,7 +171,7 @@ export const useSellerProducts = () => {
 
   const filteredStorage = useMemo(() => {
     return products.filter((p) =>
-      p.nama.toLowerCase().includes(search.toLowerCase()),
+      p.nama?.replace(" - ", " ").toLowerCase().includes(search.toLowerCase()),
     );
   }, [products, search]);
 

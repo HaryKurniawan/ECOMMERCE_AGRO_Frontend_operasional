@@ -464,7 +464,7 @@ export default function CourierActivityDetailPage() {
                             >
                               <span className="text-slate-500 font-medium truncate mr-4">
                                 {item.product?.namaEtalase ||
-                                  item.product?.nama}{" "}
+                                  item.product?.nama?.replace(" - ", " ")}{" "}
                                 (x{item.jumlah})
                               </span>
                               <span className="font-medium text-slate-700 shrink-0">

@@ -125,7 +125,7 @@ export default function SellerRatingPage() {
           );
           return {
             id: p.id,
-            nama: p.nama,
+            nama: p.nama?.replace(" - ", " "),
             gambarUrl: p.gambarUrl,
             rating:
               p.rating ||
@@ -166,8 +166,11 @@ export default function SellerRatingPage() {
           r.ulasan.toLowerCase().includes(searchText.toLowerCase())) ||
         (r.pengguna?.nama &&
           r.pengguna.nama.toLowerCase().includes(searchText.toLowerCase())) ||
-        (r.produk?.nama &&
-          r.produk.nama.toLowerCase().includes(searchText.toLowerCase()));
+        (r.produk?.nama?.replace(" - ", " ") &&
+          r.produk.nama
+            ?.replace(" - ", " ")
+            .toLowerCase()
+            .includes(searchText.toLowerCase()));
 
       return matchesProduct && matchesStar && matchesSearch;
     });
@@ -394,7 +397,7 @@ export default function SellerRatingPage() {
                       {p.gambarUrl ? (
                         <Image
                           src={p.gambarUrl}
-                          alt={p.nama}
+                          alt={p.nama?.replace(" - ", " ")}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform"
                         />
@@ -410,7 +413,7 @@ export default function SellerRatingPage() {
                         {p.category?.nama || "Pertanian"}
                       </span>
                       <h3 className="font-medium text-slate-800 text-sm md:text-base group-hover:text-emerald-600 transition-colors truncate">
-                        {p.nama}
+                        {p.nama?.replace(" - ", " ")}
                       </h3>
                       <div className="flex items-center gap-1.5 pt-0.5">
                         {renderStars(p.rating, 11)}
@@ -477,7 +480,7 @@ export default function SellerRatingPage() {
                   {selectedProduct.gambarUrl ? (
                     <Image
                       src={selectedProduct.gambarUrl}
-                      alt={selectedProduct.nama}
+                      alt={selectedProduct.nama?.replace(" - ", " ")}
                       fill
                       className="object-cover"
                     />
@@ -489,7 +492,7 @@ export default function SellerRatingPage() {
                 </div>
                 <div className="min-w-0">
                   <h5 className="font-medium text-slate-750 text-xs truncate">
-                    {selectedProduct.nama}
+                    {selectedProduct.nama?.replace(" - ", " ")}
                   </h5>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {renderStars(selectedProduct.rating, 9)}
@@ -511,7 +514,7 @@ export default function SellerRatingPage() {
                   <span>
                     Menampilkan ulasan khusus produk:{" "}
                     <span className="font-medium text-emerald-755">
-                      {selectedProduct.nama}
+                      {selectedProduct.nama?.replace(" - ", " ")}
                     </span>
                   </span>
                 </div>
@@ -599,7 +602,7 @@ export default function SellerRatingPage() {
                           {review.produk?.gambarUrl ? (
                             <Image
                               src={review.produk.gambarUrl}
-                              alt={review.produk.nama}
+                              alt={review.produk.nama?.replace(" - ", " ")}
                               fill
                               className="object-cover"
                             />
@@ -614,7 +617,8 @@ export default function SellerRatingPage() {
                             Produk Yang Diulas
                           </span>
                           <span className="font-medium text-slate-700 truncate block">
-                            {review.produk?.nama || "Produk"}
+                            {review.produk?.nama?.replace(" - ", " ") ||
+                              "Produk"}
                           </span>
                         </div>
                       </div>

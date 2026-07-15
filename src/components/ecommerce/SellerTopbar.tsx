@@ -112,33 +112,21 @@ export default function SellerTopbar() {
                 isTabActive =
                   pathname === tab.path || pathname.startsWith(tab.path + "/");
               }
+
               const Icon = tab.icon;
 
               return (
                 <button
                   key={tab.path}
                   onClick={() => router.push(tab.path)}
-                  className={`relative flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors duration-300 border ${
+                  className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all duration-300 border ${
                     isTabActive
-                      ? "text-white border-primary-600 shadow-sm bg-primary-600/10"
-                      : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-800"
+                      ? "text-white bg-primary-600 border-primary-600 shadow-sm"
+                      : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-800 hover:bg-gray-50"
                   }`}
                 >
-                  {/* Active Sweep Background */}
-                  <div className="absolute -inset-[1px] rounded-full overflow-hidden z-0">
-                    <div
-                      className={`absolute inset-0 bg-primary-600 ${
-                        isTabActive
-                          ? "transition-transform duration-500 ease-out translate-x-0"
-                          : "-translate-x-[105%]"
-                      }`}
-                    />
-                  </div>
-
-                  <div className="relative z-10 flex items-center gap-1.5">
-                    <Icon size={13} />
-                    {tab.label}
-                  </div>
+                  <Icon size={13} />
+                  {tab.label}
                 </button>
               );
             })

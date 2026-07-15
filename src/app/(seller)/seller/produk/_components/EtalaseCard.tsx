@@ -55,7 +55,7 @@ const EtalaseCard: React.FC<EtalaseCardProps> = ({
             <div className="relative w-full h-full">
               <Image
                 src={product.gambarUrl}
-                alt={product.nama}
+                alt={product.nama?.replace(" - ", " ")}
                 fill
                 sizes="80px"
                 className="object-cover"

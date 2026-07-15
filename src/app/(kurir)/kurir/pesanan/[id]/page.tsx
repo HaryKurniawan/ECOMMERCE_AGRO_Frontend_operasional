@@ -398,7 +398,7 @@ export default function KurirOrderDetailPage() {
                       <Package size={12} className="text-gray-400" />
                     </div>
                     <span className="text-[12px] text-gray-700 truncate">
-                      {item.product?.nama}
+                      {item.product?.nama?.replace(" - ", " ")}
                     </span>
                   </div>
                   <div className="text-right flex-shrink-0">

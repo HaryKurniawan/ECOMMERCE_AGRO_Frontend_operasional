@@ -62,7 +62,7 @@ const CartSuccessModal: React.FC<CartSuccessModalProps> = ({
               <div className="relative w-full h-full">
                 <Image
                   src={product.gambarUrl}
-                  alt={product.nama}
+                  alt={product.nama?.replace(" - ", " ")}
                   fill
                   sizes="48px"
                   className="object-cover"
@@ -75,7 +75,7 @@ const CartSuccessModal: React.FC<CartSuccessModalProps> = ({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-800 line-clamp-1">
-              {product.nama}
+              {product.nama?.replace(" - ", " ")}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
               {grade && (

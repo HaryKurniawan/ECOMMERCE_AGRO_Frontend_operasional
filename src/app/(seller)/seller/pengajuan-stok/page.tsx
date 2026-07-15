@@ -196,7 +196,7 @@ export default function SellerStockRequestsPage() {
                     ? item.varianProduk
                       ? `${item.namaProduk} ${item.varianProduk}`
                       : item.namaProduk
-                    : item.produk?.nama || "Produk"}
+                    : item.produk?.nama?.replace(" - ", " ") || "Produk"}
                 </span>
               ))}
               {request.items && request.items.length > 2 && (
@@ -415,7 +415,8 @@ export default function SellerStockRequestsPage() {
                               ? item.varianProduk
                                 ? `${item.namaProduk} ${item.varianProduk}`
                                 : item.namaProduk
-                              : item.produk?.nama || "Produk"}
+                              : item.produk?.nama?.replace(" - ", " ") ||
+                                "Produk"}
                           </span>
                         ))}
                         {request.items && request.items.length > 2 && (

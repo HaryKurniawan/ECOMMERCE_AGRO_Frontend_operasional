@@ -225,7 +225,7 @@ export default function TrenPerProdukPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <p className="font-semibold text-gray-800">
-                          {item.produk.nama}
+                          {item.produk.nama?.replace(" - ", " ")}
                         </p>
                         {item.produk.kategori && (
                           <p className="text-[10px] text-gray-400 mt-0.5">

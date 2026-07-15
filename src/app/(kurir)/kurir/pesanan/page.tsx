@@ -566,7 +566,7 @@ function OrderCard({
             {order.items.slice(0, 2).map((item, idx) => (
               <div key={idx} className="flex items-center justify-between py-1">
                 <span className="text-xs text-gray-700 truncate mr-3 flex-1">
-                  {item.product?.nama}
+                  {item.product?.nama?.replace(" - ", " ")}
                 </span>
                 <span className="text-xs font-semibold text-gray-900 flex-shrink-0">
                   {formatRupiah(item.harga * item.jumlah)}

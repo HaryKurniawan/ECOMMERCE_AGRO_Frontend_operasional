@@ -161,7 +161,7 @@ export default function AdminStoreProductMarginOverridesPage() {
       );
       setMessage({
         type: "success",
-        text: `Harga jual untuk "${editingProduct.nama}" berhasil disimpan.`,
+        text: `Harga jual untuk "${editingProduct.nama?.replace(" - ", " ")}" berhasil disimpan.`,
       });
       setEditingProduct(null);
 
@@ -424,7 +424,7 @@ export default function AdminStoreProductMarginOverridesPage() {
                     className="hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="py-4 pl-2 font-semibold text-gray-900">
-                      {p.nama}
+                      {p.nama?.replace(" - ", " ")}
                     </td>
                     <td className="py-4 text-center font-bold text-gray-500">
                       {p.stok} {p.satuan}
@@ -503,7 +503,7 @@ export default function AdminStoreProductMarginOverridesPage() {
               <p className="text-[11px] text-gray-400 mt-0.5">
                 Produk:{" "}
                 <span className="font-semibold text-gray-700">
-                  {editingProduct.nama}
+                  {editingProduct.nama?.replace(" - ", " ")}
                 </span>
               </p>
             </div>
@@ -725,7 +725,8 @@ export default function AdminStoreProductMarginOverridesPage() {
                           <td className="px-4 py-3">
                             {item.produkId ? (
                               <span className="text-indigo-600 font-medium bg-indigo-50 px-2 py-1 rounded-md text-[11px] truncate max-w-[150px] inline-block">
-                                {item.produk?.nama || "Produk"}
+                                {item.produk?.nama?.replace(" - ", " ") ||
+                                  "Produk"}
                               </span>
                             ) : (
                               <span className="text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px]">

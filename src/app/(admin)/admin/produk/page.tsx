@@ -118,7 +118,7 @@ export default function ManajemenProdukPage() {
   }, []);
 
   const filtered = products.filter((p) => {
-    const productName = p.nama || "";
+    const productName = p.nama?.replace(" - ", " ") || "";
     const storeName = p.store?.nama || p.tokoNama || "";
     const matchSearch =
       productName.toLowerCase().includes(search.toLowerCase()) ||
@@ -296,7 +296,7 @@ export default function ManajemenProdukPage() {
                   const imageContent = p.gambarUrl ? (
                     <Image
                       src={p.gambarUrl}
-                      alt={p.nama}
+                      alt={p.nama?.replace(" - ", " ")}
                       width={40}
                       height={40}
                       className="w-10 h-10 object-cover rounded-lg"
@@ -336,7 +336,7 @@ export default function ManajemenProdukPage() {
                             </div>
                             <div>
                               <p className="font-bold text-gray-900">
-                                {p.nama}
+                                {p.nama?.replace(" - ", " ")}
                               </p>
                               {p.masterProduk?.nama ? (
                                 <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100">
@@ -401,7 +401,7 @@ export default function ManajemenProdukPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDelete(p.id, p.nama);
+                              handleDelete(p.id, p.nama?.replace(" - ", " "));
                             }}
                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                             title="Hapus Produk"

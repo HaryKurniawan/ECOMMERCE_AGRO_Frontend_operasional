@@ -43,7 +43,7 @@ export default function ProductGrowthCard({ item }: ProductGrowthCardProps) {
           {item.produk.gambarUrl ? (
             <img
               src={item.produk.gambarUrl}
-              alt={item.produk.nama}
+              alt={item.produk.nama?.replace(" - ", " ")}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -55,7 +55,7 @@ export default function ProductGrowthCard({ item }: ProductGrowthCardProps) {
 
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-gray-800 truncate leading-snug">
-            {item.produk.nama}
+            {item.produk.nama?.replace(" - ", " ")}
           </p>
           {item.produk.kategori && (
             <p className="text-[10px] text-gray-400 truncate">

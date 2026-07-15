@@ -76,7 +76,10 @@ export default function ProdukGudangPage() {
     () =>
       products.filter(
         (p: ProdukGudang) =>
-          p.nama?.toLowerCase().includes(search.toLowerCase()) ||
+          p.nama
+            ?.replace(" - ", " ")
+            ?.toLowerCase()
+            .includes(search.toLowerCase()) ||
           p.deskripsi?.toLowerCase().includes(search.toLowerCase()) ||
           p.gudangNama?.toLowerCase().includes(search.toLowerCase()),
       ),
@@ -196,7 +199,7 @@ export default function ProdukGudangPage() {
                 {p.gambarUrl && (
                   <img
                     src={p.gambarUrl}
-                    alt={p.nama}
+                    alt={p.nama?.replace(" - ", " ")}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
@@ -219,11 +222,13 @@ export default function ProdukGudangPage() {
               {/* Content */}
               <div className="p-4 flex flex-col flex-1 gap-2">
                 <h3 className="font-bold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors line-clamp-1">
-                  {p.varianProduk ? `${p.nama} ${p.varianProduk}` : p.nama}
+                  {p.varianProduk
+                    ? `${p.nama?.replace(" - ", " ")} ${p.varianProduk}`
+                    : p.nama?.replace(" - ", " ")}
                 </h3>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">
-                    {p.nama}
+                    {p.nama?.replace(" - ", " ")}
                   </span>
                   {p.varianProduk && (
                     <span className="text-[9px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100 uppercase tracking-wider">

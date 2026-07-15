@@ -815,7 +815,8 @@ export default function AdminStoresMarginPage() {
                           <td className="px-4 py-3">
                             {item.produkId ? (
                               <span className="text-indigo-600 font-medium bg-indigo-50 px-2 py-1 rounded-md text-[11px] truncate max-w-[150px] inline-block">
-                                {item.produk?.nama || "Produk"}
+                                {item.produk?.nama?.replace(" - ", " ") ||
+                                  "Produk"}
                               </span>
                             ) : (
                               <span className="text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px]">

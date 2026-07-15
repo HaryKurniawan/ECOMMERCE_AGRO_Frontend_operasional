@@ -269,7 +269,7 @@ export default function ProdukTrenPage() {
                             {item.produk.gambarUrl ? (
                               <img
                                 src={item.produk.gambarUrl}
-                                alt={item.produk.nama}
+                                alt={item.produk.nama?.replace(" - ", " ")}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -280,7 +280,7 @@ export default function ProdukTrenPage() {
                           </div>
                           <div>
                             <p className="font-bold text-gray-800 text-sm group-hover:text-emerald-700 transition-colors">
-                              {item.produk.nama}
+                              {item.produk.nama?.replace(" - ", " ")}
                             </p>
                             {item.produk.kategori && (
                               <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mt-0.5">

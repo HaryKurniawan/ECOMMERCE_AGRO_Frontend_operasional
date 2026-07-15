@@ -57,7 +57,7 @@ const SellerProductTable: React.FC<SellerProductTableProps> = ({
                           <div className="relative w-full h-full">
                             <Image
                               src={p.gambarUrl}
-                              alt={p.nama || "Produk"}
+                              alt={p.nama?.replace(" - ", " ") || "Produk"}
                               fill
                               sizes="40px"
                               className="object-cover"
@@ -69,7 +69,7 @@ const SellerProductTable: React.FC<SellerProductTableProps> = ({
                         )}
                       </div>
                       <span className="font-bold text-gray-900 truncate max-w-[150px]">
-                        {p.nama}
+                        {p.nama?.replace(" - ", " ")}
                       </span>
                     </div>
                   </td>

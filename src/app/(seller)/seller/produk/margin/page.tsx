@@ -177,7 +177,7 @@ export default function MarginPage() {
       await apiClient.patch(`/toko/harga/produk/${editingProduct.id}`, payload);
       setMessage({
         type: "success",
-        text: `Harga jual untuk "${editingProduct.nama}" berhasil disimpan.`,
+        text: `Harga jual untuk "${editingProduct.nama?.replace(" - ", " ")}" berhasil disimpan.`,
       });
       setEditingProduct(null);
       // Reload details
@@ -468,7 +468,7 @@ export default function MarginPage() {
                     className="hover:bg-slate-50/30 transition-colors"
                   >
                     <td className="py-4 pl-2 font-medium text-slate-850">
-                      {p.nama}
+                      {p.nama?.replace(" - ", " ")}
                     </td>
                     <td className="py-4 text-center font-medium text-slate-500">
                       {p.stok} {p.satuan}
@@ -536,7 +536,7 @@ export default function MarginPage() {
               <p className="text-[11px] text-slate-400 mt-0.5">
                 Produk:{" "}
                 <span className="font-medium text-slate-600">
-                  {editingProduct.nama}
+                  {editingProduct.nama?.replace(" - ", " ")}
                 </span>
               </p>
             </div>
@@ -773,7 +773,8 @@ export default function MarginPage() {
                           <td className="px-4 py-3">
                             {item.produkId ? (
                               <span className="text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-md text-[11px] truncate max-w-[150px] inline-block">
-                                {item.produk?.nama || "Produk"}
+                                {item.produk?.nama?.replace(" - ", " ") ||
+                                  "Produk"}
                               </span>
                             ) : (
                               <span className="text-emerald-600 font-medium bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md text-[11px]">

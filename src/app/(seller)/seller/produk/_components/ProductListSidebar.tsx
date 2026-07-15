@@ -123,7 +123,7 @@ export default function ProductListSidebar({
                 {product.gambarUrl ? (
                   <Image
                     src={product.gambarUrl}
-                    alt={product.nama}
+                    alt={product.nama?.replace(" - ", " ")}
                     fill
                     sizes="64px"
                     className="object-cover"
@@ -140,7 +140,7 @@ export default function ProductListSidebar({
                 <h3
                   className={`font-medium text-sm truncate transition-colors ${isActive ? "text-emerald-700" : "text-gray-900 group-hover:text-emerald-600"}`}
                 >
-                  {product.namaEtalase || product.nama}
+                  {product.namaEtalase || product.nama?.replace(" - ", " ")}
                 </h3>
                 <p className="text-xs font-semibold text-emerald-600 mt-1">
                   {formatRupiah(product.harga)}

@@ -56,7 +56,7 @@ export default function LaporanProdukPage() {
   }, []);
 
   const filteredProducts = products.filter((p) =>
-    p.nama.toLowerCase().includes(search.toLowerCase()),
+    p.nama?.replace(" - ", " ").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -123,7 +123,7 @@ export default function LaporanProdukPage() {
                   {p.gambarUrl ? (
                     <Image
                       src={p.gambarUrl}
-                      alt={p.nama}
+                      alt={p.nama?.replace(" - ", " ")}
                       fill
                       sizes="56px"
                       className="object-cover w-full h-full"
@@ -135,7 +135,7 @@ export default function LaporanProdukPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-gray-900 text-sm line-clamp-2 group-hover:text-emerald-700 transition-colors">
-                    {p.nama}
+                    {p.nama?.replace(" - ", " ")}
                   </h3>
                   <p className="text-[11px] text-gray-500 mt-1">
                     {p.category?.nama || "Tanpa Kategori"}
