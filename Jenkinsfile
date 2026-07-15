@@ -54,6 +54,7 @@ pipeline {
                     --name ${CONTAINER_NAME} \
                     --network agro-network \
                     --env-file .env.local \
+                    --restart always \
                     -p ${APP_PORT}:3004 \
                     ${IMAGE_NAME}
 
