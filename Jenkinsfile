@@ -2,11 +2,10 @@ pipeline {
     agent any
 
     environment {
-        IS_PRODUCTION = "${env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master' || env.BRANCH_NAME == null}"
-        
-        APP_PORT = "${IS_PRODUCTION == 'true' ? '3002' : '3003'}"
-        CONTAINER_NAME = "${IS_PRODUCTION == 'true' ? 'agro-frontend-operasional' : 'agro-frontend-operasional-staging'}"
-        ENV_CRED_ID = "${IS_PRODUCTION == 'true' ? 'agro_env_frontend_ops' : 'frontend-operasional-env-staging'}"
+        // Atur port dan nama container
+        APP_PORT = "3004"
+        CONTAINER_NAME = "agro-frontend-operasional"
+        ENV_CRED_ID = "agro_env_frontend_ops"
         IMAGE_NAME = "${CONTAINER_NAME}-image"
     }
 
@@ -39,7 +38,7 @@ pipeline {
                 echo "1. Menyalakan versi baru di latar belakang..."
                 docker run -d \
                 --name $TEST_CONTAINER \
-                --network 1panel-network \
+                --network agro-network \
                 --env-file .env.local \
                 ${IMAGE_NAME}
 
@@ -53,7 +52,7 @@ pipeline {
                     
                     docker run -d \
                     --name ${CONTAINER_NAME} \
-                    --network 1panel-network \
+                    --network agro-network \
                     --env-file .env.local \
                     -p ${APP_PORT}:3004 \
                     ${IMAGE_NAME}
