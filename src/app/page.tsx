@@ -37,6 +37,12 @@ const isAccountNotFoundError = (msg: string | null | undefined): boolean => {
   );
 };
 
+const isUnverifiedError = (msg: string | null | undefined): boolean => {
+  if (!msg) return false;
+  const normalized = msg.toLowerCase();
+  return normalized.includes("belum terverifikasi");
+};
+
 // --- CUSTOM HOOKS ---
 function useOperationalLogin() {
   const router = useRouter();
@@ -46,6 +52,8 @@ function useOperationalLogin() {
 
   const [oauthError, setOauthError] = useState<string | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showUnverifiedModal, setShowUnverifiedModal] = useState(false);
+  const [unverifiedMessage, setUnverifiedMessage] = useState("");
 
   useEffect(() => {
     const err = searchParams.get("error");
@@ -54,6 +62,10 @@ function useOperationalLogin() {
       const decodedMsg = msg ? decodeURIComponent(msg) : "";
       if (isAccountNotFoundError(decodedMsg)) {
         setShowErrorModal(true);
+        router.replace("/");
+      } else if (isUnverifiedError(decodedMsg)) {
+        setUnverifiedMessage(decodedMsg);
+        setShowUnverifiedModal(true);
         router.replace("/");
       } else {
         setOauthError(decodedMsg || "Authentication failed. Please try again.");
@@ -86,6 +98,9 @@ function useOperationalLogin() {
       const msg = err?.response?.data?.message || err?.message || "";
       if (isAccountNotFoundError(msg)) {
         setShowErrorModal(true);
+      } else if (isUnverifiedError(msg)) {
+        setUnverifiedMessage(msg);
+        setShowUnverifiedModal(true);
       }
     },
   });
@@ -95,7 +110,8 @@ function useOperationalLogin() {
       response?: { data?: { message?: string } };
     };
     const msg = axiosError?.response?.data?.message || mutation.error?.message;
-    return isAccountNotFoundError(msg) ? null : msg || null;
+    if (isAccountNotFoundError(msg) || isUnverifiedError(msg)) return null;
+    return msg || null;
   };
 
   const activeError = oauthError || getMutationErrorMessage();
@@ -106,6 +122,9 @@ function useOperationalLogin() {
     setOauthError,
     showErrorModal,
     setShowErrorModal,
+    showUnverifiedModal,
+    setShowUnverifiedModal,
+    unverifiedMessage,
   };
 }
 
@@ -129,6 +148,41 @@ function AccountNotFoundModal({
         </h3>
         <p className="text-sm text-gray-500 leading-relaxed max-w-[280px] mb-6">
           Silakan daftar terlebih dahulu.
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/20"
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function UnverifiedAccountModal({
+  isOpen,
+  onClose,
+  message,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  message: string;
+}) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300 animate-in fade-in">
+      <div className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-150 flex flex-col items-center text-center transform transition-all duration-300 scale-100 animate-in zoom-in-95">
+        <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 mb-5 shadow-inner">
+          <AlertCircle size={32} strokeWidth={2} />
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">
+          Akun Belum Terverifikasi
+        </h3>
+        <p className="text-sm text-gray-500 leading-relaxed max-w-[280px] mb-6">
+          Akun Anda belum terverifikasi sepenuhnya. Silakan selesaikan
+          verifikasi Email Anda.
         </p>
         <button
           type="button"
@@ -176,6 +230,9 @@ function OperationalLoginPageContent() {
     setOauthError,
     showErrorModal,
     setShowErrorModal,
+    showUnverifiedModal,
+    setShowUnverifiedModal,
+    unverifiedMessage,
   } = useOperationalLogin();
   const {
     register,
@@ -190,6 +247,7 @@ function OperationalLoginPageContent() {
 
   const closeModal = () => {
     setShowErrorModal(false);
+    setShowUnverifiedModal(false);
     mutation.reset();
     setOauthError(null);
   };
@@ -314,6 +372,11 @@ function OperationalLoginPageContent() {
       </div>
 
       <AccountNotFoundModal isOpen={showErrorModal} onClose={closeModal} />
+      <UnverifiedAccountModal
+        isOpen={showUnverifiedModal}
+        onClose={closeModal}
+        message={unverifiedMessage}
+      />
     </div>
   );
 }
