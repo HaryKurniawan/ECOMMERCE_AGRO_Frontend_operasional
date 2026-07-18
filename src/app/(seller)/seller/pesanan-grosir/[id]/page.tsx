@@ -43,6 +43,8 @@ interface OrderDetail {
   catatan?: string;
   createdAt: string;
   updatedAt?: string;
+  kemasanGrosir?: any;
+  diskonGrosirPersen?: number;
   konsumen?: { nama?: string; email?: string };
   customer?: { name?: string; email?: string; phone?: string };
   item?: Array<{
@@ -480,6 +482,33 @@ export default function DetailPesananGrosirPage() {
                 );
               })}
             </div>
+
+            {/* Packaging Details */}
+            {order.kemasanGrosir &&
+              Array.isArray(order.kemasanGrosir) &&
+              order.kemasanGrosir.length > 0 && (
+                <div className="mt-6 pt-5 border-t border-slate-100">
+                  <h4 className="text-sm font-medium text-slate-800 mb-3 flex items-center gap-1.5">
+                    <Package size={14} className="text-emerald-500" />
+                    Detail Kemasan (Packaging)
+                  </h4>
+                  <div className="grid gap-2">
+                    {order.kemasanGrosir.map((pack: any, i: number) => (
+                      <div
+                        key={i}
+                        className="flex justify-between items-center bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100"
+                      >
+                        <span className="text-xs font-medium text-slate-600">
+                          Kemasan {pack.ukuranKg} Kg
+                        </span>
+                        <span className="text-xs font-semibold text-slate-800 bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">
+                          {pack.jumlahBungkus} karung/box
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
           </div>
 
           {/* Address Card (Moved to Left Side to solve empty space on desktop) */}

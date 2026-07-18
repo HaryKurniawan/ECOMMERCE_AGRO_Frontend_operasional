@@ -43,13 +43,19 @@ export default function SellerTopbar() {
   let backUrl = "";
   const backLabel = "Kembali";
 
-  if (pathname.startsWith("/seller/produk/") && pathname !== "/seller/produk") {
+  if (
+    pathname.startsWith("/seller/produk/") &&
+    pathname !== "/seller/produk" &&
+    pathname !== "/seller/produk/margin"
+  ) {
     backUrl = "/seller/produk";
   } else if (
     pathname.startsWith("/seller/laporan/produk/") &&
     pathname !== "/seller/laporan/produk"
   ) {
     backUrl = "/seller/tren";
+  } else if (pathname === "/seller/pengajuan-stok/baru") {
+    backUrl = "/seller/gudang/produk";
   }
 
   const isDetailPage = !!backUrl;

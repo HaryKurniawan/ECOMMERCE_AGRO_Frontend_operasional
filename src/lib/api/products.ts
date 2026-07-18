@@ -17,6 +17,15 @@ export const productsApi = {
     apiClient.get(`/ecom-produk/toko/${tokoId}/all`, { params }),
   getStockHistory: (id: string, params?: { page?: number; limit?: number }) =>
     apiClient.get(`/ecom-produk/${id}/stock-history`, { params }),
+  getBatches: (id: string) => apiClient.get(`/ecom-produk/${id}/batches`),
+  updateBatchExpiry: (
+    produkId: string,
+    batchId: string,
+    tanggalKadaluarsa: string | null,
+  ) =>
+    apiClient.patch(`/ecom-produk/${produkId}/batches/${batchId}/expiry`, {
+      tanggalKadaluarsa,
+    }),
   getGrades: (produkId: string) =>
     apiClient.get(`/ecom-produk/${produkId}/grade`),
   create: (tokoId: string, data: Record<string, unknown>) =>

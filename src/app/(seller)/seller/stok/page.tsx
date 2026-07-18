@@ -64,192 +64,35 @@ export default function SellerStockManagementPage() {
     "semua" | "normal" | "rendah" | "habis"
   >("semua");
 
-  // History tab: 'masuk', 'keluar', or 'perubahan'
-  const [historyTab, setHistoryTab] = useState<
-    "masuk" | "keluar" | "perubahan"
-  >("masuk");
-
-  // History State
-  const [historyLogs, setHistoryLogs] = useState<StockLog[]>([]);
-
-  // ── History Initialization ───────────────────────────────────────────────
-  const initHistory = useCallback((prods: ProductItem[]) => {
-    if (typeof window === "undefined") return;
-
-    const localData = localStorage.getItem("agrojabar_seller_stock_history_v2");
-    if (localData) {
-      try {
-        setHistoryLogs(JSON.parse(localData));
-        return;
-      } catch (e) {
-        console.error("Error parsing local history logs", e);
-      }
-    }
-
-    // Fallback: Generate ultra-realistic logs
-    if (prods.length === 0) return;
-
-    const initialLogs: StockLog[] = [];
-    const now = new Date();
-
-    prods.forEach((p, idx) => {
-      // 1. Incoming Stock (Stok Masuk - from Stock Requests)
-      const time1 = new Date(now.getTime() - (idx * 36 + 18) * 60 * 60 * 1000);
-      initialLogs.push({
-        id: `log-in-${p.id}-${idx}`,
-        produkId: p.id,
-        produkNama: p.nama?.replace(" - ", " "),
-        gambarUrl: p.gambarUrl,
-        change: 120 + idx * 15,
-        tipe: "MASUK",
-        keterangan: `Penerimaan Titip Stok - Pengajuan #${p.id.substring(0, 5).toUpperCase()}`,
-        timestamp: time1.toISOString(),
-      });
-
-      // 2. Outgoing Stock (Stok Keluar - from customer sales orders)
-      const time2 = new Date(now.getTime() - (idx * 18 + 4) * 60 * 60 * 1000);
-      initialLogs.push({
-        id: `log-out-${p.id}-${idx}`,
-        produkId: p.id,
-        produkNama: p.nama?.replace(" - ", " "),
-        gambarUrl: p.gambarUrl,
-        change: -1 * (2 + (idx % 3)),
-        tipe: "KELUAR",
-        keterangan: `Penjualan Otomatis - Pesanan #${108920 + idx}`,
-        timestamp: time2.toISOString(),
-      });
-
-      // 3. Shrinkage/Audit Outflow (Stok Keluar - sorting / damage)
-      if (idx % 3 === 0) {
-        const time3 = new Date(now.getTime() - (idx * 24 + 2) * 60 * 60 * 1000);
-        initialLogs.push({
-          id: `log-out-audit-${p.id}-${idx}`,
-          produkId: p.id,
-          produkNama: p.nama?.replace(" - ", " "),
-          gambarUrl: p.gambarUrl,
-          change: -1,
-          tipe: "KELUAR",
-          keterangan: "Penyusutan Barang Afkir (Disortir Gudang)",
-          timestamp: time3.toISOString(),
-        });
-      }
-
-      // 4. Manual Stock Adjustments (Stok Perubahan - stock corrections)
-      if (idx % 2 === 0) {
-        const time4 = new Date(
-          now.getTime() - (idx * 48 + 10) * 60 * 60 * 1000,
-        );
-        initialLogs.push({
-          id: `log-change-init-${p.id}-${idx}`,
-          produkId: p.id,
-          produkNama: p.nama?.replace(" - ", " "),
-          gambarUrl: p.gambarUrl,
-          change: idx % 4 === 0 ? 5 : -2,
-          tipe: "PERUBAHAN",
-          keterangan:
-            idx % 4 === 0
-              ? "Koreksi Selisih Stok Fisik Toko"
-              : "Retur Barang Rusak/Kedaluwarsa",
-          timestamp: time4.toISOString(),
-        });
-      }
-    });
-
-    // Sort by newest
-    initialLogs.sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-    );
-    localStorage.setItem(
-      "agrojabar_seller_stock_history_v2",
-      JSON.stringify(initialLogs),
-    );
-    setHistoryLogs(initialLogs);
-  }, []);
-
   // ── Fetch Data ─────────────────────────────────────────────────────────────
-  const fetchData = useCallback(
-    async (showLoading = true) => {
-      try {
-        if (showLoading) setLoading(true);
-        setErrorText("");
+  const fetchData = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      setErrorText("");
 
-        const storeRes = await storesApi.getMyStore();
-        const storeData =
-          extractArray<any>(storeRes)[0] ||
-          storeRes?.data?.data ||
-          storeRes?.data;
-        setStore(storeData);
+      const storeRes = await storesApi.getMyStore();
+      const storeData =
+        extractArray<any>(storeRes)[0] ||
+        storeRes?.data?.data ||
+        storeRes?.data;
+      setStore(storeData);
 
-        if (storeData?.id) {
-          const prodRes = await productsApi.getAllByStore(storeData.id);
-          const dataArray = extractArray<ProductItem>(prodRes);
-          setProducts(dataArray);
-
-          // Fetch real stock history from backend
-          try {
-            const historyRes = await storesApi.getMyStockHistory({
-              limit: 100,
-            });
-            const historyData =
-              historyRes?.data?.data?.data || historyRes?.data?.data || [];
-
-            if (Array.isArray(historyData) && historyData.length > 0) {
-              const mappedLogs: StockLog[] = historyData.map((log: any) => {
-                let logType: "MASUK" | "KELUAR" | "PERUBAHAN" = "MASUK";
-                if (log.tipe === "OUT") logType = "KELUAR";
-                if (log.tipe === "ADJUSTMENT") logType = "PERUBAHAN";
-
-                return {
-                  id: log.id,
-                  produkId: log.produkId,
-                  produkNama:
-                    log.produk?.nama?.replace(" - ", " ") ||
-                    "Produk Tidak Dikenal",
-                  gambarUrl: log.produk?.gambarUrl,
-                  change: log.tipe === "OUT" ? -log.kuantitas : log.kuantitas,
-                  tipe: logType,
-                  keterangan:
-                    log.catatan ||
-                    (log.tipe === "IN"
-                      ? "Stok Masuk"
-                      : log.tipe === "OUT"
-                        ? "Stok Keluar"
-                        : "Penyesuaian Stok"),
-                  timestamp: log.createdAt,
-                };
-              });
-              setHistoryLogs(mappedLogs);
-            } else {
-              initHistory(dataArray);
-            }
-          } catch (historyErr) {
-            console.error(
-              "Failed to fetch store stock history from API",
-              historyErr,
-            );
-            initHistory(dataArray);
-          }
-        }
-      } catch (err: any) {
-        console.error("Failed to fetch store inventory details", err);
-        setErrorText(err.message || "Gagal memuat data inventaris.");
-      } finally {
-        setLoading(false);
+      if (storeData?.id) {
+        const prodRes = await productsApi.getAllByStore(storeData.id);
+        const dataArray = extractArray<ProductItem>(prodRes);
+        setProducts(dataArray);
       }
-    },
-    [initHistory],
-  );
+    } catch (err: any) {
+      console.error("Failed to fetch store inventory details", err);
+      setErrorText(err.message || "Gagal memuat data inventaris.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  useEffect(() => {
-    if (products.length > 0 && historyLogs.length === 0) {
-      initHistory(products);
-    }
-  }, [products, historyLogs, initHistory]);
 
   // ── Derivations ────────────────────────────────────────────────────────────
   const catalogCount = products.length;
@@ -288,16 +131,6 @@ export default function SellerStockManagementPage() {
       return matchSearch && matchStatus;
     });
   }, [products, search, filterStockStatus]);
-
-  // Filter history logs based on active tab ('masuk', 'keluar', or 'perubahan')
-  const filteredHistoryLogs = useMemo(() => {
-    return historyLogs.filter((log) => {
-      if (historyTab === "masuk") return log.tipe === "MASUK";
-      if (historyTab === "keluar") return log.tipe === "KELUAR";
-      if (historyTab === "perubahan") return log.tipe === "PERUBAHAN";
-      return true;
-    });
-  }, [historyLogs, historyTab]);
 
   // Loading indicator for full page fetch
   if (loading && products.length === 0) {
@@ -425,9 +258,8 @@ export default function SellerStockManagementPage() {
       </div>
 
       {/* ── MAIN WORKSPACE CONTAINER ────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-        {/* Left 2 Columns: Product List */}
-        <div className="xl:col-span-2 space-y-4">
+      <div className="items-start">
+        <div className="space-y-4">
           <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-4">
             {/* Search & Stock Filter Tabs */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -548,16 +380,21 @@ export default function SellerStockManagementPage() {
 
                         {/* Varian Kemasan Sub-Stock */}
                         {p.varian && p.varian.length > 0 && (
-                          <div className="flex flex-wrap justify-end gap-1.5 mt-0.5">
+                          <div className="flex flex-wrap justify-end gap-2 mt-2">
                             {p.varian.map((v) => (
                               <div
                                 key={v.id}
-                                className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50/50 text-emerald-600 border border-emerald-100/50 flex gap-1"
+                                className="text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 shadow-sm"
                               >
-                                <span className="font-semibold">
-                                  {v.ukuranKg}kg:
+                                <span className="font-bold text-[10px] bg-emerald-200/50 px-1.5 py-0.5 rounded text-emerald-800">
+                                  {v.ukuranKg} kg
                                 </span>
-                                <span>{v.stokKemasan}</span>
+                                <span className="font-bold text-sm">
+                                  {v.stokKemasan}
+                                </span>
+                                <span className="text-[10px] text-emerald-600/80 font-medium -ml-0.5">
+                                  pack
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -569,148 +406,6 @@ export default function SellerStockManagementPage() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Right 1 Column: Stock Mutation Timeline */}
-        <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-4">
-          <div className="pb-3 border-b border-slate-50 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-                <History size={12} />
-              </div>
-              <span className="text-[13px] font-medium text-slate-700">
-                Riwayat Mutasi Stok
-              </span>
-            </div>
-
-            {/* TAB-3: Stok Masuk vs Stok Keluar vs Perubahan */}
-            <div className="grid grid-cols-3 gap-1 p-1 bg-gray-50 rounded-xl border border-slate-100/50">
-              <button
-                onClick={() => setHistoryTab("masuk")}
-                className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10.5px] font-medium transition-all ${
-                  historyTab === "masuk"
-                    ? "bg-white text-emerald-600 shadow-sm border border-slate-100/30"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <TrendingUp size={11} />
-                Masuk
-              </button>
-              <button
-                onClick={() => setHistoryTab("keluar")}
-                className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10.5px] font-medium transition-all ${
-                  historyTab === "keluar"
-                    ? "bg-white text-rose-600 shadow-sm border border-slate-100/30"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <TrendingDown size={11} />
-                Keluar
-              </button>
-              <button
-                onClick={() => setHistoryTab("perubahan")}
-                className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10.5px] font-medium transition-all ${
-                  historyTab === "perubahan"
-                    ? "bg-white text-blue-600 shadow-sm border border-slate-100/30"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <RefreshCw size={11} />
-                Perubahan
-              </button>
-            </div>
-          </div>
-
-          {/* Timeline Feed */}
-          {filteredHistoryLogs.length === 0 ? (
-            <div className="text-center py-14 space-y-2">
-              <Clock className="w-8 h-8 text-slate-200 mx-auto" />
-              <p className="text-[11px] text-slate-400 font-medium">
-                Tidak ada mutasi{" "}
-                {historyTab === "masuk"
-                  ? "stok masuk"
-                  : historyTab === "keluar"
-                    ? "stok keluar"
-                    : "perubahan stok"}
-              </p>
-            </div>
-          ) : (
-            <div className="relative border-l border-slate-100 pl-4 py-2 space-y-5 max-h-[500px] overflow-y-auto pr-1">
-              {filteredHistoryLogs.map((log) => {
-                const isEntry = log.change > 0;
-                const isChange = log.tipe === "PERUBAHAN";
-                const bulletColor = isChange
-                  ? "bg-blue-500"
-                  : isEntry
-                    ? "bg-emerald-500"
-                    : "bg-rose-500";
-                const textColor = isChange
-                  ? "text-blue-600"
-                  : isEntry
-                    ? "text-emerald-600"
-                    : "text-rose-500";
-                const displayChange = isChange
-                  ? log.change >= 0
-                    ? `+${log.change}`
-                    : `${log.change}`
-                  : isEntry
-                    ? `+${log.change}`
-                    : log.change;
-
-                return (
-                  <div key={log.id} className="relative group text-left">
-                    {/* Bullet dot indicator */}
-                    <span
-                      className={`absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center shrink-0 ${bulletColor}`}
-                    />
-
-                    <div className="space-y-1">
-                      {/* Product identity in Log */}
-                      <div className="flex gap-2 items-center">
-                        <div className="w-6 h-6 bg-slate-50 rounded-lg overflow-hidden border border-slate-100 flex-shrink-0 flex items-center justify-center">
-                          {log.gambarUrl ? (
-                            <img
-                              src={log.gambarUrl}
-                              alt={log.produkNama}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Package className="w-3 h-3 text-slate-300" />
-                          )}
-                        </div>
-                        <span className="text-[11px] font-medium text-slate-800 truncate flex-1 leading-none">
-                          {log.produkNama}
-                        </span>
-                      </div>
-
-                      {/* Log Action Label */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] text-slate-400 font-normal leading-none block">
-                          {log.keterangan}
-                        </span>
-
-                        <span
-                          className={`text-[11px] font-medium flex-shrink-0 ${textColor}`}
-                        >
-                          {displayChange}
-                        </span>
-                      </div>
-
-                      {/* Timestamp */}
-                      <span className="text-[9px] text-slate-300 font-medium block">
-                        {new Date(log.timestamp).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -26,8 +26,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShieldX,
-  ChevronRight,
-  TrendingUp,
   PanelRightClose,
   PanelRightOpen,
 } from "lucide-react";
@@ -89,14 +87,6 @@ interface PageParams {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const statusColor = (s: string) => {
-  const status = s?.toLowerCase();
-  if (status === "active") return "bg-emerald-100 text-emerald-700";
-  if (status === "out_of_stock") return "bg-red-100 text-red-700";
-  if (status === "draft") return "bg-gray-100 text-gray-500";
-  return "bg-amber-100 text-amber-700";
-};
-
 const StarRating = ({ rating }: { rating: number }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map((i) => (
@@ -151,7 +141,7 @@ export default function KelolaProdukPage({
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "etalase" | "review" | "riwayat" | "margin"
+    "etalase" | "review" | "riwayat" | "margin" | "kemasan"
   >("etalase");
 
   // ── Varian Kemasan State ──────────────────────────────────────────────────
@@ -161,7 +151,6 @@ export default function KelolaProdukPage({
   const [editVarianPrice, setEditVarianPrice] = useState<number>(0);
 
   // ── Margin State ──────────────────────────────────────────────────────────
-  const [marginData, setMarginData] = useState<any>(null);
   const [marginLoading, setMarginLoading] = useState(false);
   const [marginFeedback, setMarginFeedback] = useState<{
     type: "success" | "error";
@@ -179,7 +168,6 @@ export default function KelolaProdukPage({
     namaEtalase: "",
     images: [] as { type: "link" | "file"; value: string }[],
   });
-  const [editLoading, setEditLoading] = useState(false);
   const [editFeedback, setEditFeedback] = useState<{
     type: "success" | "error";
     msg: string;
@@ -324,6 +312,7 @@ export default function KelolaProdukPage({
       }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // ── Fetch Reviews ─────────────────────────────────────────────────────────
@@ -476,7 +465,7 @@ export default function KelolaProdukPage({
       }
     }
 
-    setEditLoading(true);
+    setActionLoading(true);
     setEditFeedback(null);
     try {
       await productsApi.update(product.id, {
@@ -504,7 +493,7 @@ export default function KelolaProdukPage({
         msg: e?.response?.data?.message || e?.message || "Gagal menyimpan.",
       });
     } finally {
-      setEditLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -785,7 +774,12 @@ export default function KelolaProdukPage({
                 value={activeTab}
                 onChange={(val) =>
                   setActiveTab(
-                    val as "etalase" | "review" | "riwayat" | "margin",
+                    val as
+                      | "etalase"
+                      | "review"
+                      | "riwayat"
+                      | "margin"
+                      | "kemasan",
                   )
                 }
                 options={[
@@ -862,121 +856,7 @@ export default function KelolaProdukPage({
                     </span>
                   </div>
 
-                  {/* Varian Kemasan Section */}
-                  {varians.length > 0 && (
-                    <div className="space-y-3 pt-2 border-t border-gray-100">
-                      <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-                        <Package size={16} className="text-emerald-600" />
-                        <span className="font-semibold text-gray-900 text-sm">
-                          Daftar Varian Kemasan Etalase
-                        </span>
-                      </div>
-
-                      <div className="grid gap-3">
-                        {varians.map((varian) => (
-                          <div
-                            key={varian.id}
-                            className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-150 hover:border-emerald-200/80 transition-colors"
-                          >
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-gray-900 bg-white border border-gray-200 px-2 py-0.5 rounded-lg shadow-xs">
-                                  Kemasan {varian.ukuranKg} kg
-                                </span>
-                                <span
-                                  className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md ${varian.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}
-                                >
-                                  {varian.isActive ? "Aktif" : "Nonaktif"}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span>
-                                  Stok:{" "}
-                                  <strong className="text-gray-900">
-                                    {varian.stokKemasan}
-                                  </strong>{" "}
-                                  unit
-                                </span>
-                                <span>
-                                  Biaya Tambahan:{" "}
-                                  <strong className="text-emerald-700">
-                                    {formatRupiah(varian.biayaTambahan)}
-                                  </strong>
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {editingVarianId === varian.id ? (
-                                <div className="flex items-center gap-1.5">
-                                  <input
-                                    type="number"
-                                    value={editVarianPrice}
-                                    onChange={(e) =>
-                                      setEditVarianPrice(Number(e.target.value))
-                                    }
-                                    className="w-24 px-2 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-emerald-500 bg-white"
-                                    placeholder="Harga"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleUpdateVarian(
-                                        varian.id,
-                                        editVarianPrice,
-                                      )
-                                    }
-                                    className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                                  >
-                                    <Save size={12} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditingVarianId(null)}
-                                    className="p-1.5 bg-white border border-gray-200 text-gray-400 rounded-lg hover:bg-gray-50 transition-colors"
-                                  >
-                                    <X size={12} />
-                                  </button>
-                                </div>
-                              ) : (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setEditingVarianId(varian.id);
-                                      setEditVarianPrice(varian.biayaTambahan);
-                                    }}
-                                    className="px-2.5 py-1 text-xs bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 rounded-lg transition-colors font-semibold"
-                                  >
-                                    Ubah Biaya
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleUpdateVarian(
-                                        varian.id,
-                                        undefined,
-                                        !varian.isActive,
-                                      )
-                                    }
-                                    className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors ${
-                                      varian.isActive
-                                        ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                                    }`}
-                                  >
-                                    {varian.isActive
-                                      ? "Nonaktifkan"
-                                      : "Aktifkan"}
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Varian Kemasan Section moved to 'Kemasan' tab */}
 
                   {/* Deskripsi */}
                   <div>
@@ -1613,6 +1493,205 @@ export default function KelolaProdukPage({
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+
+            {/* ────────────────────────────────────────────────────────────────────── */}
+            {/* TAB: KEMASAN                                                          */}
+            {/* ────────────────────────────────────────────────────────────────────── */}
+            {activeTab === "kemasan" && (
+              <div className="animate-fade-in space-y-4">
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-5 shadow-sm">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <Package size={16} className="text-emerald-600" />
+                      <span className="font-semibold text-gray-900 text-sm">
+                        Pengaturan Kemasan & Biaya Tambahan
+                      </span>
+                    </div>
+                    {variansLoading && (
+                      <Loader2
+                        size={16}
+                        className="animate-spin text-emerald-500"
+                      />
+                    )}
+                  </div>
+
+                  {/* Info Banner */}
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 text-blue-700 rounded-lg flex-shrink-0">
+                      <Package size={15} />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                        Biaya Tambahan Kemasan Grosir
+                      </h4>
+                      <p className="text-xs text-blue-700 leading-relaxed">
+                        Atur biaya kemasan plastik/karung per bungkus untuk
+                        setiap ukuran kemasan. Biaya ini akan ditampilkan ke
+                        pembeli saat mereka memilih kemasan di form pengajuan
+                        grosir. Kosongkan (0) jika biaya kemasan sudah termasuk
+                        dalam harga produk.
+                      </p>
+                    </div>
+                  </div>
+
+                  {varians.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Package size={28} className="text-gray-300" />
+                      </div>
+                      <p className="font-semibold text-gray-600 text-sm">
+                        Belum Ada Varian Kemasan
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Varian kemasan akan muncul otomatis saat ada stok masuk
+                        dengan spesifikasi kemasan tertentu.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-[11px] text-gray-400 font-medium">
+                        {varians.length} varian kemasan ditemukan • Klik
+                        &quot;Ubah Biaya&quot; untuk mengatur harga kemasan
+                      </p>
+                      <div className="grid gap-3">
+                        {varians.map((varian) => (
+                          <div
+                            key={varian.id}
+                            className={`p-4 rounded-xl border transition-all ${
+                              editingVarianId === varian.id
+                                ? "border-emerald-300 bg-emerald-50/30"
+                                : varian.isActive
+                                  ? "border-gray-150 bg-gray-50 hover:border-emerald-200"
+                                  : "border-gray-100 bg-gray-50/40 opacity-60"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              {/* Left: info */}
+                              <div className="space-y-1.5 flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-gray-900 bg-white border border-gray-200 px-2.5 py-0.5 rounded-lg shadow-xs">
+                                    Kemasan {varian.ukuranKg} kg
+                                  </span>
+                                  <span
+                                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md ${
+                                      varian.isActive
+                                        ? "bg-emerald-100 text-emerald-700"
+                                        : "bg-gray-100 text-gray-500"
+                                    }`}
+                                  >
+                                    {varian.isActive ? "✓ Aktif" : "Nonaktif"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-4 text-xs">
+                                  <span className="text-gray-500">
+                                    Stok:{" "}
+                                    <strong className="text-gray-800">
+                                      {varian.stokKemasan}
+                                    </strong>{" "}
+                                    unit
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${
+                                      varian.biayaTambahan > 0
+                                        ? "text-emerald-700"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    {varian.biayaTambahan > 0
+                                      ? `+${formatRupiah(varian.biayaTambahan)}/bungkus`
+                                      : "Biaya: Gratis"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Right: actions */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {editingVarianId === varian.id ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">
+                                        Rp
+                                      </span>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={editVarianPrice}
+                                        onChange={(e) =>
+                                          setEditVarianPrice(
+                                            Number(e.target.value),
+                                          )
+                                        }
+                                        className="w-32 pl-8 pr-2 py-1.5 text-xs border border-emerald-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-400 bg-white font-semibold"
+                                        placeholder="0"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateVarian(
+                                          varian.id,
+                                          editVarianPrice,
+                                        )
+                                      }
+                                      className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-xs font-semibold"
+                                    >
+                                      <Save size={12} />
+                                      Simpan
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingVarianId(null)}
+                                      className="p-1.5 bg-white border border-gray-200 text-gray-400 rounded-lg hover:bg-gray-100 transition-colors"
+                                    >
+                                      <X size={13} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingVarianId(varian.id);
+                                        setEditVarianPrice(
+                                          varian.biayaTambahan,
+                                        );
+                                      }}
+                                      className="flex items-center gap-1 px-3 py-1.5 text-xs bg-white hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300 text-gray-600 hover:text-emerald-700 rounded-lg transition-colors font-semibold"
+                                    >
+                                      <Edit size={11} />
+                                      Ubah Biaya
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateVarian(
+                                          varian.id,
+                                          undefined,
+                                          !varian.isActive,
+                                        )
+                                      }
+                                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                                        varian.isActive
+                                          ? "bg-gray-50 border-gray-200 text-gray-500 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                                          : "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"
+                                      }`}
+                                    >
+                                      {varian.isActive
+                                        ? "Nonaktifkan"
+                                        : "Aktifkan"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

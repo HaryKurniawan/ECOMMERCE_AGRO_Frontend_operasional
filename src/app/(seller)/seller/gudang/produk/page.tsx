@@ -11,6 +11,7 @@ import {
   ChevronRight,
   CheckCircle2,
   Star,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import { gudangApi, storesApi } from "@/lib/ecommerce-api";
@@ -325,194 +326,184 @@ export default function SellerWarehouseProductsPage() {
   }
 
   return (
-    <div className="w-full space-y-5">
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="space-y-2.5">
-        {/* Title row + search in one line */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
-              Gudang
-            </p>
-            <h1 className="text-base text-gray-800">Daftar Produk Gudang</h1>
-          </div>
-          {/* Search bar — pojok kanan */}
-          <div className="relative w-56 shrink-0">
-            <input
-              type="text"
-              placeholder="Cari produk..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 bg-white border border-gray-100 rounded-xl text-xs text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-200 focus:ring-2 focus:ring-gray-50 transition-all"
-            />
-            <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-gray-300" />
-          </div>
-        </div>
-
-        {/* Filter chips gudang */}
-        {affiliations.length > 1 && (
-          <div className="flex flex-wrap gap-1.5 items-center">
-            <button
-              onClick={() => setSelectedGudangFilter("all")}
-              className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border ${
-                selectedGudangFilter === "all"
-                  ? "bg-emerald-600 text-white border-emerald-600"
-                  : "bg-white text-gray-500 border-gray-100 hover:border-gray-200 hover:text-gray-700"
-              }`}
-            >
-              Semua
-            </button>
-            {affiliations.map((aff) => {
-              const { nama } = getGudangDetails(aff);
-              const isFav = aff.gudangId === favoriteId;
-              const isActive = selectedGudangFilter === aff.gudangId;
-              return (
-                <button
-                  key={aff.gudangId}
-                  onClick={() => setSelectedGudangFilter(aff.gudangId)}
-                  className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border flex items-center gap-1 ${
-                    isActive
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : "bg-white text-gray-500 border-gray-100 hover:border-gray-200 hover:text-gray-700"
-                  }`}
-                >
-                  {isFav && (
-                    <Star
-                      className={`w-2.5 h-2.5 shrink-0 ${isActive ? "fill-amber-300 text-amber-300" : "fill-amber-400 text-amber-400"}`}
-                    />
-                  )}
-                  {nama}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-rose-50/50 border border-rose-100 text-rose-700 p-4 rounded-2xl flex items-start gap-3">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-          <p className="text-xs leading-relaxed">{error}</p>
-        </div>
-      )}
-
-      {/* Grid Produk */}
-      {allProducts.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-slate-100/80 shadow-sm space-y-4">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-300">
-            <Package className="w-6 h-6" />
-          </div>
-          <h3 className="font-medium text-base text-slate-700">
-            Belum Ada Produk
-          </h3>
-          <p className="text-xs text-slate-400">
-            Belum ada produk tersedia dari gudang.
-          </p>
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="bg-amber-50/40 border border-amber-100/70 p-5 rounded-2xl flex items-start gap-3.5">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-500" />
-          <div>
-            <h3 className="font-medium text-sm text-amber-900">
-              Tidak Ada Produk
-            </h3>
-            <p className="text-xs mt-1 text-amber-700/90">
-              {searchQuery
-                ? "Tidak ada produk yang sesuai pencarian."
-                : "Tidak ada produk untuk filter yang dipilih."}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-          {filteredProducts.map((product) => (
-            <div
-              key={`${product.id}-${product.gudangId}`}
-              className="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col"
-            >
-              {/* Foto */}
-              <div className="w-full aspect-[4/3] bg-slate-100 overflow-hidden">
-                {product.gambarUrl ? (
-                  <img
-                    src={product.gambarUrl}
-                    alt={product.nama?.replace(" - ", " ")}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-300">
-                    <Package className="w-10 h-10" />
-                  </div>
-                )}
-              </div>
-
-              {/* Konten */}
-              <div className="p-4 flex flex-col flex-1 gap-2">
-                <h3 className="font-semibold text-sm text-slate-800 line-clamp-1">
-                  {product.varianProduk
-                    ? `${product.nama?.replace(" - ", " ")} ${product.varianProduk}`
-                    : product.nama?.replace(" - ", " ")}
-                </h3>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-100 uppercase tracking-wider">
-                    {product.nama?.replace(" - ", " ")}
-                  </span>
-                  {product.varianProduk && (
-                    <span className="text-[9px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100 uppercase tracking-wider">
-                      {product.varianProduk}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className="font-bold text-base text-emerald-600">
-                    Rp {product.hargaGudang.toLocaleString("id-ID")}
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    / {product.satuan}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  Min. pembelian{" "}
-                  <span className="font-semibold text-slate-700">
-                    {(product.minimalPembelianKg ?? 300).toLocaleString(
-                      "id-ID",
-                    )}{" "}
-                    {product.satuan}
-                  </span>
+    <div className="h-full flex flex-col">
+      {/* ── Scrollable Content ────────────────────────────────────────────── */}
+      <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="p-6 md:p-8 space-y-5 max-w-6xl mx-auto w-full">
+          {/* ── Header ─── */}
+          <div className="flex flex-col gap-4 pb-4 mb-2 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Daftar Produk Gudang
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  Minimal total pembelian 300 kg
                 </p>
-                <button
-                  onClick={() => toggleCart(product)}
-                  className={`mt-auto w-full px-3 py-2 rounded-xl text-xs font-medium transition-all border flex items-center justify-center gap-1.5 active:scale-[0.98] ${
-                    isInCart(product)
-                      ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
-                      : "bg-emerald-50/60 hover:bg-emerald-100/60 text-emerald-600 border-emerald-100/50"
-                  }`}
-                >
-                  {isInCart(product) ? (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Ditambahkan
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-3.5 h-3.5" />
-                      Tambah ke Daftar
-                    </>
-                  )}
-                </button>
+              </div>
+              {/* Search */}
+              <div className="relative w-full sm:w-64 shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cari produk..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all shadow-sm"
+                />
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
 
-      {/* Bar Keranjang sticky */}
+          {/* Filter chips gudang */}
+          {affiliations.length > 1 && (
+            <div className="flex flex-wrap gap-1.5 items-center">
+              <button
+                onClick={() => setSelectedGudangFilter("all")}
+                className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border ${
+                  selectedGudangFilter === "all"
+                    ? "bg-emerald-600 text-white border-emerald-600"
+                    : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
+                }`}
+              >
+                Semua
+              </button>
+              {affiliations.map((aff) => {
+                const { nama } = getGudangDetails(aff);
+                const isFav = aff.gudangId === favoriteId;
+                const isActive = selectedGudangFilter === aff.gudangId;
+                return (
+                  <button
+                    key={aff.gudangId}
+                    onClick={() => setSelectedGudangFilter(aff.gudangId)}
+                    className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border flex items-center gap-1 ${
+                      isActive
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
+                    }`}
+                  >
+                    {isFav && (
+                      <Star
+                        className={`w-2.5 h-2.5 shrink-0 ${isActive ? "fill-amber-300 text-amber-300" : "fill-amber-400 text-amber-400"}`}
+                      />
+                    )}
+                    {nama}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="bg-rose-50/50 border border-rose-100 text-rose-700 p-4 rounded-2xl flex items-start gap-3">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+              <p className="text-xs leading-relaxed">{error}</p>
+            </div>
+          )}
+
+          {/* Grid Produk */}
+          {allProducts.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-3xl border border-slate-100/80 shadow-sm space-y-4">
+              <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-300">
+                <Package className="w-6 h-6" />
+              </div>
+              <h3 className="font-medium text-base text-slate-700">
+                Belum Ada Produk
+              </h3>
+              <p className="text-xs text-slate-400">
+                Belum ada produk tersedia dari gudang.
+              </p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="bg-amber-50/40 border border-amber-100/70 p-5 rounded-2xl flex items-start gap-3.5">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-500" />
+              <div>
+                <h3 className="font-medium text-sm text-amber-900">
+                  Tidak Ada Produk
+                </h3>
+                <p className="text-xs mt-1 text-amber-700/90">
+                  {searchQuery
+                    ? "Tidak ada produk yang sesuai pencarian."
+                    : "Tidak ada produk untuk filter yang dipilih."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4">
+              {filteredProducts.map((product) => (
+                <div
+                  key={`${product.id}-${product.gudangId}`}
+                  className="bg-white rounded-3xl overflow-hidden hover:shadow-lg transition-all flex flex-col cursor-pointer group"
+                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                >
+                  {/* Foto */}
+                  <div className="w-full aspect-[4/3] bg-slate-100 overflow-hidden relative">
+                    {product.gambarUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={product.gambarUrl}
+                        alt={product.nama}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 relative z-10"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    )}
+                    <div className="absolute inset-0 w-full h-full flex items-center justify-center text-slate-300 z-0 bg-slate-100">
+                      <ImageIcon className="w-10 h-10 opacity-50" />
+                    </div>
+                  </div>
+
+                  {/* Konten */}
+                  <div className="p-3.5 flex flex-col flex-1 gap-0.5">
+                    <h3 className="font-semibold text-sm text-slate-800 line-clamp-2 leading-snug">
+                      {product.nama}
+                    </h3>
+                    <div className="flex items-baseline gap-1 mb-3">
+                      <span className="font-bold text-base text-emerald-600">
+                        Rp {product.hargaGudang.toLocaleString("id-ID")}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        / {product.satuan}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => toggleCart(product)}
+                      className={`mt-auto w-full py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${
+                        isInCart(product)
+                          ? "border border-emerald-500 text-emerald-600 bg-white hover:bg-emerald-50"
+                          : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      }`}
+                    >
+                      {isInCart(product) ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Ditambahkan
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3.5 h-3.5" />
+                          Tambah ke Daftar
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Cart Bar — selalu di bawah ────────────────────────────────────── */}
       {cart.length > 0 && (
-        <div className="sticky bottom-4 z-30 mt-2">
-          <div className="bg-emerald-600 text-white rounded-2xl shadow-xl shadow-emerald-900/20 p-4 flex items-center justify-between gap-4">
+        <div className="shrink-0 px-6 md:px-8 pb-4 pt-3">
+          <div className="bg-emerald-600 text-white rounded-2xl shadow-xl shadow-emerald-900/20 p-3.5 flex items-center justify-between gap-4 max-w-6xl mx-auto">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 border border-white/20 relative">
-                <Package className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0 relative">
+                <Package className="w-4 h-4" />
                 <span className="absolute -top-1.5 -right-1.5 bg-white text-emerald-700 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow">
                   {cart.length}
                 </span>
@@ -536,13 +527,13 @@ export default function SellerWarehouseProductsPage() {
                     /* ignore */
                   }
                 }}
-                className="px-3 py-2 text-xs font-medium text-emerald-50/90 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                className="px-3 py-1.5 text-xs font-medium text-emerald-50/90 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               >
                 Kosongkan
               </button>
               <button
                 onClick={handleLanjutPengajuan}
-                className="px-5 py-2.5 bg-white text-emerald-700 hover:bg-emerald-50 rounded-xl text-xs font-bold transition-all active:scale-[0.98] flex items-center gap-1.5"
+                className="px-5 py-2 bg-white text-emerald-700 hover:bg-emerald-50 rounded-xl text-xs font-bold transition-all active:scale-[0.98] flex items-center gap-1.5"
               >
                 Lanjut Ajukan
                 <ChevronRight className="w-4 h-4" />

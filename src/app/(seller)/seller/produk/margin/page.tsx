@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   Percent,
   TrendingUp,
+  TrendingDown,
   Package,
   AlertCircle,
   Sliders,
@@ -257,9 +258,6 @@ export default function MarginPage() {
     <div className="space-y-8 w-full">
       {/* Title */}
       <div className="pb-6 border-b border-slate-100">
-        <span className="text-xs text-emerald-600 font-medium uppercase tracking-wider">
-          Keuntungan & B2B
-        </span>
         <h2 className="text-2xl md:text-3xl font-medium text-slate-800 mt-1.5 tracking-tight">
           Pengaturan Margin & Harga Jual
         </h2>

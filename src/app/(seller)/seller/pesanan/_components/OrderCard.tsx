@@ -155,11 +155,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
               <ChevronRight size={13} /> {getStatusLabel(nextStatus)}
             </button>
           )}
-          {shipping?.status === "ARRIVED" && order.status !== "SELESAI" && (
-            <span className="text-[11px] text-slate-500 font-medium">
-              ⏳ Menunggu konfirmasi pembeli
-            </span>
-          )}
+          {shipping?.status === "ARRIVED" &&
+            order.status !== "SELESAI" &&
+            order.status !== "DITUTUP" && (
+              <span className="text-[11px] text-slate-500 font-medium">
+                ⏳ Menunggu konfirmasi pembeli
+              </span>
+            )}
           {order.status === "SELESAI" && (
             <button
               onClick={() => router.push(`/seller/pesanan/${order.id}`)}

@@ -10,8 +10,10 @@ import {
   Copy,
   ArrowUpDown,
   ChevronDown,
+  TrendingDown,
 } from "lucide-react";
 
+import { apiClient } from "@/lib/api-client";
 import { useSellerGrosirOrders } from "@/hooks/seller/useSellerGrosirOrders";
 import { useSellerDashboard } from "@/hooks/seller/useSellerDashboard";
 import { formatRupiah, formatTanggal } from "@/lib/ecommerce-api";
@@ -121,6 +123,59 @@ const GrosirOrdersPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState("semua");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
+  const [diskonGrosirPersen, setDiskonGrosirPersen] = useState<number>(0);
+  const [newDiskonGrosirPersen, setNewDiskonGrosirPersen] = useState<number>(0);
+  const [savingDiskon, setSavingDiskon] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const configRes = await apiClient.get("/toko/harga/config");
+        const curDiskon = configRes.data.data.diskonGrosirPersen ?? 0;
+        setDiskonGrosirPersen(curDiskon);
+        setNewDiskonGrosirPersen(curDiskon);
+      } catch (err) {
+        console.error("Failed to fetch store config", err);
+      }
+    };
+    if (store?.id) {
+      fetchConfig();
+    }
+  }, [store?.id]);
+
+  const handleSaveDiskonGrosir = async () => {
+    if (newDiskonGrosirPersen < 0 || newDiskonGrosirPersen > 50) {
+      setMessage({
+        type: "error",
+        text: "Diskon grosir harus antara 0% dan 50%.",
+      });
+      return;
+    }
+    setSavingDiskon(true);
+    setMessage(null);
+    try {
+      await apiClient.patch("/toko/harga/config", {
+        diskonGrosirPersen: Number(newDiskonGrosirPersen),
+      });
+      setDiskonGrosirPersen(Number(newDiskonGrosirPersen));
+      setMessage({
+        type: "success",
+        text: "Diskon grosir berhasil diperbarui!",
+      });
+    } catch (err: any) {
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Gagal memperbarui diskon grosir.",
+      });
+    } finally {
+      setSavingDiskon(false);
+    }
+  };
+
   const loading = storeLoading || (store?.id && ordersLoading);
 
   if (loading) {
@@ -193,6 +248,103 @@ const GrosirOrdersPage: React.FC = () => {
             <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-slate-800">
               Pembelian Grosiran
             </h1>
+          </div>
+        </div>
+      </div>
+
+      {message && (
+        <div
+          className={`p-4 rounded-xl text-sm font-medium flex items-center gap-2 ${message.type === "error" ? "bg-red-50 text-red-600 border border-red-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}
+        >
+          <AlertCircle size={16} />
+          {message.text}
+        </div>
+      )}
+
+      {/* Diskon Grosir Setting */}
+      <div className="bg-white rounded-3xl border border-emerald-100 shadow-sm p-6 space-y-4">
+        <div className="flex items-center gap-3 pb-3 border-b border-slate-50">
+          <div className="p-2.5 bg-emerald-50 rounded-2xl">
+            <TrendingDown size={18} className="text-emerald-600" />
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-slate-800">
+              Pengaturan Diskon Grosiran
+            </h3>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+              Potongan harga otomatis yang diberikan kepada pembeli grosiran
+              (min. 300 kg total).
+            </p>
+          </div>
+          {diskonGrosirPersen > 0 && (
+            <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-full shrink-0">
+              Aktif {diskonGrosirPersen}%
+            </span>
+          )}
+          {diskonGrosirPersen === 0 && (
+            <span className="ml-auto text-[10px] bg-slate-100 text-slate-400 font-bold px-2.5 py-1 rounded-full shrink-0">
+              Tidak Aktif
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-slate-50 rounded-2xl p-4 space-y-1">
+            <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
+              Diskon Saat Ini
+            </p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-medium text-emerald-600">
+                {diskonGrosirPersen}%
+              </span>
+              <span className="text-xs text-slate-400">
+                potongan dari subtotal
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
+              {diskonGrosirPersen === 0
+                ? "Tidak ada diskon untuk pembelian grosiran saat ini."
+                : `Setiap pembeli grosiran mendapat potongan ${diskonGrosirPersen}% dari total pesanan.`}
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <p className="text-xs text-slate-500 font-medium">
+              Ubah Diskon Grosir
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="number"
+                  min="0"
+                  max="50"
+                  step="0.5"
+                  value={newDiskonGrosirPersen}
+                  onChange={(e) =>
+                    setNewDiskonGrosirPersen(parseFloat(e.target.value) || 0)
+                  }
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-medium focus:ring-1 focus:ring-emerald-500 focus:outline-none focus:bg-white pr-10"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">
+                  %
+                </span>
+              </div>
+              <button
+                onClick={handleSaveDiskonGrosir}
+                disabled={savingDiskon}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-100 disabled:text-slate-400 text-white rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 shrink-0"
+              >
+                {savingDiskon ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <TrendingDown size={13} />
+                )}
+                {savingDiskon ? "Menyimpan..." : "Simpan"}
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium">
+              Rentang 0%–50%. Isi 0 untuk menonaktifkan diskon grosir.
+            </p>
           </div>
         </div>
       </div>

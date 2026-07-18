@@ -108,14 +108,17 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   } | null>(null);
 
   useEffect(() => {
+    let animationFrameId: number;
+    let startTime: number;
+
     const updateRect = () => {
       const activeEl = navRef.current?.querySelector(
         ".sidebar-item-active",
       ) as HTMLElement;
       if (activeEl) {
         setActiveRect({
-          top: activeEl.offsetTop - 2, // slightly shift up by 2px
-          height: activeEl.offsetHeight + 4, // add 4px total padding
+          top: activeEl.offsetTop - 2,
+          height: activeEl.offsetHeight + 4,
           left: activeEl.offsetLeft,
           width: activeEl.offsetWidth,
         });
@@ -124,13 +127,22 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       }
     };
 
-    // Initial update
-    updateRect();
+    // This tracks the element smoothly during the 300ms CSS transition
+    const trackAnimation = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
 
-    // Add small delay to ensure DOM is fully rendered/expanded
-    const timeoutId = setTimeout(updateRect, 50);
+      updateRect();
 
-    // Observe nav container for resize during transitions (collapsing/expanding)
+      if (elapsed < 350) {
+        animationFrameId = requestAnimationFrame(trackAnimation);
+      }
+    };
+
+    // Initial update & start animation loop for transition duration
+    animationFrameId = requestAnimationFrame(trackAnimation);
+
+    // Observe nav container for resize
     let resizeObserver: ResizeObserver | null = null;
     if (navRef.current) {
       resizeObserver = new ResizeObserver(() => {
@@ -140,7 +152,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
     }
 
     return () => {
-      clearTimeout(timeoutId);
+      cancelAnimationFrame(animationFrameId);
       if (resizeObserver) resizeObserver.disconnect();
     };
   }, [pathname, collapsed, expanded, menuItems]);
@@ -227,7 +239,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         </div>
       )}
 
-      {/* ── Navigation ─────────────────────────── */}
       <nav
         ref={navRef}
         className="flex-1 relative overflow-y-auto overflow-x-hidden py-3 px-2 space-y-1.5 scrollbar-thin scrollbar-thumb-gray-100"
@@ -235,7 +246,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         {/* Floating Active Background */}
         {activeRect && (
           <div
-            className={`absolute ${accent.activeBg} rounded-xl transition-all duration-200 ease-out z-0`}
+            className={`absolute ${accent.activeBg} rounded-xl transition-all duration-[50ms] ease-linear z-0`}
             style={{
               top: `${activeRect.top}px`,
               left: `${activeRect.left}px`,

@@ -31,11 +31,11 @@ export default function SellerLayout({
     "/seller/chat",
     "/seller/profil-toko",
     "/seller/produk/",
+    "/seller/pengajuan-stok/baru",
   ];
 
   // Exception: show sidebar for margin page
   const isMarginPage = pathname === "/seller/produk/margin";
-
   const showSidebar =
     !hideSidebarRoutes.some(
       (route) => pathname === route || pathname.startsWith(route),
@@ -57,7 +57,9 @@ export default function SellerLayout({
             pathname.startsWith("/seller/chat") ||
             (pathname.startsWith("/seller/produk/") &&
               pathname !== "/seller/produk/margin" &&
-              pathname !== "/seller/produk")
+              pathname !== "/seller/produk") ||
+            pathname === "/seller/pengajuan-stok/baru" ||
+            pathname === "/seller/gudang/produk"
               ? "overflow-hidden"
               : `overflow-auto ${pathname === "/seller/dashboard" ? "scrollbar-hide" : ""}`
           } bg-gray-100 flex flex-col min-h-0`}
@@ -66,7 +68,9 @@ export default function SellerLayout({
             className={`${
               pathname.startsWith("/seller/chat") ||
               (pathname.startsWith("/seller/produk/") &&
-                pathname !== "/seller/produk/margin")
+                pathname !== "/seller/produk/margin") ||
+              pathname === "/seller/pengajuan-stok/baru" ||
+              pathname === "/seller/gudang/produk"
                 ? "h-full"
                 : "p-6 md:p-8 pb-20 max-w-6xl mx-auto w-full"
             } flex-1 flex flex-col min-h-0`}

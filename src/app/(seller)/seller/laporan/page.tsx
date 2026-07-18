@@ -97,6 +97,7 @@ interface FinanceOrder {
   tanggalDibuat?: string;
   createdAt?: string;
   items?: unknown[];
+  item?: any[];
   customer?: { name?: string };
   konsumen?: { nama?: string; email?: string };
   pembeli?: string;
@@ -265,6 +266,10 @@ export default function LaporanKeuanganPage() {
       toast.error("ID Toko tidak ditemukan.");
       return;
     }
+    if (!orderStartDate || !orderEndDate) {
+      toast.error("Silahkan pilih tanggal untuk cetak laporan");
+      return;
+    }
     setDownloadingOrders(true);
     const tid = toast.loading("Menyiapkan Laporan Transaksi...");
     try {
@@ -300,6 +305,10 @@ export default function LaporanKeuanganPage() {
   const handleDownloadStock = async () => {
     if (!tokoId) {
       toast.error("ID Toko tidak ditemukan.");
+      return;
+    }
+    if (!stockStartDate || !stockEndDate) {
+      toast.error("Silahkan pilih tanggal untuk cetak laporan");
       return;
     }
     setDownloadingStock(true);
@@ -685,6 +694,8 @@ export default function LaporanKeuanganPage() {
                 <th className="py-3 px-5 text-left">Pesanan</th>
                 <th className="py-3 px-5 text-left">Tanggal</th>
                 <th className="py-3 px-5 text-left">Pembeli</th>
+                <th className="py-3 px-5 text-right">Keuntungan</th>
+                <th className="py-3 px-5 text-right">Margin</th>
                 <th className="py-3 px-5 text-right">Total</th>
                 <th className="py-3 px-5 text-center">Status</th>
               </tr>
@@ -692,6 +703,26 @@ export default function LaporanKeuanganPage() {
             <tbody>
               {filteredOrders.map((order, idx) => {
                 const badge = getStatusStyle(order.status || "");
+
+                // Hitung margin per order dari item.transaksiKeuntungan
+                const items = order.item || order.items || [];
+                let orderHpp = 0;
+                let orderOmset = 0;
+                let hasProfitTx = false;
+
+                items.forEach((it: any) => {
+                  const tx = it.transaksiKeuntungan;
+                  if (tx) {
+                    hasProfitTx = true;
+                    orderHpp += tx.totalHargaBeli || 0;
+                    orderOmset += tx.jumlahTerjual * tx.hargaJual || 0;
+                  }
+                });
+
+                const orderKeuntungan = orderOmset - orderHpp;
+                const orderMargin =
+                  orderHpp > 0 ? (orderKeuntungan / orderHpp) * 100 : 0;
+
                 return (
                   <tr
                     key={order.id || idx}
@@ -705,7 +736,7 @@ export default function LaporanKeuanganPage() {
                         #{(order.id || "").substring(0, 8).toUpperCase()}
                       </span>
                       <div className="text-[10px] text-slate-400 mt-0.5">
-                        {order.items?.length ?? 0} item
+                        {items.length} item
                       </div>
                     </td>
                     <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">
@@ -726,6 +757,36 @@ export default function LaporanKeuanganPage() {
                         </p>
                       )}
                     </td>
+                    <td className="py-3.5 px-5 text-right font-semibold whitespace-nowrap">
+                      {hasProfitTx ? (
+                        <span
+                          className={
+                            orderKeuntungan >= 0
+                              ? "text-emerald-600"
+                              : "text-red-500"
+                          }
+                        >
+                          {formatRupiah(orderKeuntungan)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-5 text-right font-semibold whitespace-nowrap">
+                      {hasProfitTx ? (
+                        <span
+                          className={
+                            orderMargin >= 0
+                              ? "text-emerald-600"
+                              : "text-red-500"
+                          }
+                        >
+                          {orderMargin.toFixed(1)}%
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </td>
                     <td className="py-3.5 px-5 text-right font-semibold text-slate-800 whitespace-nowrap">
                       {formatRupiah(order.totalHarga || order.totalAmount || 0)}
                     </td>
@@ -742,7 +803,7 @@ export default function LaporanKeuanganPage() {
 
               {filteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-center py-16 text-slate-400">
+                  <td colSpan={7} className="text-center py-16 text-slate-400">
                     <Package size={28} className="mx-auto mb-2 opacity-40" />
                     <p className="text-xs font-medium">
                       {searchQuery || statusFilter !== "semua"
