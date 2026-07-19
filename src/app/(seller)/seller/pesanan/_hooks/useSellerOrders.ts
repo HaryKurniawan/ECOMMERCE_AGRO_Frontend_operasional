@@ -8,7 +8,7 @@ export interface OrderItem {
   totalHarga: number | string;
   metodeBayar: string;
   createdAt: string;
-  customer?: { name?: string; email?: string };
+  customer?: { name?: string; email?: string; phone?: string };
   penerima?: string;
   pembeli?: string;
   alamatKirim?: string;
@@ -59,6 +59,24 @@ export const useSellerOrders = () => {
         ? rawList.map((o: any) => ({
             ...o,
             shipping: o.shipping || o.pengiriman,
+            customer: o.customer
+              ? {
+                  ...o.customer,
+                  phone:
+                    o.customer.phone ||
+                    o.customer.noTelepon ||
+                    o.konsumen?.noTelepon ||
+                    o.konsumen?.addresses?.[0]?.telepon,
+                }
+              : o.konsumen
+                ? {
+                    name: o.konsumen.nama,
+                    email: o.konsumen.email,
+                    phone:
+                      o.konsumen.noTelepon ||
+                      o.konsumen.addresses?.[0]?.telepon,
+                  }
+                : undefined,
             items: (o.items || o.item || []).map((it: any) => ({
               ...it,
               product: it.product || it.produk,

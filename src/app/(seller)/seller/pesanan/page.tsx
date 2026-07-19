@@ -16,6 +16,7 @@ import { useSellerOrders, OrderItem } from "./_hooks/useSellerOrders";
 import OrderCard from "./_components/OrderCard";
 import InitShippingModal from "./_components/InitShippingModal";
 import AdvanceStatusModal from "./_components/AdvanceStatusModal";
+import CetakResiModal from "./_components/CetakResiModal";
 
 export default function PesananMasukPage() {
   const [filterStatus, setFilterStatus] = useState("semua");
@@ -35,6 +36,7 @@ export default function PesananMasukPage() {
   const [advanceModalOrder, setAdvanceModalOrder] = useState<OrderItem | null>(
     null,
   );
+  const [resiModalOrder, setResiModalOrder] = useState<OrderItem | null>(null);
 
   const statusList = [
     { id: "semua", label: "Aktif" },
@@ -172,6 +174,7 @@ export default function PesananMasukPage() {
               order={p}
               onInitShipping={setInitModalOrder}
               onAdvanceStatus={setAdvanceModalOrder}
+              onPrintResi={setResiModalOrder}
             />
           ))
         )}
@@ -220,6 +223,12 @@ export default function PesananMasukPage() {
           }
         }}
         loading={actionLoading === "advance"}
+      />
+
+      <CetakResiModal
+        order={resiModalOrder}
+        storeInfo={myStore}
+        onClose={() => setResiModalOrder(null)}
       />
     </div>
   );

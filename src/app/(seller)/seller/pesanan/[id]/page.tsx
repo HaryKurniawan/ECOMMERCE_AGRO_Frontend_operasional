@@ -15,10 +15,13 @@ import {
   Copy,
   Calendar,
   CreditCard,
+  Printer,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { formatRupiah, formatTanggal, ordersApi } from "@/lib/ecommerce-api";
+
+import CetakResiModal from "../_components/CetakResiModal";
 
 const getStatusLabel = (s: string) => {
   switch (s) {
@@ -167,6 +170,7 @@ export default function DetailPesananSellerPage() {
   const [error, setError] = useState("");
   const [copiedId, setCopiedId] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [showResiModal, setShowResiModal] = useState(false);
 
   const handleCopyId = () => {
     if (!order?.id) return;
@@ -306,6 +310,16 @@ export default function DetailPesananSellerPage() {
           <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
           {sc.label}
         </span>
+        {/* Cetak Resi — hanya saat DIPROSES */}
+        {order.status === "DIPROSES" && (
+          <button
+            onClick={() => setShowResiModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-xl hover:bg-slate-700 transition-all shrink-0"
+            title="Cetak Resi Pengiriman"
+          >
+            <Printer size={13} /> Cetak Resi
+          </button>
+        )}
       </div>
 
       {/* Customer */}
@@ -585,6 +599,36 @@ export default function DetailPesananSellerPage() {
             Pesanan ini sudah ditutup oleh seller.
           </p>
         </div>
+      )}
+
+      {/* Cetak Resi Modal */}
+      {showResiModal && (
+        <CetakResiModal
+          order={
+            {
+              id: order.id,
+              status: order.status,
+              totalHarga: order.totalHarga,
+              metodeBayar: order.metodeBayar,
+              createdAt: order.createdAt,
+              penerima: order.customer?.name,
+              alamatKirim: order.alamatKirim,
+              customer: order.customer
+                ? {
+                    name: order.customer.name,
+                    email: order.customer.email,
+                    phone: order.customer.phone,
+                  }
+                : undefined,
+              items: order.items?.map((it) => ({
+                product: it.product,
+                jumlah: it.jumlah,
+                harga: it.harga,
+              })),
+            } as any
+          }
+          onClose={() => setShowResiModal(false)}
+        />
       )}
     </div>
   );

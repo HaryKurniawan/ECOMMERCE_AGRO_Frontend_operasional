@@ -1,6 +1,13 @@
 import React from "react";
 import Image from "next/image";
-import { Truck, ChevronRight, CheckCircle, Copy, Package } from "lucide-react";
+import {
+  Truck,
+  ChevronRight,
+  CheckCircle,
+  Copy,
+  Package,
+  Printer,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { formatRupiah, formatTanggal } from "@/lib/ecommerce-api";
@@ -16,12 +23,14 @@ interface OrderCardProps {
   order: OrderItem;
   onInitShipping: (order: OrderItem) => void;
   onAdvanceStatus: (order: OrderItem) => void;
+  onPrintResi?: (order: OrderItem) => void;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({
   order,
   onInitShipping,
   onAdvanceStatus,
+  onPrintResi,
 }) => {
   const router = useRouter();
   const shipping = order.shipping;
@@ -140,12 +149,23 @@ const OrderCard: React.FC<OrderCardProps> = ({
       >
         <div className="flex items-center gap-2 flex-wrap">
           {order.status === "DIPROSES" && !shipping && (
-            <button
-              onClick={() => onInitShipping(order)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
-            >
-              <Truck size={13} /> Proses Pengiriman
-            </button>
+            <>
+              <button
+                onClick={() => onInitShipping(order)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
+              >
+                <Truck size={13} /> Proses Pengiriman
+              </button>
+              {onPrintResi && (
+                <button
+                  onClick={() => onPrintResi(order)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-700 text-white text-xs font-medium rounded-xl hover:bg-slate-800 transition-all"
+                  title="Cetak Resi Pengiriman"
+                >
+                  <Printer size={13} /> Cetak Resi
+                </button>
+              )}
+            </>
           )}
           {shipping && nextStatus && (
             <button
