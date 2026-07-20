@@ -4,9 +4,9 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --legacy-peer-deps
-
 COPY . .
+
+RUN npm ci --legacy-peer-deps
 
 RUN npm run build
 
