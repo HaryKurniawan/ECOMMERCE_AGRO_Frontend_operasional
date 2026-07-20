@@ -22,6 +22,9 @@ export const useProfilToko = () => {
     kodePos: "",
     telepon: "",
     jamOperasional: "",
+    nomorSIUP: "",
+    telegramBotToken: "",
+    telegramChatId: "",
   });
 
   const showToast = (msg: string) => {
@@ -48,6 +51,9 @@ export const useProfilToko = () => {
       kodePos: store.kodePos || "",
       telepon: store.telepon || store.noHp || "",
       jamOperasional: store.jamOperasional || "",
+      nomorSIUP: (store as any).nomorSIUP || "",
+      telegramBotToken: (store as any).telegramBotToken || "",
+      telegramChatId: (store as any).telegramChatId || "",
     });
     if (store.lat && store.lng) {
       setMapValue({
@@ -89,6 +95,9 @@ export const useProfilToko = () => {
         kodePos: store.kodePos || "",
         telepon: store.telepon || store.noHp || "",
         jamOperasional: store.jamOperasional || "",
+        nomorSIUP: (store as any).nomorSIUP || "",
+        telegramBotToken: (store as any).telegramBotToken || "",
+        telegramChatId: (store as any).telegramChatId || "",
       });
       setMapValue(
         store.lat && store.lng

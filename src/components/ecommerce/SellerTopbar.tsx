@@ -149,10 +149,20 @@ export default function SellerTopbar() {
           onMouseLeave={() => setIsProfileOpen(false)}
         >
           <button className="relative z-50 flex items-center gap-2.5 rounded-full transition-all group outline-none">
-            <div className="w-10 h-10 rounded-full bg-white border border-slate-200 group-hover:bg-primary-600 group-hover:border-primary-600 flex items-center justify-center flex-shrink-0 transition-colors shadow-sm">
+            <div
+              className={`w-10 h-10 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors shadow-sm ${
+                pathname === "/seller/profil-toko"
+                  ? "bg-primary-600 border-primary-600"
+                  : "bg-white border-slate-200 group-hover:bg-primary-600 group-hover:border-primary-600"
+              }`}
+            >
               <UserIcon
                 size={18}
-                className="text-slate-700 group-hover:text-white transition-colors"
+                className={`transition-colors ${
+                  pathname === "/seller/profil-toko"
+                    ? "text-white"
+                    : "text-slate-700 group-hover:text-white"
+                }`}
               />
             </div>
           </button>
