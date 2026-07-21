@@ -136,6 +136,10 @@ export default function NewStockRequestPage() {
   // Target kg acuan per produk (untuk bagi rata di mode custom)
   const [targetKg, setTargetKg] = useState<Record<string, number>>({});
   const [catatan, setCatatan] = useState("");
+  const [tipePengiriman, setTipePengiriman] = useState<"DEFAULT" | "CUSTOM">(
+    "DEFAULT",
+  );
+  const [tanggalPermintaanKirim, setTanggalPermintaanKirim] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showErrorMinModal, setShowErrorMinModal] = useState(false);
@@ -324,6 +328,11 @@ export default function NewStockRequestPage() {
       return;
     }
 
+    if (tipePengiriman === "CUSTOM" && !tanggalPermintaanKirim) {
+      setError("Silakan pilih tanggal pengiriman untuk opsi Terjadwal.");
+      return;
+    }
+
     try {
       setSubmitting(true);
       const apiItems: any[] = [];
@@ -351,6 +360,8 @@ export default function NewStockRequestPage() {
       await gudangApi.createStockRequest({
         gudangId,
         catatan,
+        tipePengiriman,
+        ...(tipePengiriman === "CUSTOM" && { tanggalPermintaanKirim }),
         items: apiItems,
       });
       clearCart();
@@ -888,6 +899,64 @@ export default function NewStockRequestPage() {
                 </div>
               </div>
             )}
+
+            {/* Pengiriman */}
+            <div className="space-y-3">
+              <label className="block text-[10.5px] font-medium uppercase tracking-wider text-slate-500">
+                Pilihan Pengiriman
+              </label>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTipePengiriman("DEFAULT")}
+                  className={`py-2 px-3 text-xs font-medium rounded-lg border flex flex-col items-center justify-center transition-all ${
+                    tipePengiriman === "DEFAULT"
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
+                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="block font-bold">Standard</span>
+                  <span className="text-[9px] opacity-80 font-normal">
+                    1-2 Hari
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipePengiriman("CUSTOM")}
+                  className={`py-2 px-3 text-xs font-medium rounded-lg border flex flex-col items-center justify-center transition-all ${
+                    tipePengiriman === "CUSTOM"
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
+                      : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="block font-bold">Terjadwal</span>
+                  <span className="text-[9px] opacity-80 font-normal">
+                    Pilih Tanggal
+                  </span>
+                </button>
+              </div>
+
+              {tipePengiriman === "CUSTOM" && (
+                <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="block text-[10.5px] font-medium text-slate-500 mb-1">
+                    Tanggal Pengiriman (Min H+2)
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={tanggalPermintaanKirim}
+                    min={(() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() + 2);
+                      return d.toISOString().split("T")[0];
+                    })()}
+                    onChange={(e) => setTanggalPermintaanKirim(e.target.value)}
+                    className="w-full text-sm py-2 px-3 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-700"
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Catatan */}
             <div className="space-y-1.5">

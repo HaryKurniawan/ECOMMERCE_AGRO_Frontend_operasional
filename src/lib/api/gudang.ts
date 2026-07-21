@@ -25,6 +25,8 @@ export const gudangApi = {
   createStockRequest: (data: {
     gudangId: string;
     catatan?: string;
+    tipePengiriman?: string;
+    tanggalPermintaanKirim?: string | Date;
     items: {
       produkGudangId: string;
       jumlahPermintaan: number;
