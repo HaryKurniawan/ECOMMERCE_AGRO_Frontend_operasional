@@ -16,6 +16,7 @@ import {
   Calendar,
   CreditCard,
   Printer,
+  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -171,6 +172,7 @@ export default function DetailPesananSellerPage() {
   const [copiedId, setCopiedId] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [showResiModal, setShowResiModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleCopyId = () => {
     if (!order?.id) return;
@@ -521,6 +523,45 @@ export default function DetailPesananSellerPage() {
               ))}
             </div>
           )}
+
+          {/* Bukti Pengiriman */}
+          {shipping.buktiKirimFoto && shipping.buktiKirimFoto.length > 0 && (
+            <div className="border-t border-gray-50 pt-4 mt-4">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-3">
+                Bukti Pengiriman (Tiba di Tujuan)
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {shipping.buktiKirimFoto.map((foto, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setSelectedImage(foto)}
+                  >
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 hover:border-emerald-200 transition-colors cursor-pointer">
+                      <Image
+                        src={foto}
+                        alt={`Bukti ${i + 1}`}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {shipping.buktiKirimCatatan && (
+                <div className="mt-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                  <span className="text-[10px] font-semibold text-gray-500 block mb-0.5 uppercase tracking-widest">
+                    Catatan Kurir:
+                  </span>
+                  <p className="text-xs text-gray-700">
+                    {shipping.buktiKirimCatatan}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </SectionCard>
       )}
 
@@ -536,45 +577,10 @@ export default function DetailPesananSellerPage() {
                 Pembeli telah mengkonfirmasi penerimaan
               </p>
               <p className="text-xs text-gray-400 mt-0.5">
-                Periksa foto bukti pengiriman, lalu tutup pesanan ini.
+                Pesanan telah selesai. Anda dapat menutup pesanan ini.
               </p>
             </div>
           </div>
-
-          {shipping?.buktiKirimFoto && shipping.buktiKirimFoto.length > 0 && (
-            <div className="mb-4">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
-                Foto Bukti Pengiriman
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                {shipping.buktiKirimFoto.map((foto, i) => (
-                  <a key={i} href={foto} target="_blank" rel="noreferrer">
-                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 hover:border-emerald-200 transition-colors">
-                      <Image
-                        src={foto}
-                        alt={`Bukti ${i + 1}`}
-                        fill
-                        sizes="80px"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  </a>
-                ))}
-              </div>
-              {shipping.buktiKirimCatatan && (
-                <p className="text-xs text-gray-500 mt-2">
-                  {shipping.buktiKirimCatatan}
-                </p>
-              )}
-            </div>
-          )}
-
-          {!shipping?.buktiKirimFoto?.length && (
-            <p className="text-xs text-gray-400 mb-4">
-              Kurir tidak mengunggah foto bukti pengiriman.
-            </p>
-          )}
 
           <button
             onClick={handleSellerConfirm}
@@ -629,6 +635,34 @@ export default function DetailPesananSellerPage() {
           }
           onClose={() => setShowResiModal(false)}
         />
+      )}
+      {/* Lightbox Modal */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl max-h-[90vh] h-full flex items-center justify-center animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-2 right-2 md:-top-6 md:-right-6 text-white/70 hover:text-white z-50 p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-all"
+            >
+              <X size={24} />
+            </button>
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={selectedImage}
+                alt="Foto Full"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

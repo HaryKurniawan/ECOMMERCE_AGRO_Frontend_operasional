@@ -11,6 +11,7 @@ import {
 
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SortDropdown } from "@/components/ecommerce/SortDropdown";
+import { useOrderEvents } from "@/hooks/orders/useOrderEvents";
 
 import { useSellerOrders, OrderItem } from "./_hooks/useSellerOrders";
 import OrderCard from "./_components/OrderCard";
@@ -21,6 +22,7 @@ import CetakResiModal from "./_components/CetakResiModal";
 export default function PesananMasukPage() {
   const [filterStatus, setFilterStatus] = useState("semua");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
   const {
     orders,
     loading,
@@ -30,6 +32,9 @@ export default function PesananMasukPage() {
     handleInitShipping,
     handleAdvanceStatus,
   } = useSellerOrders();
+
+  // Real-time order updates for this store
+  useOrderEvents(myStore?.id);
 
   // Modal states
   const [initModalOrder, setInitModalOrder] = useState<OrderItem | null>(null);

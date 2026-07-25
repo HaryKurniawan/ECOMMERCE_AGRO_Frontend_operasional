@@ -52,7 +52,8 @@ interface StockRequest {
     | "DIAJUKAN"
     | "DIPROSES"
     | "DIKIRIM"
-    | "KONFIRMASI_DITERIMA";
+    | "KONFIRMASI_DITERIMA"
+    | "TIBA";
   catatan?: string;
   catatanGudang?: string;
   createdAt: string;
@@ -167,10 +168,10 @@ export default function StockRequestDetailPage() {
     try {
       setLoading(true);
 
-      // Update status ke KONFIRMASI_DITERIMA
+      // Update status ke SELESAI
       await gudangApi.updateStockRequestStatus(request.id, {
-        status: "KONFIRMASI_DITERIMA",
-        catatan: "Barang telah diterima dan dikonfirmasi oleh seller",
+        status: "SELESAI",
+        catatan: "Barang telah tiba dan dikonfirmasi diterima oleh seller",
       });
 
       // Refresh data
@@ -298,45 +299,42 @@ export default function StockRequestDetailPage() {
       },
       {
         title: "Proses Pengiriman",
-        description: "Seller / Kurir mengirimkan barang fisik ke Gudang",
-        date:
-          request.status === "PROSES_KIRIM" ||
-          request.status === "DIKIRIM" ||
-          request.status === "KONFIRMASI_DITERIMA" ||
-          request.status === "SELESAI"
-            ? new Date(request.updatedAt).toLocaleString("id-ID")
-            : "",
-        completed:
-          request.status === "PROSES_KIRIM" ||
-          request.status === "DIKIRIM" ||
-          request.status === "KONFIRMASI_DITERIMA" ||
-          request.status === "SELESAI",
-        current:
-          request.status === "PROSES_KIRIM" || request.status === "DIKIRIM",
+        description: "Gudang mengirimkan stok menuju titik Seller",
+        date: ["DIKIRIM", "TIBA", "KONFIRMASI_DITERIMA", "SELESAI"].includes(
+          request.status,
+        )
+          ? new Date(request.updatedAt).toLocaleString("id-ID")
+          : "",
+        completed: [
+          "DIKIRIM",
+          "TIBA",
+          "KONFIRMASI_DITERIMA",
+          "SELESAI",
+        ].includes(request.status),
+        current: request.status === "DIKIRIM",
       },
       {
-        title: "Konfirmasi Diterima",
-        description: "Seller mengkonfirmasi barang telah diterima dengan baik",
-        date:
-          request.status === "KONFIRMASI_DITERIMA" ||
-          request.status === "SELESAI"
-            ? new Date(request.updatedAt).toLocaleString("id-ID")
-            : "",
-        completed:
-          request.status === "KONFIRMASI_DITERIMA" ||
-          request.status === "SELESAI",
-        current: request.status === "KONFIRMASI_DITERIMA",
+        title: "Barang Tiba",
+        description: "Barang telah tiba dan menunggu konfirmasi penerimaan",
+        date: ["TIBA", "KONFIRMASI_DITERIMA", "SELESAI"].includes(
+          request.status,
+        )
+          ? new Date(request.updatedAt).toLocaleString("id-ID")
+          : "",
+        completed: ["TIBA", "KONFIRMASI_DITERIMA", "SELESAI"].includes(
+          request.status,
+        ),
+        current: request.status === "TIBA",
       },
       {
-        title: "Selesai & Masuk Etalase",
+        title: "Konfirmasi & Selesai",
         description:
-          "Stok diproses ke etalase produk (produk baru: INACTIVE, produk existing: ACTIVE)",
-        date:
-          request.status === "SELESAI"
-            ? new Date(request.updatedAt).toLocaleString("id-ID")
-            : "",
-        completed: request.status === "SELESAI",
-        current: request.status === "SELESAI",
+          "Seller mengkonfirmasi barang, stok ditambahkan ke etalase toko",
+        date: ["SELESAI", "KONFIRMASI_DITERIMA"].includes(request.status)
+          ? new Date(request.updatedAt).toLocaleString("id-ID")
+          : "",
+        completed: ["SELESAI", "KONFIRMASI_DITERIMA"].includes(request.status),
+        current: ["SELESAI", "KONFIRMASI_DITERIMA"].includes(request.status),
       },
     ];
 
@@ -489,7 +487,7 @@ export default function StockRequestDetailPage() {
       )}
 
       {/* Tombol Konfirmasi Diterima */}
-      {request.status === "DIKIRIM" && (
+      {request.status === "TIBA" && (
         <div className="bg-blue-50/40 border border-blue-100/50 p-4 rounded-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">

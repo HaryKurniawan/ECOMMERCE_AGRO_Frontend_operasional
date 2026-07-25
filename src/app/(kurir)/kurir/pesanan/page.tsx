@@ -266,7 +266,7 @@ export default function KurirTasksPage() {
   useEffect(() => {
     if (!_hasHydrated || !user || user.role !== "KURIR") return;
     fetchOrders(true);
-    const es = new EventSource("/api/proxy/ecom-pesanan/stream", {
+    const es = new EventSource("/api/proxy/ecom/pesanan-events/stream", {
       withCredentials: true,
     });
     es.onmessage = (ev) => {

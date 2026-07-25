@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Loader2, Truck, User, Upload as UploadIcon } from "lucide-react";
+import {
+  X,
+  Loader2,
+  Truck,
+  User,
+  Upload as UploadIcon,
+  Mail,
+} from "lucide-react";
 
 import { apiClient } from "@/lib/ecommerce-api";
 
 import { OrderItem } from "../_hooks/useSellerOrders";
-import {
-  getNextStatus,
-  getStatusIcon,
-  getStatusLabel,
-} from "../../_utils/shipping-status";
+import { getNextStatus, getStatusLabel } from "../../_utils/shipping-status";
 
 interface CourierItem {
   id: string;
@@ -40,7 +43,7 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
 }) => {
   const [note, setNote] = useState("");
   const [selectedCourierId, setSelectedCourierId] = useState("");
-  const [sendEmailNotification, setSendEmailNotification] = useState(true);
+  const [sendEmailNotification, setSendEmailNotification] = useState(false);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -127,42 +130,28 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
         aria-label="Tutup"
       />
       <div className="fixed inset-0 flex items-center justify-center z-[1000] p-4">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-          {/* ── Header strip */}
-          <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-6 pt-6 pb-7 relative overflow-hidden">
-            <div className="absolute -top-6 -right-6 w-28 h-28 bg-white/5 rounded-full" />
-            <div className="absolute -bottom-4 right-10 w-16 h-16 bg-white/5 rounded-full" />
+        <div className="bg-white rounded-2xl w-full max-w-sm relative z-10 overflow-hidden shadow-xl animate-in zoom-in-95 duration-200">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 className="font-medium text-sm text-slate-800 flex items-center gap-2">
+              <Truck className="w-4 h-4 text-emerald-600" />
+              Update Status Pengiriman
+            </h3>
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all"
+              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
             >
-              <X size={15} />
+              <X className="w-4 h-4" />
             </button>
-            <div className="relative flex items-center gap-3">
-              <div className="w-11 h-11 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-                <Truck size={20} className="text-white" />
-              </div>
-              <div>
-                <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-widest">
-                  Update Status
-                </p>
-                <h3 className="text-white font-bold text-base leading-tight">
-                  Pengiriman Pesanan
-                </h3>
-              </div>
-            </div>
           </div>
-          <div className="p-6 lg:p-8">
+
+          <div className="p-5 space-y-4">
             {/* Status Indicator */}
-            <div className="bg-blue-50/70 border border-blue-100/50 rounded-2xl p-4 mb-5 flex items-center gap-3">
-              <span className="text-2xl shrink-0">
-                {getStatusIcon(nextStatus || "")}
-              </span>
+            <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 flex items-center gap-3">
               <div>
-                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
+                <p className="text-[10px] font-medium text-slate-500 mb-0.5">
                   Status Berikutnya
                 </p>
-                <p className="text-sm font-bold text-blue-900 mt-0.5">
+                <p className="text-sm font-medium text-slate-800">
                   {getStatusLabel(nextStatus || "")}
                 </p>
               </div>
@@ -170,59 +159,50 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
 
             {/* Courier Selector - Only for Handover step */}
             {isHandover && (
-              <div className="border-t border-b border-slate-50 py-5 mb-5 space-y-4">
+              <div className="space-y-3">
                 {couriers.length === 0 ? (
-                  <div className="bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl p-4 text-xs font-semibold flex items-start gap-2.5">
+                  <div className="bg-rose-50 border border-rose-100 text-rose-700 rounded-lg p-3 text-[11px] font-medium flex items-start gap-2">
                     <span>⚠️</span>
                     <p className="leading-relaxed">
-                      Toko Anda tidak memiliki kurir terafiliasi. Silakan
-                      hubungi admin pusat Agrojabar terlebih dahulu untuk
-                      menugaskan kurir.
+                      Toko Anda belum memiliki kurir. Silakan hubungi admin
+                      pusat.
                     </p>
                   </div>
                 ) : couriers.length === 1 ? (
-                  // Auto-filled single courier display
-                  <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex items-center gap-3.5">
-                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-extrabold text-base uppercase shrink-0">
+                  <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 font-medium text-sm uppercase shrink-0">
                       {(couriers[0].nama || couriers[0].name || "K").charAt(0)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 text-[8px] font-bold rounded uppercase tracking-wider">
-                        Kurir Pengirim (Otomatis)
+                      <span className="inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-medium rounded uppercase">
+                        Kurir Otomatis
                       </span>
-                      <p className="text-sm font-bold text-slate-800 mt-1 truncate">
+                      <p className="text-xs font-medium text-slate-800 mt-1 truncate">
                         {couriers[0].nama || couriers[0].name}
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        {couriers[0].noTelepon ||
-                          couriers[0].phoneNumber ||
-                          "Nomor tidak tersedia"}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  // Dropdown selector for multiple couriers
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">
-                      Pilih Kurir Pengirim *
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-medium text-slate-600">
+                      Pilih Kurir *
                     </label>
                     <div className="relative">
                       <User
-                        size={16}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                        size={14}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                       />
                       <select
                         value={selectedCourierId}
                         onChange={(e) => setSelectedCourierId(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3.5 border border-slate-100 rounded-2xl text-sm outline-none bg-slate-50/50 hover:bg-slate-50/80 focus:bg-white focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 font-bold text-slate-800 transition-all cursor-pointer appearance-none"
+                        className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 transition-colors bg-white cursor-pointer appearance-none font-medium"
                       >
                         <option value="" disabled>
                           -- Pilih Kurir --
                         </option>
                         {couriers.map((c) => (
                           <option key={c.id} value={c.id}>
-                            {c.nama || c.name} (
-                            {c.noTelepon || c.phoneNumber || "Tanpa nomor"})
+                            {c.nama || c.name}
                           </option>
                         ))}
                       </select>
@@ -233,39 +213,38 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
             )}
 
             {/* Note Input */}
-            <div className="space-y-2 mb-4">
-              <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">
-                Catatan Aktivitas
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-medium text-slate-600">
+                Catatan (Opsional)
               </label>
               <input
                 type="text"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className="w-full px-4 py-3.5 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 outline-none bg-slate-50/50 focus:bg-white transition-all font-medium text-slate-800"
-                placeholder="Catatan (opsional, misal: diserahkan di pos 1)"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors font-medium text-slate-800"
+                placeholder="Tulis catatan..."
               />
             </div>
 
             {/* Foto Sebelum Kirim (Hanya untuk Handover) */}
             {isHandover && (
-              <div className="space-y-2 mb-6">
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">
-                  Foto Sebelum Kirim (Opsional)
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-medium text-slate-600">
+                  Foto Pesanan (Opsional)
                 </label>
 
                 {!fotoPreview ? (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-blue-500 hover:border-blue-300 transition-all cursor-pointer"
+                    className="w-full h-20 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-emerald-500 hover:border-emerald-300 transition-colors cursor-pointer"
                   >
-                    <UploadIcon size={24} className="mb-2" />
-                    <span className="text-xs font-semibold">
-                      Klik untuk upload foto pesanan
+                    <UploadIcon size={18} className="mb-1.5" />
+                    <span className="text-[10px] font-medium">
+                      Klik untuk upload foto
                     </span>
                   </div>
                 ) : (
-                  <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-slate-200">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <div className="relative w-full h-24 rounded-lg overflow-hidden border border-slate-200">
                     <img
                       src={fotoPreview}
                       alt="Preview"
@@ -276,9 +255,9 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
                         setFotoPreview(null);
                         setFotoFile(null);
                       }}
-                      className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-full hover:bg-red-500 transition-colors"
+                      className="absolute top-1.5 right-1.5 bg-black/50 text-white p-1 rounded-full hover:bg-red-500 transition-colors"
                     >
-                      <X size={14} />
+                      <X size={12} />
                     </button>
                   </div>
                 )}
@@ -292,18 +271,14 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
               </div>
             )}
 
-            {/* Email Notification Toggle - Only for Handover step */}
+            {/* Email Notification Toggle */}
             {isHandover && couriers.length > 0 && (
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4 transition-all">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl mt-0.5">📧</span>
+              <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Mail size={16} className="text-slate-500" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-slate-800">
-                      Kirim Notifikasi Email
-                    </p>
-                    <p className="text-[10px] text-slate-500 leading-normal mt-0.5">
-                      Kirim rincian tugas pengantaran ini secara otomatis ke
-                      email kurir.
+                    <p className="text-[11px] font-medium text-slate-800">
+                      Notifikasi Email Kurir
                     </p>
                   </div>
                 </div>
@@ -312,13 +287,13 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
                   onClick={() =>
                     setSendEmailNotification(!sendEmailNotification)
                   }
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    sendEmailNotification ? "bg-blue-600" : "bg-slate-200"
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    sendEmailNotification ? "bg-emerald-600" : "bg-slate-200"
                   }`}
                 >
                   <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      sendEmailNotification ? "translate-x-5" : "translate-x-0"
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      sendEmailNotification ? "translate-x-4" : "translate-x-0"
                     }`}
                   />
                 </button>
@@ -326,22 +301,22 @@ const AdvanceStatusModal: React.FC<AdvanceStatusModalProps> = ({
             )}
 
             {/* Confirm Button */}
-            <div className="flex gap-2.5 pt-2">
+            <div className="flex gap-2 pt-1">
               <button
                 onClick={onClose}
-                className="flex-1 py-3.5 rounded-2xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all"
+                className="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-[11px] font-medium hover:bg-slate-50 transition-colors"
               >
                 Batal
               </button>
               <button
                 onClick={handleConfirmAction}
                 disabled={loading || uploading || !canConfirm}
-                className="flex-[2] bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-2xl font-bold text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 active:scale-[0.98]"
+                className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-medium text-[11px] transition-colors disabled:opacity-50 disabled:bg-slate-300 flex items-center justify-center gap-1.5"
               >
                 {loading || uploading ? (
-                  <Loader2 size={16} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                 ) : (
-                  <Truck size={16} />
+                  <Truck size={14} />
                 )}
                 {loading || uploading ? "Memproses..." : "Konfirmasi & Update"}
               </button>
