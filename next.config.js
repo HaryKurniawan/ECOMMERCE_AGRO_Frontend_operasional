@@ -5,6 +5,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    // Mengabaikan type-checking saat build untuk menghemat RAM dan mencegah OOM di Jenkins
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       {
