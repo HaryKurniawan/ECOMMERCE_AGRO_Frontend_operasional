@@ -19,6 +19,7 @@ import { useNotifStore } from "@/store/notifikasi-store";
 import { notificationsApi } from "@/lib/api/notifications";
 import { queryKeys } from "@/hooks/query-keys";
 import { useNotifSSE } from "@/hooks/notifikasi/useNotifSSE";
+import { useAuthStore } from "@/store/auth-store";
 
 export default function NotifBell() {
   const router = useRouter();
@@ -34,14 +35,18 @@ export default function NotifBell() {
     markAllAsRead,
   } = useNotifStore();
 
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   // Enable SSE
   useNotifSSE();
 
-  // Fetch initial data
+  // Fetch initial data — hanya jika sudah login
   const { data } = useQuery({
     queryKey: queryKeys.notifications.all,
     queryFn: () => notificationsApi.getAll({ limit: 5 }),
+    enabled: isAuthenticated,
     refetchInterval: false,
+    retry: false,
   });
 
   useEffect(() => {

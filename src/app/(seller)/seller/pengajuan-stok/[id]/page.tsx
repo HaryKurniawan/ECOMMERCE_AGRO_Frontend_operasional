@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   FileSpreadsheet,
@@ -11,10 +11,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Circle,
   Truck,
-  MessageSquare,
-  Sparkles,
   Download,
   FileText,
   X,
@@ -105,12 +102,10 @@ export default function StockRequestDetailPage() {
   const [tokoInfo, setTokoInfo] = useState<TokoInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [realtimeConnected, setRealtimeConnected] = useState(false);
-  const [sseNotifications, setSseNotifications] = useState<string[]>([]);
+  const [isPolling, setIsPolling] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   const { downloadInvoice, downloading } = useInvoiceDownload();
-  const eventSourceRef = useRef<EventSource | null>(null);
 
   const fetchRequestDetail = useCallback(
     async (showLoading = true) => {
@@ -176,17 +171,6 @@ export default function StockRequestDetailPage() {
 
       // Refresh data
       await fetchRequestDetail(false);
-
-      // Show success notification
-      setSseNotifications((prev) => [
-        ...prev,
-        `✅ Konfirmasi diterima berhasil! Stok akan diproses ke etalase.`,
-      ]);
-
-      // Clear notification after 5 seconds
-      setTimeout(() => {
-        setSseNotifications((prev) => prev.slice(1));
-      }, 5000);
     } catch (err: any) {
       console.error("Error confirming receipt:", err);
       setError(err.message || "Gagal mengkonfirmasi penerimaan barang.");
@@ -199,19 +183,22 @@ export default function StockRequestDetailPage() {
     fetchRequestDetail();
   }, [fetchRequestDetail]);
 
-  // Setup polling to fetch updates without SSE
+  // Setup polling to fetch updates (gudang adalah project terpisah, tidak menggunakan SSE)
   useEffect(() => {
     if (!request) return;
-    if (request.status === "SELESAI" || request.status === "DITOLAK") return;
+    if (request.status === "SELESAI" || request.status === "DITOLAK") {
+      setIsPolling(false);
+      return;
+    }
 
-    console.log("[Polling] Setting up interval for stock request updates...");
+    setIsPolling(true);
     const interval = setInterval(() => {
       fetchRequestDetail(false);
     }, 5000); // Polling setiap 5 detik
 
     return () => {
       clearInterval(interval);
-      console.log("[Polling] Cleared interval.");
+      setIsPolling(false);
     };
   }, [request?.status, fetchRequestDetail]);
 
@@ -366,19 +353,13 @@ export default function StockRequestDetailPage() {
 
         {/* Kanan - Badge + Tombol Invoice */}
         <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
-          {/* Connection Status Badge */}
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10.5px] font-medium rounded-full border ${
-              realtimeConnected
-                ? "bg-emerald-50/50 text-emerald-700 border-emerald-100/50"
-                : "bg-amber-50/50 text-amber-700 border-amber-100/50"
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${realtimeConnected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
-            />
-            {realtimeConnected ? "Stream Terhubung" : "Menghubungkan Stream..."}
-          </span>
+          {/* Polling Status Badge */}
+          {isPolling && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10.5px] font-medium rounded-full border bg-emerald-50/50 text-emerald-700 border-emerald-100/50">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Auto Refresh Aktif
+            </span>
+          )}
 
           {/* Tombol Invoice - muncul jika status SELESAI atau KONFIRMASI_DITERIMA */}
           {(request.status === "SELESAI" ||
@@ -415,21 +396,6 @@ export default function StockRequestDetailPage() {
           )}
         </div>
       </div>
-
-      {/* Real-time SSE Notifications Alert */}
-      {sseNotifications.length > 0 && (
-        <div className="bg-emerald-50/40 border border-emerald-100/50 text-emerald-800 p-4 rounded-xl space-y-1.5 animate-pulse">
-          <h4 className="font-medium text-xs flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-            Pemberitahuan Real-time:
-          </h4>
-          <ul className="text-xs space-y-1 pl-4 list-disc font-normal text-emerald-700">
-            {sseNotifications.map((notif, idx) => (
-              <li key={idx}>{notif}</li>
-            ))}
-          </ul>
-        </div>
-      )}
 
       {/* Tombol Konfirmasi Diterima */}
       {request.status === "TIBA" && (
