@@ -115,24 +115,32 @@ docker run -d \
     ${IMAGE_NAME}
 
 echo "Waiting application..."
-sleep 15
+sleep 5
 
 echo "======================================="
 echo "Running Health Check..."
 echo "======================================="
 
-if docker exec $TEST_CONTAINER wget -qO- http://localhost:3000 >/dev/null; then
-    echo "Health Check Passed"
-else
-    echo "Health Check Failed"
+for i in $(seq 1 30); do
+    if docker exec $TEST_CONTAINER wget -qO- http://127.0.0.1:3000 >/dev/null 2>&1; then
+        echo "Health Check Passed"
+        break
+    fi
 
-    echo "========== TEST CONTAINER LOG =========="
-    docker logs $TEST_CONTAINER || true
+    echo "Waiting application... ($i/30)"
+    sleep 2
 
-    docker rm -f $TEST_CONTAINER || true
+    if [ "$i" -eq 30 ]; then
+        echo "Health Check Failed"
 
-    exit 1
-fi
+        echo "========== TEST CONTAINER LOG =========="
+        docker logs $TEST_CONTAINER || true
+
+        docker rm -f $TEST_CONTAINER || true
+
+        exit 1
+    fi
+done
 
 echo "======================================="
 echo "Starting production container..."
