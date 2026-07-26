@@ -199,76 +199,21 @@ export default function StockRequestDetailPage() {
     fetchRequestDetail();
   }, [fetchRequestDetail]);
 
-  // Setup SSE connection
+  // Setup polling to fetch updates without SSE
   useEffect(() => {
-    if (!request?.tokoId) return;
+    if (!request) return;
+    if (request.status === "SELESAI" || request.status === "DITOLAK") return;
 
-    const storeId = request.tokoId;
-    console.log("[SSE] Connecting for seller store:", storeId);
-
-    // Connect to Express TS Gudang SSE Server
-    const gudangBaseUrl =
-      process.env.NEXT_PUBLIC_GUDANG_API_URL ||
-      "https://gudang-agro-backend.vercel.app";
-    const sseUrl = `${gudangBaseUrl}/api/events/seller?sellerId=${storeId}`;
-    const es = new EventSource(sseUrl);
-    eventSourceRef.current = es;
-
-    es.onopen = () => {
-      console.log("[SSE] Connected to Gudang SSE Server!");
-      setRealtimeConnected(true);
-    };
-
-    es.onerror = (err) => {
-      console.log(
-        "[SSE] Connection error/disconnected from Gudang SSE Server.",
-      );
-      setRealtimeConnected(false);
-    };
-
-    es.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        console.log("[SSE] Received event:", payload);
-
-        if (payload.type === "STATUS_UPDATED" && payload.requestId === id) {
-          // Play a premium sound notification
-          try {
-            const audio = new Audio(
-              "https://assets.mixkit.co/active_storage/sfx/2869/2869-100.wav",
-            );
-            audio.volume = 0.5;
-            audio.play().catch((playErr) => {
-              console.log(
-                "Audio playback prevented by browser autoplay policy:",
-                playErr.message,
-              );
-            });
-          } catch (e) {
-            console.log(
-              "Audio playback prevented by browser auto-play policy.",
-            );
-          }
-
-          // Add notification message
-          const msg = `Status pengajuan diperbarui menjadi ${payload.status} pada ${new Date().toLocaleTimeString("id-ID")}`;
-          setSseNotifications((prev) => [msg, ...prev].slice(0, 3));
-
-          // Refresh details dynamically
-          fetchRequestDetail(false);
-        }
-      } catch (err) {
-        console.error("Failed to parse SSE payload:", err);
-      }
-    };
+    console.log("[Polling] Setting up interval for stock request updates...");
+    const interval = setInterval(() => {
+      fetchRequestDetail(false);
+    }, 5000); // Polling setiap 5 detik
 
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        console.log("[SSE] Disconnected EventSource.");
-      }
+      clearInterval(interval);
+      console.log("[Polling] Cleared interval.");
     };
-  }, [request?.tokoId, id, fetchRequestDetail]);
+  }, [request?.status, fetchRequestDetail]);
 
   const getTimelineSteps = () => {
     if (!request) return [];
