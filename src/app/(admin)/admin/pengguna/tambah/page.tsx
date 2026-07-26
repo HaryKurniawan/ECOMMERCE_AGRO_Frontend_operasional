@@ -155,7 +155,7 @@ export default function AddUserPage() {
           title="Tambah Akun Pengguna Baru"
           description="Pilih jenis peran akun yang ingin didaftarkan."
           icon={User}
-          iconColor="text-emerald-600"
+          iconColor="text-primary-600"
         />
       </div>
 
@@ -167,20 +167,20 @@ export default function AddUserPage() {
           onClick={() => handleRoleSelect("SELLER")}
           className={`flex flex-col text-left p-6 rounded-3xl border-2 transition-all relative ${
             selectedRole === "SELLER"
-              ? "border-blue-500 bg-blue-50/40 shadow-sm"
+              ? "border-primary-600 bg-primary-50/40"
               : "border-gray-100 bg-white hover:border-gray-200"
           }`}
         >
           {selectedRole === "SELLER" && (
-            <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+            <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center">
               <Check size={12} strokeWidth={3} className="text-white" />
             </div>
           )}
           <div
             className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-4 ${
               selectedRole === "SELLER"
-                ? "bg-blue-500 text-white"
-                : "bg-blue-50 text-blue-500"
+                ? "bg-primary-600 text-white"
+                : "bg-primary-50 text-primary-600"
             }`}
           >
             <Store size={22} />
@@ -199,20 +199,20 @@ export default function AddUserPage() {
           onClick={() => handleRoleSelect("COURIER")}
           className={`flex flex-col text-left p-6 rounded-3xl border-2 transition-all relative ${
             selectedRole === "COURIER"
-              ? "border-emerald-500 bg-emerald-50/40 shadow-sm"
+              ? "border-primary-600 bg-primary-50/40"
               : "border-gray-100 bg-white hover:border-gray-200"
           }`}
         >
           {selectedRole === "COURIER" && (
-            <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+            <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center">
               <Check size={12} strokeWidth={3} className="text-white" />
             </div>
           )}
           <div
             className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-4 ${
               selectedRole === "COURIER"
-                ? "bg-emerald-500 text-white"
-                : "bg-emerald-50 text-emerald-500"
+                ? "bg-primary-600 text-white"
+                : "bg-primary-50 text-primary-600"
             }`}
           >
             <Truck size={22} />
@@ -231,20 +231,20 @@ export default function AddUserPage() {
           onClick={() => handleRoleSelect("CS")}
           className={`flex flex-col text-left p-6 rounded-3xl border-2 transition-all relative ${
             selectedRole === "CS"
-              ? "border-purple-500 bg-purple-50/40 shadow-sm"
+              ? "border-primary-600 bg-primary-50/40"
               : "border-gray-100 bg-white hover:border-gray-200"
           }`}
         >
           {selectedRole === "CS" && (
-            <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+            <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center">
               <Check size={12} strokeWidth={3} className="text-white" />
             </div>
           )}
           <div
             className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-4 ${
               selectedRole === "CS"
-                ? "bg-purple-500 text-white"
-                : "bg-purple-50 text-purple-500"
+                ? "bg-primary-600 text-white"
+                : "bg-primary-50 text-primary-600"
             }`}
           >
             <Headphones size={22} />
@@ -260,8 +260,8 @@ export default function AddUserPage() {
 
       {/* ── SELLER: buka CreateSellerForm yang sama dengan toko/seller ── */}
       {selectedRole === "SELLER" && (
-        <div className="bg-white border border-gray-100 rounded-3xl p-10 shadow-sm flex flex-col items-center text-center gap-5">
-          <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-[1.5rem] flex items-center justify-center">
+        <div className="bg-white border border-gray-100 rounded-3xl p-10 flex flex-col items-center text-center gap-5">
+          <div className="w-16 h-16 bg-primary-50 text-primary-600 rounded-[1.5rem] flex items-center justify-center">
             <Store size={32} />
           </div>
           <div>
@@ -275,7 +275,7 @@ export default function AddUserPage() {
           </div>
           <button
             onClick={() => setShowSellerForm(true)}
-            className="inline-flex items-center gap-2 px-8 py-3.5 bg-blue-600 text-white text-sm font-medium rounded-2xl hover:bg-blue-700 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary-600 text-white text-sm font-medium rounded-2xl hover:bg-primary-700 transition-all"
           >
             <Store size={16} />
             Buka Form Buat Seller
@@ -284,7 +284,7 @@ export default function AddUserPage() {
             Atau langsung ke{" "}
             <Link
               href="/admin/toko/seller"
-              className="text-blue-500 hover:underline"
+              className="text-primary-600 hover:underline"
             >
               halaman Manajemen Seller
             </Link>
@@ -294,13 +294,13 @@ export default function AddUserPage() {
 
       {/* ── COURIER & CS: inline form ── */}
       {selectedRole !== "SELLER" && (
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
+        <div className="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* COURIER */}
             {selectedRole === "COURIER" && (
               <div className="space-y-6">
                 <h4 className="text-sm font-medium text-gray-700 border-b border-gray-100 pb-3 flex items-center gap-2">
-                  <Truck size={16} className="text-emerald-500" /> Informasi
+                  <Truck size={16} className="text-primary-500" /> Informasi
                   Akun Kurir Baru
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -344,7 +344,7 @@ export default function AddUserPage() {
                           value={(formData as any)[name]}
                           onChange={handleInputChange}
                           placeholder={placeholder}
-                          className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-400/50 outline-none transition-all"
+                          className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-400/50 outline-none transition-all"
                           required
                         />
                       </div>
@@ -365,7 +365,7 @@ export default function AddUserPage() {
                         value={formData.courierOwnPassword}
                         onChange={handleInputChange}
                         placeholder="Min. 6 karakter"
-                        className="w-full pl-9 pr-10 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-400/50 outline-none transition-all"
+                        className="w-full pl-9 pr-10 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-400/50 outline-none transition-all"
                         required
                       />
                       <button
@@ -386,15 +386,15 @@ export default function AddUserPage() {
                 </div>
 
                 {/* Store selector */}
-                <div className="border border-emerald-100 bg-emerald-50/30 rounded-2xl p-5">
-                  <h5 className="text-xs text-emerald-700 font-medium uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <div className="border border-primary-100 bg-primary-50/30 rounded-2xl p-5">
+                  <h5 className="text-xs text-primary-700 font-medium uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <Store size={13} /> Afiliasi ke Toko Seller *
                   </h5>
                   {loadingStores ? (
                     <div className="flex items-center gap-2 text-sm text-gray-400 py-3">
                       <Loader2
                         size={16}
-                        className="animate-spin text-emerald-500"
+                        className="animate-spin text-primary-500"
                       />{" "}
                       Memuat data toko...
                     </div>
@@ -403,7 +403,7 @@ export default function AddUserPage() {
                       name="selectedStoreId"
                       value={formData.selectedStoreId}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-400/50 outline-none"
+                      className="w-full px-3 py-3 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-primary-400/50 outline-none"
                       required
                     >
                       <option value="">— Pilih Toko Seller —</option>
@@ -422,8 +422,8 @@ export default function AddUserPage() {
             {selectedRole === "CS" && (
               <div className="space-y-6">
                 <h4 className="text-sm font-medium text-gray-700 border-b border-gray-100 pb-3 flex items-center gap-2">
-                  <Headphones size={16} className="text-purple-500" /> Informasi
-                  Akun Customer Service
+                  <Headphones size={16} className="text-primary-600" />{" "}
+                  Informasi Akun Customer Service
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {(
@@ -466,7 +466,7 @@ export default function AddUserPage() {
                           value={(formData as any)[name]}
                           onChange={handleInputChange}
                           placeholder={placeholder}
-                          className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-400/50 outline-none transition-all"
+                          className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-400/50 outline-none transition-all"
                           required
                         />
                       </div>
@@ -487,7 +487,7 @@ export default function AddUserPage() {
                         value={formData.password}
                         onChange={handleInputChange}
                         placeholder="Min. 6 karakter"
-                        className="w-full pl-9 pr-10 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-purple-400/50 outline-none transition-all"
+                        className="w-full pl-9 pr-10 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-400/50 outline-none transition-all"
                         required
                       />
                       <button
@@ -519,11 +519,7 @@ export default function AddUserPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className={`inline-flex items-center gap-2 px-6 py-2.5 text-white text-sm font-medium rounded-2xl transition-all disabled:opacity-50 ${
-                  selectedRole === "CS"
-                    ? "bg-purple-600 hover:bg-purple-700"
-                    : "bg-emerald-600 hover:bg-emerald-700"
-                }`}
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-white text-sm font-medium rounded-2xl transition-all disabled:opacity-50 bg-primary-600 hover:bg-primary-700"
               >
                 {submitting ? (
                   <>

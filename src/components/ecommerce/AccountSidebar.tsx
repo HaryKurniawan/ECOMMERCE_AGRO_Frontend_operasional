@@ -24,11 +24,7 @@ const ACCOUNT_MENU: SidebarMenuItem[] = [
       { path: "/admin/pengguna/tambah", label: "Tambah Pengguna" },
     ],
   },
-  {
-    path: "/admin/pengguna/security",
-    label: "Keamanan",
-    icon: <Lock size={17} />,
-  },
+
   {
     path: "/admin/pengguna/logs",
     label: "Log Aktivitas",

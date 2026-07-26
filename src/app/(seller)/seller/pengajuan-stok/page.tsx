@@ -135,8 +135,8 @@ export default function SellerStockRequestsPage() {
         );
       case "SELESAI":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-emerald-50/50 text-emerald-600 border border-emerald-100/60 uppercase tracking-wider shrink-0">
-            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-primary-50 text-primary-600 border border-primary-100/60 uppercase tracking-wider shrink-0">
+            <CheckCircle2 className="w-3 h-3 text-primary-500" />
             Selesai
           </span>
         );
@@ -171,7 +171,7 @@ export default function SellerStockRequestsPage() {
       <button
         key={request.id}
         onClick={() => router.push(`/seller/pengajuan-stok/${request.id}`)}
-        className="w-full bg-white border border-slate-100 hover:border-emerald-200/60 rounded-lg p-4 transition-all duration-300 hover:shadow-md text-left group"
+        className="w-full bg-white border border-slate-200/70 hover:border-primary-200/60 rounded-lg p-4 transition-all duration-300 text-left group"
       >
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex-1 min-w-0">
@@ -208,7 +208,7 @@ export default function SellerStockRequestsPage() {
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
             {getStatusBadge(request.status)}
-            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-600 transition-colors" />
+            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-primary-600 transition-colors" />
           </div>
         </div>
 
@@ -233,7 +233,7 @@ export default function SellerStockRequestsPage() {
                     <div
                       className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
                         isActive
-                          ? "bg-emerald-50 border-emerald-600 text-emerald-600"
+                          ? "bg-primary-50 border-primary-600 text-primary-600"
                           : "bg-white border-slate-200 text-slate-300"
                       }`}
                     >
@@ -259,7 +259,7 @@ export default function SellerStockRequestsPage() {
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center py-32 space-y-4">
-        <Loader2 className="w-8 h-8 text-emerald-600/80 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
         <p className="text-sm font-medium text-slate-400">
           Memuat riwayat pengajuan...
         </p>
@@ -273,7 +273,7 @@ export default function SellerStockRequestsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-6 border-b border-slate-100/80">
         <div className="space-y-1.5">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
+            <div className="p-2.5 bg-primary-50 text-primary-600 rounded-2xl shrink-0">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-slate-800">
@@ -287,16 +287,8 @@ export default function SellerStockRequestsPage() {
 
         <div className="flex items-center gap-3 self-start sm:self-center shrink-0">
           <button
-            onClick={() => fetchRequests()}
-            className="px-4 py-2 border border-slate-100 rounded-xl text-xs font-medium hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-500 flex items-center gap-2 bg-white shadow-sm"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Perbarui
-          </button>
-
-          <button
             onClick={() => router.push("/seller/gudang/produk")}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 shadow-sm active:scale-[0.98]"
+            className="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 active:scale-[0.98]"
           >
             <Plus className="w-4 h-4" />
             Pengajuan Baru
@@ -331,7 +323,7 @@ export default function SellerStockRequestsPage() {
         <div className="space-y-4">
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-6 h-6 text-emerald-600/80 animate-spin" />
+              <Loader2 className="w-6 h-6 text-primary-600 animate-spin" />
             </div>
           ) : activeRequests.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-2xl border border-slate-100/80 shadow-sm">
@@ -373,7 +365,7 @@ export default function SellerStockRequestsPage() {
                 .map((request) => (
                   <div
                     key={request.id}
-                    className="bg-white border border-slate-100 hover:border-emerald-200/60 rounded-lg p-4 transition-all duration-300 hover:shadow-md"
+                    className="bg-white border border-slate-200/70 hover:border-primary-200/60 rounded-lg p-4 transition-all duration-300"
                   >
                     {/* Card clickable area */}
                     <button
@@ -399,8 +391,8 @@ export default function SellerStockRequestsPage() {
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-emerald-50/50 text-emerald-600 border border-emerald-100/60 uppercase tracking-wider">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-primary-50 text-primary-600 border border-primary-100/60 uppercase tracking-wider">
+                            <CheckCircle2 className="w-3 h-3 text-primary-500" />
                             Selesai
                           </span>
                         </div>

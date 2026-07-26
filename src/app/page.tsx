@@ -152,7 +152,7 @@ function AccountNotFoundModal({
         <button
           type="button"
           onClick={onClose}
-          className="w-full py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/20"
+          className="w-full py-3 rounded-full bg-primary-600 hover:bg-primary-700 active:scale-[0.98] text-white font-semibold text-sm transition-all"
         >
           Tutup
         </button>
@@ -187,7 +187,7 @@ function UnverifiedAccountModal({
         <button
           type="button"
           onClick={onClose}
-          className="w-full py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm transition-all shadow-md shadow-emerald-600/20"
+          className="w-full py-3 rounded-full bg-primary-600 hover:bg-primary-700 active:scale-[0.98] text-white font-semibold text-sm transition-all"
         >
           Tutup
         </button>
@@ -209,7 +209,7 @@ function GoogleLoginButton() {
     >
       <svg
         viewBox="0 0 24 24"
-        className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform"
+        className="w-5 h-5 text-primary-600 group-hover:scale-110 transition-transform"
         fill="currentColor"
       >
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -253,7 +253,7 @@ function OperationalLoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white font-sans selection:bg-emerald-100 selection:text-emerald-900 relative">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white font-sans selection:bg-primary-100 selection:text-primary-900 relative">
       <div className="w-full max-w-[400px] relative z-10 animate-in fade-in duration-500">
         {/* Header */}
         <div className="flex flex-col space-y-1.5 mb-10">
@@ -273,7 +273,7 @@ function OperationalLoginPageContent() {
             <input
               type="email"
               placeholder="contoh: kurir@agrojabar.com"
-              className={`w-full px-4 py-3.5 rounded-xl border bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-500 transition-all ${
                 errors.email
                   ? "border-red-300 focus:border-red-400 focus:ring-red-500/20"
                   : "border-gray-200"
@@ -295,7 +295,7 @@ function OperationalLoginPageContent() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                className={`w-full px-4 py-3.5 pr-12 rounded-xl border bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all ${
+                className={`w-full px-4 py-3.5 pr-12 rounded-xl border bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-500 transition-all ${
                   errors.password
                     ? "border-red-300 focus:border-red-400 focus:ring-red-500/20"
                     : "border-gray-200"
@@ -320,7 +320,7 @@ function OperationalLoginPageContent() {
               )}
               <Link
                 href="/forgot-password"
-                className="text-sm text-emerald-600 hover:text-emerald-700 font-semibold transition-colors ml-auto"
+                className="text-sm text-primary-600 hover:text-primary-700 font-semibold transition-colors ml-auto"
               >
                 Lupa sandi?
               </Link>
@@ -337,7 +337,7 @@ function OperationalLoginPageContent() {
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-70 disabled:pointer-events-none text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 mt-4"
+            className="w-full py-3.5 rounded-xl bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-70 disabled:pointer-events-none text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 mt-4"
           >
             {mutation.isPending ? (
               <>
@@ -386,7 +386,7 @@ export default function OperationalLoginPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-white">
-          <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+          <Loader2 className="w-10 h-10 text-primary-600 animate-spin" />
         </div>
       }
     >

@@ -317,7 +317,7 @@ export default function SellerWarehouseProductsPage() {
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center py-32 space-y-4">
-        <Loader2 className="w-8 h-8 text-emerald-600/80 animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
         <p className="text-sm font-medium text-slate-400">
           Memuat daftar produk...
         </p>
@@ -349,7 +349,7 @@ export default function SellerWarehouseProductsPage() {
                   placeholder="Cari produk..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all shadow-sm"
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:border-primary-500 transition-all"
                 />
               </div>
             </div>
@@ -362,8 +362,8 @@ export default function SellerWarehouseProductsPage() {
                 onClick={() => setSelectedGudangFilter("all")}
                 className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border ${
                   selectedGudangFilter === "all"
-                    ? "bg-emerald-600 text-white border-emerald-600"
-                    : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
+                    ? "bg-primary-600 text-white border-primary-600"
+                    : "bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600"
                 }`}
               >
                 Semua
@@ -378,8 +378,8 @@ export default function SellerWarehouseProductsPage() {
                     onClick={() => setSelectedGudangFilter(aff.gudangId)}
                     className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all border flex items-center gap-1 ${
                       isActive
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
+                        ? "bg-primary-600 text-white border-primary-600"
+                        : "bg-white text-gray-500 border-gray-200 hover:border-primary-300 hover:text-primary-600"
                     }`}
                   >
                     {isFav && (
@@ -434,8 +434,7 @@ export default function SellerWarehouseProductsPage() {
               {filteredProducts.map((product) => (
                 <div
                   key={`${product.id}-${product.gudangId}`}
-                  className="bg-white rounded-3xl overflow-hidden hover:shadow-lg transition-all flex flex-col cursor-pointer group"
-                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                  className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden transition-all flex flex-col cursor-pointer group"
                 >
                   {/* Foto */}
                   <div className="w-full aspect-[4/3] bg-slate-100 overflow-hidden relative">
@@ -459,9 +458,10 @@ export default function SellerWarehouseProductsPage() {
                   <div className="p-3.5 flex flex-col flex-1 gap-0.5">
                     <h3 className="font-semibold text-sm text-slate-800 line-clamp-2 leading-snug">
                       {product.nama}
+                      {product.varianProduk && ` ${product.varianProduk}`}
                     </h3>
                     <div className="flex items-baseline gap-1 mb-3">
-                      <span className="font-bold text-base text-emerald-600">
+                      <span className="font-semibold text-base text-primary-600">
                         Rp {product.hargaGudang.toLocaleString("id-ID")}
                       </span>
                       <span className="text-[11px] text-slate-400">
@@ -471,10 +471,10 @@ export default function SellerWarehouseProductsPage() {
 
                     <button
                       onClick={() => toggleCart(product)}
-                      className={`mt-auto w-full py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${
+                      className={`mt-auto w-full py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] ${
                         isInCart(product)
-                          ? "border border-emerald-500 text-emerald-600 bg-white hover:bg-emerald-50"
-                          : "bg-emerald-600 text-white hover:bg-emerald-700"
+                          ? "border border-primary-500 text-primary-600 bg-white hover:bg-primary-50"
+                          : "bg-primary-600 text-white hover:bg-primary-700"
                       }`}
                     >
                       {isInCart(product) ? (
@@ -500,11 +500,11 @@ export default function SellerWarehouseProductsPage() {
       {/* ── Cart Bar — selalu di bawah ────────────────────────────────────── */}
       {cart.length > 0 && (
         <div className="shrink-0 px-6 md:px-8 pb-4 pt-3">
-          <div className="bg-emerald-600 text-white rounded-2xl shadow-xl shadow-emerald-900/20 p-3.5 flex items-center justify-between gap-4 max-w-6xl mx-auto">
+          <div className="bg-primary-600 text-white rounded-2xl p-3.5 flex items-center justify-between gap-4 max-w-6xl mx-auto">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0 relative">
                 <Package className="w-4 h-4" />
-                <span className="absolute -top-1.5 -right-1.5 bg-white text-emerald-700 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow">
+                <span className="absolute -top-1.5 -right-1.5 bg-white text-primary-700 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                   {cart.length}
                 </span>
               </div>
@@ -512,7 +512,7 @@ export default function SellerWarehouseProductsPage() {
                 <p className="font-semibold text-sm truncate">
                   {cart.length} produk siap diajukan
                 </p>
-                <p className="text-[11px] text-emerald-50/80 truncate">
+                <p className="text-[11px] text-primary-50/80 truncate">
                   Dari {cart[0].gudangNama}
                 </p>
               </div>
@@ -527,13 +527,13 @@ export default function SellerWarehouseProductsPage() {
                     /* ignore */
                   }
                 }}
-                className="px-3 py-1.5 text-xs font-medium text-emerald-50/90 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                className="px-3 py-1.5 text-xs font-medium text-primary-50/90 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               >
                 Kosongkan
               </button>
               <button
                 onClick={handleLanjutPengajuan}
-                className="px-5 py-2 bg-white text-emerald-700 hover:bg-emerald-50 rounded-xl text-xs font-bold transition-all active:scale-[0.98] flex items-center gap-1.5"
+                className="px-5 py-2.5 bg-white text-primary-700 hover:bg-primary-50 rounded-xl text-xs font-bold transition-all active:scale-[0.98] flex items-center gap-1.5"
               >
                 Lanjut Ajukan
                 <ChevronRight className="w-4 h-4" />
