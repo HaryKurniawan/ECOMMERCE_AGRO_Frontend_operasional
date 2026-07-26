@@ -2,14 +2,19 @@ pipeline {
     agent any
 
     environment {
-        // Atur port dan nama container
-        APP_PORT = "3004"
+        APP_PORT = "3000"
         CONTAINER_NAME = "agro-frontend-operasional"
+        IMAGE_NAME = "agro-frontend-operasional-image"
         ENV_CRED_ID = "agro_env_frontend_ops"
-        IMAGE_NAME = "${CONTAINER_NAME}-image"
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
     }
 
     stages {
+
         stage('Notify Start') {
             steps {
                 withCredentials([
@@ -17,127 +22,261 @@ pipeline {
                     string(credentialsId: 'telegram-chat-id', variable: 'TG_CHAT')
                 ]) {
                     sh '''
-                    TOKEN=$(echo "$TG_TOKEN" | tr -d '\r\n ')
-                    CHAT=$(echo "$TG_CHAT" | tr -d '\r\n ')
-                    curl -sS -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-                        -H "Content-Type: application/json" \
-                        -d @- <<EOF
+TOKEN=$(echo "$TG_TOKEN" | tr -d '\\r\\n ')
+CHAT=$(echo "$TG_CHAT" | tr -d '\\r\\n ')
+
+curl -sS -X POST \
+https://api.telegram.org/bot${TOKEN}/sendMessage \
+-H "Content-Type: application/json" \
+-d @- <<EOF
 {
-    "chat_id": "${CHAT}",
-    "parse_mode": "Markdown",
-    "text": "🚀 *MEMULAI DEPLOY*\\n📦 Service: Frontend Ops (agro-frontend-operasional)\\n🔢 Build: #${BUILD_NUMBER}\\n🔗 [Lihat Build](${BUILD_URL})"
+    "chat_id":"${CHAT}",
+    "parse_mode":"Markdown",
+    "text":"🚀 *Deploy Frontend Operasional Dimulai*\\nBuild #${BUILD_NUMBER}"
 }
 EOF
-                    '''
+'''
                 }
             }
         }
 
-        // stage('OWASP Dependency-Check') { ... }
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-        stage('Build Docker Image') {
+        stage('Inject Environment') {
             steps {
                 withCredentials([
                     file(credentialsId: "${ENV_CRED_ID}", variable: 'ENV_FILE')
                 ]) {
                     sh '''
-                    # Hapus sisa file lama (jika ada) untuk mencegah Permission Denied
-                    rm -f .env.local || true
-                    cp "$ENV_FILE" .env.local
-                    docker build -t ${IMAGE_NAME} .
-                    '''
+set -e
+
+rm -f .env.local || true
+cp "$ENV_FILE" .env.local
+'''
                 }
             }
         }
 
-        stage('Deploy (Safe Restart)') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
-                TEST_CONTAINER="${CONTAINER_NAME}-tester"
-                
-                echo "=== Memulai Proses Deploy Anti-Downtime ==="
-                docker rm -f $TEST_CONTAINER || true
+set -e
 
-                echo "1. Menyalakan versi baru di latar belakang..."
-                docker run -d \
-                --name $TEST_CONTAINER \
-                --network agro-network \
-                --env-file .env.local \
-                ${IMAGE_NAME}
+echo "======================================="
+echo "Removing old production container..."
+echo "======================================="
 
-                echo "2. Menunggu 10 detik..."
-                sleep 10
+docker rm -f ${CONTAINER_NAME} || true
 
-                if [ "$(docker inspect -f '{{.State.Running}}' $TEST_CONTAINER)" = "true" ]; then
-                    echo "3. UJI COBA SUKSES! Mengalihkan traffic..."
-                    docker rm -f ${CONTAINER_NAME} || true
-                    docker rm -f $TEST_CONTAINER || true
-                    
-                    docker run -d \
-                    --name ${CONTAINER_NAME} \
-                    --network agro-network \
-                    --env-file .env.local \
-                    --restart always \
-                    -p ${APP_PORT}:3004 \
-                    ${IMAGE_NAME}
+echo "======================================="
+echo "Removing old docker image..."
+echo "======================================="
 
-                    echo "=== Deploy ${CONTAINER_NAME} BERHASIL ==="
-                else
-                    echo "=== GAGAL: Aplikasi baru crash ==="
-                    docker logs $TEST_CONTAINER
-                    docker rm -f $TEST_CONTAINER
-                    exit 1
-                fi
-                '''
+docker image rm -f ${IMAGE_NAME} || true
+
+echo "======================================="
+echo "Building Docker Image..."
+echo "======================================="
+
+docker build \
+    --pull \
+    -f Dockerfile.prod \
+    -t ${IMAGE_NAME} .
+
+echo "Docker Image Build Success"
+'''
+            }
+        }
+                stage('Deploy (Safe Restart)') {
+            steps {
+                sh '''
+set -e
+
+TEST_CONTAINER="${CONTAINER_NAME}-tester"
+
+echo "======================================="
+echo "Removing old tester container..."
+echo "======================================="
+
+docker rm -f $TEST_CONTAINER || true
+
+echo "======================================="
+echo "Starting tester container..."
+echo "======================================="
+
+docker run -d \
+    --name $TEST_CONTAINER \
+    --network agro-network \
+    --env-file .env.local \
+    ${IMAGE_NAME}
+
+echo "Waiting application..."
+sleep 15
+
+echo "======================================="
+echo "Running Health Check..."
+echo "======================================="
+
+if docker exec $TEST_CONTAINER wget -qO- http://localhost:3000 >/dev/null; then
+    echo "Health Check Passed"
+else
+    echo "Health Check Failed"
+
+    echo "========== TEST CONTAINER LOG =========="
+    docker logs $TEST_CONTAINER || true
+
+    docker rm -f $TEST_CONTAINER || true
+
+    exit 1
+fi
+
+echo "======================================="
+echo "Starting production container..."
+echo "======================================="
+
+docker run -d \
+    --name ${CONTAINER_NAME} \
+    --network agro-network \
+    --env-file .env.local \
+    --restart unless-stopped \
+    --log-driver json-file \
+    --log-opt max-size=20m \
+    --log-opt max-file=5 \
+    -p ${APP_PORT}:3000 \
+    ${IMAGE_NAME}
+
+echo "Waiting production container..."
+sleep 5
+
+echo "======================================="
+echo "Removing tester container..."
+echo "======================================="
+
+docker rm -f $TEST_CONTAINER || true
+
+echo "======================================="
+echo "Deploy Success"
+echo "======================================="
+'''
+            }
+        }
+
+        stage('Container Status') {
+            steps {
+                sh '''
+echo "======================================="
+echo "Running Containers"
+echo "======================================="
+
+docker ps
+
+echo ""
+
+echo "======================================="
+echo "Frontend Logs"
+echo "======================================="
+
+docker logs --tail 50 ${CONTAINER_NAME}
+
+echo ""
+
+echo "======================================="
+echo "Container Health"
+echo "======================================="
+
+docker inspect \
+--format='{{json .State.Health}}' \
+${CONTAINER_NAME} || true
+'''
             }
         }
     }
 
-    post {
+        post {
+
         always {
-            archiveArtifacts artifacts: 'dependency-check-report/*.html', allowEmptyArchive: true
+            sh '''
+set -e
+
+echo "======================================="
+echo "Cleaning Workspace..."
+echo "======================================="
+
+rm -f .env.local || true
+
+docker rm -f ${CONTAINER_NAME}-tester || true
+
+docker image prune -f || true
+'''
         }
+
         success {
             echo "${CONTAINER_NAME} deployment successful!"
+
             withCredentials([
                 string(credentialsId: 'telegram-bot-token', variable: 'TG_TOKEN'),
                 string(credentialsId: 'telegram-chat-id', variable: 'TG_CHAT')
             ]) {
                 sh '''
-                TOKEN=$(echo "$TG_TOKEN" | tr -d '\r\n ')
-                CHAT=$(echo "$TG_CHAT" | tr -d '\r\n ')
-                curl -sS -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-                    -H "Content-Type: application/json" \
-                    -d @- <<EOF
+TOKEN=$(echo "$TG_TOKEN" | tr -d '\\r\\n ')
+CHAT=$(echo "$TG_CHAT" | tr -d '\\r\\n ')
+
+curl -sS -X POST \
+https://api.telegram.org/bot${TOKEN}/sendMessage \
+-H "Content-Type: application/json" \
+-d @- <<EOF
 {
-    "chat_id": "${CHAT}",
-    "parse_mode": "Markdown",
-    "text": "✅ *DEPLOY BERHASIL*\\n📦 Service: Frontend Ops (agro-frontend-operasional)\\n🔢 Build: #${BUILD_NUMBER}\\n🌐 Port: ${APP_PORT}\\n🔗 [Lihat Build](${BUILD_URL})"
+    "chat_id":"${CHAT}",
+    "parse_mode":"Markdown",
+    "text":"✅ *Deploy Frontend Operasional Berhasil*\\nBuild #${BUILD_NUMBER}\\n${BUILD_URL}"
 }
 EOF
-                '''
+'''
             }
         }
+
         failure {
             echo "${CONTAINER_NAME} deployment failed!"
-            sh 'docker logs ${CONTAINER_NAME} --tail 100 || true'
+
+            sh '''
+echo "======================================="
+echo "Production Container Log"
+echo "======================================="
+
+docker logs --tail 100 ${CONTAINER_NAME} || true
+
+echo ""
+
+echo "======================================="
+echo "Tester Container Log"
+echo "======================================="
+
+docker logs --tail 100 ${CONTAINER_NAME}-tester || true
+'''
+
             withCredentials([
                 string(credentialsId: 'telegram-bot-token', variable: 'TG_TOKEN'),
                 string(credentialsId: 'telegram-chat-id', variable: 'TG_CHAT')
             ]) {
                 sh '''
-                TOKEN=$(echo "$TG_TOKEN" | tr -d '\r\n ')
-                CHAT=$(echo "$TG_CHAT" | tr -d '\r\n ')
-                curl -sS -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-                    -H "Content-Type: application/json" \
-                    -d @- <<EOF
+TOKEN=$(echo "$TG_TOKEN" | tr -d '\\r\\n ')
+CHAT=$(echo "$TG_CHAT" | tr -d '\\r\\n ')
+
+curl -sS -X POST \
+https://api.telegram.org/bot${TOKEN}/sendMessage \
+-H "Content-Type: application/json" \
+-d @- <<EOF
 {
-    "chat_id": "${CHAT}",
-    "parse_mode": "Markdown",
-    "text": "❌ *DEPLOY GAGAL*\\n📦 Service: Frontend Ops (agro-frontend-operasional)\\n🔢 Build: #${BUILD_NUMBER}\\n🔗 [Cek Log Build](${BUILD_URL}console)"
+    "chat_id":"${CHAT}",
+    "parse_mode":"Markdown",
+    "text":"❌ *Deploy Frontend Operasional Gagal*\\nBuild #${BUILD_NUMBER}\\n${BUILD_URL}console"
 }
 EOF
-                '''
+'''
             }
         }
     }
