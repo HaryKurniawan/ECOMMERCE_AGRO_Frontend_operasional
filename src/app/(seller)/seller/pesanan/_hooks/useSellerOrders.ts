@@ -48,7 +48,9 @@ export const useSellerOrders = () => {
         return;
       }
       setMyStore(storeData);
-      const ordersRes = await ordersApi.sellerGetOrders(storeData.id);
+      const ordersRes = await ordersApi.sellerGetOrders(storeData.id, {
+        isGrosir: false,
+      });
       const rawList =
         ordersRes?.data?.data?.data ||
         ordersRes?.data?.data ||
@@ -56,32 +58,34 @@ export const useSellerOrders = () => {
         [];
 
       const list = Array.isArray(rawList)
-        ? rawList.map((o: any) => ({
-            ...o,
-            shipping: o.shipping || o.pengiriman,
-            customer: o.customer
-              ? {
-                  ...o.customer,
-                  phone:
-                    o.customer.phone ||
-                    o.customer.noTelepon ||
-                    o.konsumen?.noTelepon ||
-                    o.konsumen?.addresses?.[0]?.telepon,
-                }
-              : o.konsumen
+        ? rawList
+            .filter((o: any) => !o.isGrosir)
+            .map((o: any) => ({
+              ...o,
+              shipping: o.shipping || o.pengiriman,
+              customer: o.customer
                 ? {
-                    name: o.konsumen.nama,
-                    email: o.konsumen.email,
+                    ...o.customer,
                     phone:
-                      o.konsumen.noTelepon ||
-                      o.konsumen.addresses?.[0]?.telepon,
+                      o.customer.phone ||
+                      o.customer.noTelepon ||
+                      o.konsumen?.noTelepon ||
+                      o.konsumen?.addresses?.[0]?.telepon,
                   }
-                : undefined,
-            items: (o.items || o.item || []).map((it: any) => ({
-              ...it,
-              product: it.product || it.produk,
-            })),
-          }))
+                : o.konsumen
+                  ? {
+                      name: o.konsumen.nama,
+                      email: o.konsumen.email,
+                      phone:
+                        o.konsumen.noTelepon ||
+                        o.konsumen.addresses?.[0]?.telepon,
+                    }
+                  : undefined,
+              items: (o.items || o.item || []).map((it: any) => ({
+                ...it,
+                product: it.product || it.produk,
+              })),
+            }))
         : [];
 
       setOrders(list);

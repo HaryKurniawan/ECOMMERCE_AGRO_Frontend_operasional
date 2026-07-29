@@ -41,8 +41,11 @@ export function useOrderEvents(tokoId?: string) {
       }
     };
 
-    eventSource.onerror = (err) => {
-      console.error("[SSE] EventSource failed, attempting to reconnect...");
+    eventSource.onerror = () => {
+      // EventSource native auto-reconnects. Avoid console.error to prevent red Next.js dev overlay.
+      if (eventSource.readyState === EventSource.CLOSED) {
+        console.warn("[SSE] Connection closed, browser will auto-reconnect...");
+      }
     };
 
     return () => {

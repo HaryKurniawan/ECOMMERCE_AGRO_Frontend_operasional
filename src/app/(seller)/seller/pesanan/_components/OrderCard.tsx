@@ -1,40 +1,20 @@
 import React from "react";
 import Image from "next/image";
-import {
-  Truck,
-  ChevronRight,
-  CheckCircle,
-  Copy,
-  Package,
-  Printer,
-} from "lucide-react";
+import { Truck, ChevronRight, Copy, Package } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { formatRupiah, formatTanggal } from "@/lib/ecommerce-api";
 
 import { OrderItem } from "../_hooks/useSellerOrders";
-import {
-  getStatusColor,
-  getStatusLabel,
-  getNextStatus,
-} from "../../_utils/shipping-status";
+import { getStatusColor } from "../../_utils/shipping-status";
 
 interface OrderCardProps {
   order: OrderItem;
-  onInitShipping: (order: OrderItem) => void;
-  onAdvanceStatus: (order: OrderItem) => void;
-  onPrintResi?: (order: OrderItem) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({
-  order,
-  onInitShipping,
-  onAdvanceStatus,
-  onPrintResi,
-}) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   const router = useRouter();
   const shipping = order.shipping;
-  const nextStatus = shipping ? getNextStatus(shipping.status) : null;
 
   const customerName =
     order.penerima ||
@@ -148,33 +128,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
         className="flex items-center justify-between gap-2 px-5 py-3 bg-slate-50/60 border-t border-slate-100/80"
       >
         <div className="flex items-center gap-2 flex-wrap">
-          {order.status === "DIPROSES" && !shipping && (
-            <>
-              <button
-                onClick={() => onInitShipping(order)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
-              >
-                <Truck size={13} /> Proses Pengiriman
-              </button>
-              {onPrintResi && (
-                <button
-                  onClick={() => onPrintResi(order)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-700 text-white text-xs font-medium rounded-xl hover:bg-slate-800 transition-all"
-                  title="Cetak Resi Pengiriman"
-                >
-                  <Printer size={13} /> Cetak Resi
-                </button>
-              )}
-            </>
-          )}
-          {shipping && nextStatus && (
-            <button
-              onClick={() => onAdvanceStatus(order)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
-            >
-              <ChevronRight size={13} /> {getStatusLabel(nextStatus)}
-            </button>
-          )}
           {shipping?.status === "ARRIVED" &&
             order.status !== "SELESAI" &&
             order.status !== "DITUTUP" && (
@@ -182,14 +135,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 ⏳ Menunggu konfirmasi pembeli
               </span>
             )}
-          {order.status === "SELESAI" && (
-            <button
-              onClick={() => router.push(`/seller/pesanan/${order.id}`)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-xl hover:bg-emerald-700 transition-all"
-            >
-              <CheckCircle size={13} /> Cek & Konfirmasi
-            </button>
-          )}
           {shipping?.kurirPenggunaId && (
             <button
               onClick={() =>

@@ -16,12 +16,20 @@ import {
   Copy,
   ExternalLink,
   X,
+  Truck,
+  FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 
-import { formatRupiah, formatTanggal, ordersApi } from "@/lib/ecommerce-api";
+import {
+  formatRupiah,
+  formatTanggal,
+  ordersApi,
+  storesApi,
+} from "@/lib/ecommerce-api";
 import { apiClient } from "@/lib/api-client";
+import CetakSuratJalanModal from "@/app/(seller)/seller/pesanan/_components/CetakSuratJalanModal";
 const MapView = dynamic(() => import("@/components/ui/MapView"), {
   ssr: false,
   loading: () => (
@@ -144,9 +152,21 @@ export default function DetailPesananGrosirPage() {
   const [geocodeError, setGeocodeError] = useState("");
   const [copiedId, setCopiedId] = useState(false);
   const [showGudangModal, setShowGudangModal] = useState(false);
+  const [showSuratJalanModal, setShowSuratJalanModal] = useState(false);
+  const [myStore, setMyStore] = useState<any>(null);
   const [gudangList, setGudangList] = useState<any[]>([]);
   const [selectedGudangId, setSelectedGudangId] = useState("");
   const [loadingGudang, setLoadingGudang] = useState(false);
+
+  useEffect(() => {
+    storesApi
+      .getMyStore()
+      .then((res) => {
+        const s = res?.data?.data || res?.data;
+        if (s) setMyStore(s);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleCopyId = () => {
     if (!order?.id) return;
@@ -327,6 +347,24 @@ export default function DetailPesananGrosirPage() {
     ? shipping.trackingHistory
     : [];
 
+  const isPaidOrder = ["DIPROSES", "DIKIRIM", "SELESAI", "DITUTUP"].includes(
+    order.status?.toUpperCase() || "",
+  );
+  const baseReferenceDate = new Date(
+    isPaidOrder && order.updatedAt ? order.updatedAt : order.createdAt,
+  );
+  const estimasiMinDate = new Date(baseReferenceDate);
+  estimasiMinDate.setDate(estimasiMinDate.getDate() + 2);
+  const estimasiMaxDate = new Date(baseReferenceDate);
+  estimasiMaxDate.setDate(estimasiMaxDate.getDate() + 5);
+
+  const dateOpts: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  };
+  const estimasiTanggalTeks = `${estimasiMinDate.toLocaleDateString("id-ID", dateOpts)} – ${estimasiMaxDate.toLocaleDateString("id-ID", dateOpts)}`;
+
   const calculateTotalProfit = (orderData: OrderDetail) => {
     const itemsList = orderData.item || orderData.items || [];
     return itemsList.reduce((acc: number, it: any) => {
@@ -347,47 +385,28 @@ export default function DetailPesananGrosirPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/seller/pesanan-grosir")}
-            className="p-2.5 bg-white border border-slate-100 hover:bg-slate-50 hover:border-slate-200 rounded-xl text-slate-500 transition-all active:scale-[0.98] shadow-sm"
+            className="flex items-center gap-1.5 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-all shrink-0 active:scale-[0.98]"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={14} className="text-slate-500" />
+            <span>Kembali</span>
           </button>
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl md:text-2xl font-medium tracking-tight text-slate-800">
-                Detail Pesanan Grosir
-              </h1>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider border ${statusColor(order.status)}`}
-              >
-                {order.status.replace(/_/g, " ")}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <p className="text-[11px] text-slate-400 font-mono font-medium">
-                ID: {order.id}
-              </p>
-              <button
-                onClick={handleCopyId}
-                className="p-1 text-slate-300 hover:text-emerald-600 rounded transition-colors"
-                title="Salin ID Pesanan"
-              >
-                {copiedId ? (
-                  <CheckCircle size={13} className="text-emerald-500" />
-                ) : (
-                  <Copy size={13} />
-                )}
-              </button>
-            </div>
-          </div>
         </div>
 
-        {/* Top actions if applicable */}
-        <div className="flex items-center gap-3">
+        {/* Top actions */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => setShowSuratJalanModal(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-600 border border-emerald-600 text-xs font-semibold rounded-xl hover:bg-emerald-50 transition-all active:scale-[0.98]"
+            title="Cetak Surat Jalan / Delivery Note"
+          >
+            <FileText size={14} /> Surat Jalan
+          </button>
+
           {order.status === "MENUNGGU_KONFIRMASI_SELLER" && (
             <button
               onClick={handleConfirm}
               disabled={actionLoading}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
               {actionLoading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -402,7 +421,7 @@ export default function DetailPesananGrosirPage() {
             <button
               onClick={handleAjukanGudang}
               disabled={actionLoading}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-xl transition-all active:scale-[0.98] shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
               {actionLoading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -416,12 +435,50 @@ export default function DetailPesananGrosirPage() {
         </div>
       </div>
 
+      {/* No Pesanan Banner & Status (Sejajar) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/80 p-3.5 px-4 mb-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-slate-400 font-medium">
+            No. Pesanan:
+          </span>
+          <span className="font-mono text-sm font-bold text-slate-800">
+            #{order.id}
+          </span>
+          <button
+            onClick={handleCopyId}
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-600 transition-colors font-medium px-2 py-1 hover:bg-slate-50 rounded-lg"
+            title="Salin ID Pesanan"
+          >
+            {copiedId ? (
+              <>
+                <CheckCircle size={13} className="text-emerald-500" />
+                <span className="text-emerald-600 font-semibold text-[11px]">
+                  Tersalin!
+                </span>
+              </>
+            ) : (
+              <>
+                <Copy size={13} />
+                <span className="text-[11px]">Salin ID</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Status Badge (Sejajar No Pesanan) */}
+        <span
+          className={`self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${statusColor(order.status)}`}
+        >
+          {order.status.replace(/_/g, " ")}
+        </span>
+      </div>
+
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (2/3 width on desktop) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Order Items Table Card */}
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6">
             <h3 className="font-medium text-slate-800 text-base mb-5 flex items-center gap-2">
               <Package size={16} className="text-emerald-500" />
               Daftar Item Grosir
@@ -511,8 +568,31 @@ export default function DetailPesananGrosirPage() {
               )}
           </div>
 
+          {/* Estimasi Pengiriman Grosir Card */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 overflow-hidden space-y-3">
+            <h3 className="font-medium text-slate-800 text-base flex items-center gap-2">
+              <Truck size={16} className="text-emerald-500" />
+              Estimasi Pengiriman Grosir
+            </h3>
+            <p className="text-xs text-slate-500 font-medium">
+              2 – 5 Hari Kerja{" "}
+              {isPaidOrder
+                ? "dari pembayaran berhasil"
+                : "setelah pembayaran berhasil"}
+            </p>
+            <div className="bg-emerald-50/60 rounded-2xl p-3.5 border border-emerald-100/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                <Clock size={14} className="text-emerald-600 shrink-0" />
+                Estimasi Tanggal Tiba:
+              </span>
+              <span className="font-semibold text-emerald-800 bg-white px-3 py-1 rounded-xl border border-emerald-200/60 shadow-sm">
+                {estimasiTanggalTeks}
+              </span>
+            </div>
+          </div>
+
           {/* Address Card (Moved to Left Side to solve empty space on desktop) */}
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 overflow-hidden">
             <h3 className="font-medium text-slate-800 text-base mb-5 flex items-center gap-2">
               <MapPin size={16} className="text-emerald-500" />
               Alamat Pengiriman
@@ -616,7 +696,7 @@ export default function DetailPesananGrosirPage() {
 
           {/* Shipping Tracking Card */}
           {shipping && (
-            <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-6">
               <h3 className="font-medium text-slate-800 text-base mb-5 flex items-center gap-2">
                 <Clock size={16} className="text-emerald-500" />
                 Status & Riwayat Pengiriman
@@ -677,7 +757,7 @@ export default function DetailPesananGrosirPage() {
         {/* Right Column (1/3 width on desktop) */}
         <div className="space-y-6">
           {/* Payment breakdown card */}
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4">
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4">
             <h3 className="font-medium text-slate-800 text-base border-b border-slate-50 pb-3">
               Ringkasan Transaksi
             </h3>
@@ -723,7 +803,7 @@ export default function DetailPesananGrosirPage() {
           </div>
 
           {/* Customer info card */}
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6">
             <h3 className="font-medium text-slate-800 text-base mb-5 flex items-center gap-2">
               <User size={16} className="text-emerald-500" />
               Penerima & Konsumen
@@ -864,6 +944,15 @@ export default function DetailPesananGrosirPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* CETAK SURAT JALAN MODAL */}
+      {showSuratJalanModal && (
+        <CetakSuratJalanModal
+          order={order as any}
+          storeInfo={myStore}
+          onClose={() => setShowSuratJalanModal(false)}
+        />
       )}
     </div>
   );

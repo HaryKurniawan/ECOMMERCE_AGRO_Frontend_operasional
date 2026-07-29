@@ -1,7 +1,8 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -16,13 +17,27 @@ import {
   Calendar,
   CreditCard,
   Printer,
+  FileText,
   X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-import { formatRupiah, formatTanggal, ordersApi } from "@/lib/ecommerce-api";
+import {
+  formatRupiah,
+  formatTanggal,
+  ordersApi,
+  storesApi,
+  shippingApi,
+} from "@/lib/ecommerce-api";
 
 import CetakResiModal from "../_components/CetakResiModal";
+import CetakSuratJalanModal from "../_components/CetakSuratJalanModal";
+import InitShippingModal from "../_components/InitShippingModal";
+import AdvanceStatusModal from "../_components/AdvanceStatusModal";
+import {
+  getNextStatus,
+  getStatusLabel as getShippingStatusLabel,
+} from "../../_utils/shipping-status";
 
 const getStatusLabel = (s: string) => {
   switch (s) {
@@ -144,7 +159,7 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 
 function SectionCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-5">
       {children}
     </div>
   );
@@ -172,7 +187,15 @@ export default function DetailPesananSellerPage() {
   const [copiedId, setCopiedId] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [showResiModal, setShowResiModal] = useState(false);
+  const [showSuratJalanModal, setShowSuratJalanModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const [myStore, setMyStore] = useState<any>(null);
+  const [showInitModal, setShowInitModal] = useState(false);
+  const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleCopyId = () => {
     if (!order?.id) return;
@@ -182,9 +205,10 @@ export default function DetailPesananSellerPage() {
     setTimeout(() => setCopiedId(false), 2000);
   };
 
-  useEffect(() => {
-    if (!id) return;
-    const fetchOrder = async () => {
+  const fetchOrder = useCallback(
+    async (showLoadingState = false) => {
+      if (!id) return;
+      if (showLoadingState) setLoading(true);
       try {
         const res = await ordersApi.getById(id);
         let data = res?.data?.data || res?.data;
@@ -208,16 +232,97 @@ export default function DetailPesananSellerPage() {
             data.alamatLat = data.konsumen.addresses[0].lat;
             data.alamatLng = data.konsumen.addresses[0].lng;
           }
+          if (data.isGrosir) {
+            router.replace(`/seller/pesanan-grosir/${data.id}`);
+            return;
+          }
         }
         setOrder(data);
+        setError("");
       } catch (err) {
         setError("Gagal memuat detail pesanan.");
       } finally {
-        setLoading(false);
+        if (showLoadingState) setLoading(false);
+      }
+    },
+    [id, router],
+  );
+
+  useEffect(() => {
+    fetchOrder(true);
+  }, [fetchOrder]);
+
+  useEffect(() => {
+    const fetchStore = async () => {
+      try {
+        const storeRes = await storesApi.getMyStore();
+        const storeData = storeRes?.data?.data || storeRes?.data;
+        if (storeData) {
+          setMyStore(storeData);
+        }
+      } catch (err) {
+        console.error("Gagal memuat info toko:", err);
       }
     };
-    fetchOrder();
-  }, [id]);
+    fetchStore();
+  }, []);
+
+  const handleInitShipping = async () => {
+    if (!order) return;
+    if (!myStore?.courierStaff) {
+      toast.error(
+        "Gudang Anda belum didaftarkan Kurir oleh Admin. Hubungi Admin Pusat untuk menugaskan kurir ke gudang Anda.",
+      );
+      return;
+    }
+    setActionLoading("init");
+    try {
+      await shippingApi.init(order.id);
+      await fetchOrder();
+      setSuccessMessage("Status pesanan berhasil diperbarui!");
+      setShowSuccessModal(true);
+      setShowInitModal(false);
+    } catch (err: any) {
+      toast.error(err.message || "Gagal memproses pengiriman");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAdvanceStatus = async (
+    note: string,
+    kurirId?: string,
+    sendEmailNotification?: boolean,
+  ) => {
+    if (!order) return;
+    setActionLoading("advance");
+    try {
+      const payload: any = { note, sendEmailNotification };
+      if (kurirId) {
+        const selectedCourier =
+          myStore?.kurirStaffs?.find((c: any) => c.id === kurirId) ||
+          (myStore?.courierStaff?.id === kurirId ? myStore.courierStaff : null);
+        if (selectedCourier) {
+          payload.kurirPenggunaId = selectedCourier.id;
+          payload.kurirName =
+            selectedCourier.nama || selectedCourier.name || "Kurir Toko";
+          payload.kurirPhone =
+            selectedCourier.noTelepon ||
+            selectedCourier.phoneNumber ||
+            undefined;
+        }
+      }
+      await shippingApi.advance(order.id, payload);
+      await fetchOrder();
+      setSuccessMessage("Status pesanan berhasil diperbarui!");
+      setShowSuccessModal(true);
+      setShowAdvanceModal(false);
+    } catch (err: any) {
+      toast.error(err.message || "Gagal memperbarui status pengiriman");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleSellerConfirm = async () => {
     if (!order?.id || confirmLoading) return;
@@ -277,54 +382,107 @@ export default function DetailPesananSellerPage() {
   return (
     <div className="space-y-3">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-1">
-        <button
-          onClick={() => router.push("/seller/pesanan")}
-          className="p-2 hover:bg-gray-100 rounded-xl text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
-            Detail Pesanan
-          </p>
-          <div className="flex items-center gap-1.5">
-            <p className="text-xs text-gray-500 font-mono truncate">
-              #{order.id}
-            </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 mb-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/seller/pesanan")}
+            className="flex items-center gap-1.5 px-4 py-2 bg-white text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-all shrink-0 active:scale-[0.98]"
+          >
+            <ArrowLeft size={14} className="text-slate-500" />
+            <span>Kembali</span>
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Cetak Surat Jalan */}
+          {(order.status === "DIPROSES" ||
+            order.status === "DIKIRIM" ||
+            !!order.shipping) && (
             <button
-              onClick={handleCopyId}
-              className="p-0.5 text-gray-300 hover:text-gray-500 transition-colors"
-              title="Salin ID"
+              onClick={() => setShowSuratJalanModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-600 border border-emerald-600 text-xs font-semibold rounded-xl hover:bg-emerald-50 transition-all shadow-xs active:scale-[0.98]"
+              title="Cetak Surat Jalan / Delivery Note"
             >
-              {copiedId ? (
-                <CheckCircle size={11} className="text-emerald-500" />
-              ) : (
-                <Copy size={11} />
+              <FileText size={14} /> Surat Jalan
+            </button>
+          )}
+
+          {/* Cetak Resi */}
+          {order.status === "DIPROSES" && (
+            <button
+              onClick={() => setShowResiModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-600 border border-emerald-600 text-xs font-semibold rounded-xl hover:bg-emerald-50 transition-all shadow-xs active:scale-[0.98]"
+              title="Cetak Resi Pengiriman"
+            >
+              <Printer size={14} /> Cetak Resi
+            </button>
+          )}
+
+          {/* Aksi Update Status (Pojok Kanan) */}
+          {order.status === "DIPROSES" && !order.shipping && (
+            <button
+              onClick={() => setShowInitModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/10 active:scale-[0.98]"
+            >
+              <Truck size={14} /> Proses Pengiriman
+            </button>
+          )}
+
+          {order.shipping && getNextStatus(order.shipping.status) && (
+            <button
+              onClick={() => setShowAdvanceModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/10 active:scale-[0.98]"
+            >
+              <Truck size={14} /> Update Status:{" "}
+              {getShippingStatusLabel(
+                getNextStatus(order.shipping.status) || "",
               )}
             </button>
-          </div>
+          )}
         </div>
-        {/* Status badge */}
-        <span
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium ${sc.color}`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
-          {sc.label}
-        </span>
-        {/* Cetak Resi — hanya saat DIPROSES */}
-        {order.status === "DIPROSES" && (
-          <button
-            onClick={() => setShowResiModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-xl hover:bg-slate-700 transition-all shrink-0"
-            title="Cetak Resi Pengiriman"
-          >
-            <Printer size={13} /> Cetak Resi
-          </button>
-        )}
       </div>
 
-      {/* Customer */}
+      {/* Banner No Pesanan & Status Pesanan (Sejajar) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl border border-slate-200/80 p-3.5 px-4 mb-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-slate-400 font-medium">
+            No. Pesanan:
+          </span>
+          <span className="font-mono text-sm font-bold text-slate-800">
+            #{order.id}
+          </span>
+          <button
+            onClick={handleCopyId}
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-600 transition-colors font-medium px-2 py-1 hover:bg-slate-50 rounded-lg"
+            title="Salin ID Pesanan"
+          >
+            {copiedId ? (
+              <>
+                <CheckCircle size={13} className="text-emerald-500" />
+                <span className="text-emerald-600 font-semibold text-[11px]">
+                  Tersalin!
+                </span>
+              </>
+            ) : (
+              <>
+                <Copy size={13} />
+                <span className="text-[11px]">Salin ID</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Status Pesanan (Sejajar No Pesanan di Pojok Kanan) */}
+        <span
+          className={`self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${sc.color} border border-slate-100/60`}
+        >
+          <span className={`w-2 h-2 rounded-full ${sc.dot}`} />
+          {sc.label}
+        </span>
+      </div>
+
+      {/* 1. Customer (Pelanggan) */}
       <SectionCard>
         <SectionLabel icon={User} label="Pelanggan" />
         <InfoRow label="Nama" value={order.customer?.name} />
@@ -332,35 +490,7 @@ export default function DetailPesananSellerPage() {
         <InfoRow label="Telepon" value={order.customer?.phone} />
       </SectionCard>
 
-      {/* Address */}
-      <SectionCard>
-        <SectionLabel icon={MapPin} label="Alamat Pengiriman" />
-        <p className="text-sm text-gray-700 leading-relaxed">
-          {order.alamatKirim || "–"}
-        </p>
-        {order.catatan && (
-          <div className="mt-3 pt-3 border-t border-gray-50 flex items-start gap-2">
-            <span className="text-[11px] text-gray-400 shrink-0 mt-0.5">
-              Catatan
-            </span>
-            <p className="text-[11px] text-gray-600">{order.catatan}</p>
-          </div>
-        )}
-        {order.alamatLat && order.alamatLng && (
-          <div className="mt-4 pt-4 border-t border-gray-50">
-            <a
-              href={`https://www.google.com/maps?q=${order.alamatLat},${order.alamatLng}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
-            >
-              <MapPin size={12} /> Buka di Google Maps
-            </a>
-          </div>
-        )}
-      </SectionCard>
-
-      {/* Items */}
+      {/* 2. Items (Item Pesanan / Daftar Produk - DIATAS Alamat Pengiriman) */}
       <SectionCard>
         <SectionLabel icon={Package} label="Item Pesanan" />
         <div className="space-y-0">
@@ -409,6 +539,34 @@ export default function DetailPesananSellerPage() {
             </div>
           ))}
         </div>
+      </SectionCard>
+
+      {/* 3. Address (Alamat Pengiriman - DIBAWAH Item Pesanan) */}
+      <SectionCard>
+        <SectionLabel icon={MapPin} label="Alamat Pengiriman" />
+        <p className="text-sm text-gray-700 leading-relaxed">
+          {order.alamatKirim || "–"}
+        </p>
+        {order.catatan && (
+          <div className="mt-3 pt-3 border-t border-gray-50 flex items-start gap-2">
+            <span className="text-[11px] text-gray-400 shrink-0 mt-0.5">
+              Catatan
+            </span>
+            <p className="text-[11px] text-gray-600">{order.catatan}</p>
+          </div>
+        )}
+        {order.alamatLat && order.alamatLng && (
+          <div className="mt-4 pt-4 border-t border-gray-50">
+            <a
+              href={`https://www.google.com/maps?q=${order.alamatLat},${order.alamatLng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+            >
+              <MapPin size={12} /> Buka di Google Maps
+            </a>
+          </div>
+        )}
       </SectionCard>
 
       {/* Payment */}
@@ -664,6 +822,95 @@ export default function DetailPesananSellerPage() {
           </div>
         </div>
       )}
+
+      {/* Init Shipping Modal */}
+      {showInitModal && (
+        <InitShippingModal
+          order={order as any}
+          onClose={() => setShowInitModal(false)}
+          onConfirm={handleInitShipping}
+          loading={actionLoading === "init"}
+        />
+      )}
+
+      {/* Advance Status Modal */}
+      {showAdvanceModal && (
+        <AdvanceStatusModal
+          order={order as any}
+          onClose={() => setShowAdvanceModal(false)}
+          couriers={
+            myStore?.kurirStaffs && myStore.kurirStaffs.length > 0
+              ? myStore.kurirStaffs
+              : myStore?.courierStaff
+                ? [myStore.courierStaff]
+                : []
+          }
+          onConfirm={handleAdvanceStatus}
+          loading={actionLoading === "advance"}
+        />
+      )}
+
+      {/* Cetak Surat Jalan Modal */}
+      {showSuratJalanModal && (
+        <CetakSuratJalanModal
+          order={order as any}
+          storeInfo={myStore}
+          onClose={() => setShowSuratJalanModal(false)}
+        />
+      )}
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message={successMessage}
+      />
     </div>
   );
 }
+
+interface SuccessModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  message: string;
+}
+
+const SuccessModal: React.FC<SuccessModalProps> = ({
+  isOpen,
+  onClose,
+  message,
+}) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !isOpen) return null;
+
+  return createPortal(
+    <>
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+      <div className="fixed inset-0 flex items-center justify-center z-[10000] p-4">
+        <div className="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-sm overflow-hidden text-center animate-in zoom-in-95 duration-200">
+          <div className="mx-auto w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="w-10 h-10 text-emerald-500 animate-bounce" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">Berhasil!</h3>
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+            {message}
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-2xl font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+          >
+            Oke
+          </button>
+        </div>
+      </div>
+    </>,
+    document.body,
+  );
+};

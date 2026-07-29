@@ -15,9 +15,6 @@ import { useOrderEvents } from "@/hooks/orders/useOrderEvents";
 
 import { useSellerOrders, OrderItem } from "./_hooks/useSellerOrders";
 import OrderCard from "./_components/OrderCard";
-import InitShippingModal from "./_components/InitShippingModal";
-import AdvanceStatusModal from "./_components/AdvanceStatusModal";
-import CetakResiModal from "./_components/CetakResiModal";
 
 export default function PesananMasukPage() {
   const [filterStatus, setFilterStatus] = useState("semua");
@@ -36,13 +33,6 @@ export default function PesananMasukPage() {
   // Real-time order updates for this store
   useOrderEvents(myStore?.id);
 
-  // Modal states
-  const [initModalOrder, setInitModalOrder] = useState<OrderItem | null>(null);
-  const [advanceModalOrder, setAdvanceModalOrder] = useState<OrderItem | null>(
-    null,
-  );
-  const [resiModalOrder, setResiModalOrder] = useState<OrderItem | null>(null);
-
   const statusList = [
     { id: "semua", label: "Aktif" },
     { id: "MENUNGGU_BAYAR", label: "Belum Bayar" },
@@ -53,6 +43,7 @@ export default function PesananMasukPage() {
 
   const filtered = orders
     .filter((p) => {
+      if ((p as any).isGrosir) return false;
       if (filterStatus === "semua") {
         // Hanya tampilkan pesanan aktif (bukan selesai/dibatalkan/ditutup)
         return !["SELESAI", "DIBATALKAN", "DITUTUP"].includes(p.status);
@@ -173,68 +164,9 @@ export default function PesananMasukPage() {
             </div>
           </div>
         ) : (
-          filtered.map((p) => (
-            <OrderCard
-              key={p.id}
-              order={p}
-              onInitShipping={setInitModalOrder}
-              onAdvanceStatus={setAdvanceModalOrder}
-              onPrintResi={setResiModalOrder}
-            />
-          ))
+          filtered.map((p) => <OrderCard key={p.id} order={p} />)
         )}
       </div>
-
-      {/* Modals */}
-      <InitShippingModal
-        order={initModalOrder}
-        onClose={() => setInitModalOrder(null)}
-        onConfirm={async () => {
-          if (initModalOrder) {
-            try {
-              await handleInitShipping(initModalOrder.id);
-              setInitModalOrder(null);
-            } catch (err: any) {
-              alert(err.message);
-            }
-          }
-        }}
-        loading={actionLoading === "init"}
-      />
-
-      <AdvanceStatusModal
-        order={advanceModalOrder}
-        onClose={() => setAdvanceModalOrder(null)}
-        couriers={
-          myStore?.kurirStaffs && myStore.kurirStaffs.length > 0
-            ? myStore.kurirStaffs
-            : myStore?.courierStaff
-              ? [myStore.courierStaff]
-              : []
-        }
-        onConfirm={async (note, kurirId, sendEmailNotification) => {
-          if (advanceModalOrder) {
-            try {
-              await handleAdvanceStatus(
-                advanceModalOrder.id,
-                note,
-                kurirId,
-                sendEmailNotification,
-              );
-              setAdvanceModalOrder(null);
-            } catch (err: any) {
-              alert(err.message);
-            }
-          }
-        }}
-        loading={actionLoading === "advance"}
-      />
-
-      <CetakResiModal
-        order={resiModalOrder}
-        storeInfo={myStore}
-        onClose={() => setResiModalOrder(null)}
-      />
     </div>
   );
 }

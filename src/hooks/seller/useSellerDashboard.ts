@@ -25,12 +25,16 @@ export const useSellerDashboard = () => {
 
   const ordersQuery = useQuery({
     queryKey: queryKeys.sellerDashboard.orders(store?.id ?? ""),
-    queryFn: () => ordersApi.sellerGetOrders(store?.id as string),
+    queryFn: () =>
+      ordersApi.sellerGetOrders(store?.id as string, { isGrosir: false }),
     select: (res): ApiOrderItem[] => {
       const inner = res?.data?.data;
-      if (inner && Array.isArray(inner.data)) return inner.data;
-      if (Array.isArray(inner)) return inner;
-      return [];
+      const rawList = Array.isArray(inner?.data)
+        ? inner.data
+        : Array.isArray(inner)
+          ? inner
+          : [];
+      return rawList.filter((o: any) => !o.isGrosir);
     },
     enabled: !!store?.id,
     staleTime: 2 * 60 * 1000,
