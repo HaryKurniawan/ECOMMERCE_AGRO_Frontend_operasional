@@ -21,3 +21,4 @@ export * from "./api/gudang";
 export * from "./api/dashboard";
 export * from "./api/delivery-batch";
 export * from "./api/banner";
+export * from "./api/pajak";

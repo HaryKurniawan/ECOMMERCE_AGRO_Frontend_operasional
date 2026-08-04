@@ -104,6 +104,8 @@ export default function StockRequestDetailPage() {
   const [error, setError] = useState("");
   const [isPolling, setIsPolling] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [namaPenerima, setNamaPenerima] = useState("");
 
   const { downloadInvoice, downloading } = useInvoiceDownload();
 
@@ -114,7 +116,16 @@ export default function StockRequestDetailPage() {
         const res = await gudangApi.getStockRequestById(id);
         const rawData = res?.data?.data || res?.data;
         if (rawData) {
-          setRequest(rawData);
+          const mappedData = {
+            ...rawData,
+            id: rawData.id || rawData.id_pengajuanStok,
+            items:
+              rawData.items?.map((item: any) => ({
+                ...item,
+                id: item.id || item.id_itemPengajuan,
+              })) || [],
+          };
+          setRequest(mappedData);
 
           // Fetch warehouse name
           const whRes = await gudangApi.getWarehouses();
@@ -162,11 +173,12 @@ export default function StockRequestDetailPage() {
 
     try {
       setLoading(true);
+      setShowConfirmModal(false);
 
       // Update status ke SELESAI
       await gudangApi.updateStockRequestStatus(request.id, {
         status: "SELESAI",
-        catatan: "Barang telah tiba dan dikonfirmasi diterima oleh seller",
+        catatan: `Barang telah tiba dan dikonfirmasi diterima oleh seller. | Penerima: ${namaPenerima || tokoInfo?.nama || "Seller"}`,
       });
 
       // Refresh data
@@ -177,6 +189,11 @@ export default function StockRequestDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openConfirmModal = () => {
+    setNamaPenerima(tokoInfo?.nama || "");
+    setShowConfirmModal(true);
   };
 
   useEffect(() => {
@@ -412,7 +429,7 @@ export default function StockRequestDetailPage() {
               </p>
             </div>
             <button
-              onClick={handleConfirmReceived}
+              onClick={openConfirmModal}
               disabled={loading}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors shrink-0"
             >
@@ -573,16 +590,20 @@ export default function StockRequestDetailPage() {
                             <>
                               {item.jumlahDisetujui !== null
                                 ? Math.round(
-                                    item.jumlahDisetujui / item.ukuranKemasanKg,
+                                    item.jumlahDisetujui /
+                                      (item.ukuranKemasanKg || 1),
                                   ).toLocaleString("id-ID")
-                                : 0}{" "}
+                                : (item.jumlahKemasan || 0).toLocaleString(
+                                    "id-ID",
+                                  )}{" "}
                               packs
                             </>
                           ) : (
                             <>
-                              {(item.jumlahDisetujui || 0).toLocaleString(
-                                "id-ID",
-                              )}{" "}
+                              {(item.jumlahDisetujui !== null
+                                ? item.jumlahDisetujui
+                                : item.jumlahPermintaan
+                              ).toLocaleString("id-ID")}{" "}
                               {item.satuan}
                             </>
                           )}
@@ -725,6 +746,70 @@ export default function StockRequestDetailPage() {
                 Ctrl+P
               </kbd>{" "}
               di dialog print
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── MODAL KONFIRMASI PENERIMAAN ──────────────────────────── */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                Konfirmasi Penerimaan
+              </h3>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-xl flex items-start gap-3">
+                <AlertCircle className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  Pastikan semua barang fisik telah Anda terima dan periksa.
+                  Stok ini akan langsung ditambahkan ke inventaris Anda setelah
+                  dikonfirmasi.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-slate-700 uppercase tracking-wide">
+                  Nama Penerima
+                </label>
+                <input
+                  type="text"
+                  value={namaPenerima}
+                  onChange={(e) => setNamaPenerima(e.target.value)}
+                  placeholder="Contoh: Budi (Staf Toko)"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400"
+                />
+                <p className="text-[10px] text-slate-400">
+                  Nama ini akan dicantumkan pada invoice dan berita acara
+                  penerimaan barang.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200/50 rounded-lg transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleConfirmReceived}
+                disabled={loading || !namaPenerima.trim()}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-sm"
+              >
+                {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Konfirmasi Sekarang
+              </button>
             </div>
           </div>
         </div>

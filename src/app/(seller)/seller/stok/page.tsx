@@ -80,7 +80,11 @@ export default function SellerStockManagementPage() {
       if (storeData?.id) {
         const prodRes = await productsApi.getAllByStore(storeData.id);
         const dataArray = extractArray<ProductItem>(prodRes);
-        setProducts(dataArray);
+        const mappedArray = dataArray.map((p) => ({
+          ...p,
+          id: p.id || (p as any).id_produk,
+        }));
+        setProducts(mappedArray);
       }
     } catch (err: any) {
       console.error("Failed to fetch store inventory details", err);
@@ -104,7 +108,7 @@ export default function SellerStockManagementPage() {
   const lowStockCount = useMemo(() => {
     return products.filter((p) => {
       const q = Number(p.stok) || 0;
-      return q > 0 && q < 10;
+      return q > 0 && q <= 90;
     }).length;
   }, [products]);
 
@@ -124,8 +128,8 @@ export default function SellerStockManagementPage() {
 
       const q = Number(p.stok) || 0;
       let matchStatus = true;
-      if (filterStockStatus === "normal") matchStatus = q >= 10;
-      else if (filterStockStatus === "rendah") matchStatus = q > 0 && q < 10;
+      if (filterStockStatus === "normal") matchStatus = q > 90;
+      else if (filterStockStatus === "rendah") matchStatus = q > 0 && q <= 90;
       else if (filterStockStatus === "habis") matchStatus = q === 0;
 
       return matchSearch && matchStatus;
@@ -220,7 +224,7 @@ export default function SellerStockManagementPage() {
             {lowStockCount}
           </p>
           <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">
-            Stok Rendah (&lt;10)
+            Batas Pengajuan (≤90)
           </p>
           <div
             className={`w-8 h-8 rounded-lg flex items-center justify-center absolute right-4 bottom-4 ${lowStockCount > 0 ? "bg-amber-50 text-amber-500" : "bg-slate-50 text-slate-400"}`}
@@ -282,7 +286,7 @@ export default function SellerStockManagementPage() {
                 {[
                   { label: "Semua", val: "semua" },
                   { label: "Cukup", val: "normal" },
-                  { label: "Rendah", val: "rendah" },
+                  { label: "Batas Pengajuan", val: "rendah" },
                   { label: "Habis", val: "habis" },
                 ].map((t) => (
                   <button
@@ -357,9 +361,10 @@ export default function SellerStockManagementPage() {
                               <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-rose-50 text-rose-500 border border-rose-100">
                                 Habis
                               </span>
-                            ) : s < 10 ? (
-                              <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-amber-50 text-amber-500 border border-amber-100">
-                                Rendah
+                            ) : s <= 90 ? (
+                              <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-amber-50 text-amber-500 border border-amber-100 flex items-center gap-1">
+                                <AlertCircle size={10} />
+                                Perlu Pengajuan
                               </span>
                             ) : (
                               <span className="px-2 py-0.5 rounded-md text-[9px] font-medium uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">
@@ -371,7 +376,7 @@ export default function SellerStockManagementPage() {
                           {/* Solid Stock display */}
                           <div className="w-20 py-1.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
                             <span
-                              className={`text-[12px] font-medium ${s === 0 ? "text-rose-500" : s < 10 ? "text-amber-500" : "text-slate-800"}`}
+                              className={`text-[12px] font-medium ${s === 0 ? "text-rose-500" : s <= 90 ? "text-amber-500" : "text-slate-800"}`}
                             >
                               {s} {p.satuan || "unit"}
                             </span>
@@ -383,7 +388,7 @@ export default function SellerStockManagementPage() {
                           <div className="flex flex-wrap justify-end gap-2 mt-2">
                             {p.varian.map((v) => (
                               <div
-                                key={v.id}
+                                key={v.id || (v as any).id_varianKemasan}
                                 className="text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 shadow-sm"
                               >
                                 <span className="font-bold text-[10px] bg-emerald-200/50 px-1.5 py-0.5 rounded text-emerald-800">

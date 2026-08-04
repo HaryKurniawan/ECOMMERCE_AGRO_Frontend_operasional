@@ -87,7 +87,11 @@ export const useSellerProducts = () => {
         );
       }
 
-      setProducts(dataArray);
+      const mappedArray = dataArray.map((p) => ({
+        ...p,
+        id: p.id || (p as any).id_produk,
+      }));
+      setProducts(mappedArray);
     } catch (error) {
       console.error("[useSellerProducts] ❌ Error fetch:", error);
     } finally {

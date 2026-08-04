@@ -30,8 +30,16 @@ const ManajemenPenggunaPage: React.FC = () => {
   const fetchUsers = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const res = await adminApi.getUsers();
-      setUsers(extractArray<AdminUser>(res));
+      const res = await adminApi.getUsers({ limit: 500 });
+      const rawUsers = extractArray<any>(res);
+      const mappedUsers: AdminUser[] = rawUsers.map((u: any) => ({
+        ...u,
+        id: u.id_pengguna || u.id,
+        name: u.nama || u.name,
+        role: u.peran || u.role,
+        emailVerifiedAt: u.emailTerverifikasiPada || u.emailVerifiedAt,
+      }));
+      setUsers(mappedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       message.error("Gagal mengambil data pengguna");

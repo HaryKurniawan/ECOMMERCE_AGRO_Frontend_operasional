@@ -434,7 +434,7 @@ export default function SellerWarehouseProductsPage() {
               {filteredProducts.map((product) => (
                 <div
                   key={`${product.id}-${product.gudangId}`}
-                  className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden transition-all flex flex-col cursor-pointer group"
+                  className="bg-white rounded-2xl border border-slate-300 overflow-hidden transition-all flex flex-col cursor-pointer group hover:border-slate-400"
                 >
                   {/* Foto */}
                   <div className="w-full aspect-[4/3] bg-slate-100 overflow-hidden relative">

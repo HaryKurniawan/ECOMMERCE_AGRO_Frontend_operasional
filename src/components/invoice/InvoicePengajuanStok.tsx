@@ -276,6 +276,12 @@ export const InvoicePengajuanStok = React.forwardRef<
       ]
     : [gudangNamaFull, ""];
 
+  // Extract nama penerima from catatan if exists
+  const penerimaMatch = data.catatan?.match(/\|\s*Penerima:\s*(.+)$/i);
+  const namaPenerima = penerimaMatch
+    ? penerimaMatch[1].trim()
+    : "_________________";
+
   /* ── Minimal blank rows sehingga tabel tampak penuh ── */
   const MIN_ROWS = 8;
   const emptyRows = Math.max(0, MIN_ROWS - data.items.length);
@@ -800,7 +806,7 @@ export const InvoicePengajuanStok = React.forwardRef<
         }}
       >
         {/* Kiri — Payment Info */}
-        <div style={{ fontSize: "10px" }}>
+        <div style={{ fontSize: "10px", width: "33%" }}>
           <div
             style={{
               fontWeight: "bold",
@@ -817,8 +823,48 @@ export const InvoicePengajuanStok = React.forwardRef<
           </div>
         </div>
 
-        {/* Kanan — TTD + Stempel */}
-        <div style={{ textAlign: "center", minWidth: "180px" }}>
+        {/* Tengah — TTD Penerima */}
+        <div style={{ textAlign: "center", width: "33%" }}>
+          <div
+            style={{
+              fontSize: "10px",
+              fontWeight: "bold",
+              color: "#1a3a8f",
+              marginBottom: "6px",
+            }}
+          >
+            {tokoNama.split("(")[0].trim()}
+          </div>
+          <div
+            style={{
+              position: "relative",
+              width: "170px",
+              height: "72px",
+              margin: "0 auto",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                bottom: "12px",
+                left: "14px",
+                right: "14px",
+                borderBottom: "1.5px solid #555",
+              }}
+            />
+          </div>
+          <div
+            style={{ marginTop: "6px", fontSize: "10px", fontWeight: "bold" }}
+          >
+            {namaPenerima}
+          </div>
+          <div style={{ fontSize: "9.5px", color: "#555" }}>
+            Penerima Barang
+          </div>
+        </div>
+
+        {/* Kanan — TTD Gudang */}
+        <div style={{ textAlign: "center", width: "33%" }}>
           {/* Nama perusahaan di atas */}
           <div
             style={{

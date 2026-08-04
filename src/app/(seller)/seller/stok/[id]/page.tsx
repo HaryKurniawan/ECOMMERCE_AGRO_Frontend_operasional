@@ -848,19 +848,11 @@ export default function SellerProductStockDetailPage() {
                   let isExpiringSoon = false;
                   let finalExpireDate = null;
 
-                  if (batch.tanggalKadaluarsa) {
-                    finalExpireDate = new Date(batch.tanggalKadaluarsa);
-                  } else if (batch.tanggalMasuk) {
+                  if (batch.tanggalMasuk) {
                     finalExpireDate = new Date(batch.tanggalMasuk);
-                    const isFrozen = product?.nama
-                      ?.toLowerCase()
-                      .includes("frozen");
-                    const additionalDays = isFrozen
-                      ? 180
-                      : product?.estimasiSegarHari || 180;
-                    finalExpireDate.setDate(
-                      finalExpireDate.getDate() + additionalDays,
-                    );
+                    finalExpireDate.setMonth(finalExpireDate.getMonth() + 6);
+                  } else if (batch.tanggalKadaluarsa) {
+                    finalExpireDate = new Date(batch.tanggalKadaluarsa);
                   }
 
                   if (finalExpireDate) {

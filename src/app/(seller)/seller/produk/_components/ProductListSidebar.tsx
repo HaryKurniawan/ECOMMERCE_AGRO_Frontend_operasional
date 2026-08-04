@@ -61,6 +61,7 @@ export default function ProductListSidebar({
         // Hanya filter DRAFT, jangan hapus produk yang sedang aktif
         const filtered = dataArray
           .filter((p: Product) => p.status !== "DRAFT")
+          .map((p) => ({ ...p, id: p.id || (p as any).id_produk }))
           .sort((a, b) =>
             (a.namaEtalase || a.nama).localeCompare(b.namaEtalase || b.nama),
           ); // Sortir agar urutan tetap

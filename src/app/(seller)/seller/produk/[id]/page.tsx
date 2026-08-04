@@ -255,6 +255,7 @@ export default function KelolaProdukPage({
       const res = await productsApi.getById(id);
       const data = res?.data?.data || res?.data;
       if (data) {
+        data.id = data.id_produk;
         setProduct(data);
         setEditForm((prev) => ({
           ...prev,
@@ -278,6 +279,7 @@ export default function KelolaProdukPage({
           setNotFound(true);
           return;
         }
+        data.id = data.id || data.id_produk;
 
         const storeRes = await storesApi.getMyStore();
         const storeData = storeRes?.data?.data || storeRes?.data;
@@ -409,7 +411,10 @@ export default function KelolaProdukPage({
       // Refresh product data
       const res = await productsApi.getById(id);
       const data = res?.data?.data || res?.data;
-      setProduct(data);
+      if (data) {
+        data.id = data.id || data.id_produk;
+        setProduct(data);
+      }
 
       setFieldFeedback({
         field: fieldName,
@@ -481,7 +486,10 @@ export default function KelolaProdukPage({
       });
       const res = await productsApi.getById(id);
       const data = res?.data?.data || res?.data;
-      setProduct(data);
+      if (data) {
+        data.id = data.id || data.id_produk;
+        setProduct(data);
+      }
       setEditFeedback({ type: "success", msg: "Perubahan berhasil disimpan!" });
     } catch (err: unknown) {
       const e = err as {
@@ -1082,7 +1090,10 @@ export default function KelolaProdukPage({
                                   </div>
 
                                   {img.type === "link" ? (
-                                    <div className="flex gap-2">
+                                    <div
+                                      key="link-input"
+                                      className="flex gap-2"
+                                    >
                                       <input
                                         type="url"
                                         value={img.value || ""}
@@ -1119,7 +1130,10 @@ export default function KelolaProdukPage({
                                       </button>
                                     </div>
                                   ) : (
-                                    <div className="flex flex-col gap-1.5">
+                                    <div
+                                      key="file-input"
+                                      className="flex flex-col gap-1.5"
+                                    >
                                       <input
                                         type="file"
                                         accept="image/*"

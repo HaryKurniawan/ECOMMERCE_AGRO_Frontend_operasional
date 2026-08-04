@@ -87,6 +87,7 @@ const ADMIN_MENU: SidebarMenuItem[] = [
     icon: <Settings size={17} />,
     children: [
       { path: "/admin/pengaturan", label: "Umum" },
+      { path: "/admin/pengaturan/ppn", label: "Pajak (PPN)" },
       { path: "/admin/kelola-foto", label: "Kelola Foto" },
       { path: "/admin/banner", label: "Banner Promo" },
       { path: "/admin/notifikasi", label: "Broadcast Notifikasi" },

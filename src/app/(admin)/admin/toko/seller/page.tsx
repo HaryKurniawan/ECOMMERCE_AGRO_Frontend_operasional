@@ -49,9 +49,18 @@ export default function SellerManagementPage() {
         };
         if (data && typeof data === "object") {
           if (Array.isArray(data)) {
-            setSellers(data as SellerInfo[]);
+            const mapped = data.map((u: any) => ({
+              ...u,
+              id: u.id_pengguna || u.id,
+            }));
+            setSellers(mapped as SellerInfo[]);
           } else {
-            setSellers((data as { data: SellerInfo[] }).data || []);
+            const raw = (data as { data: any[] }).data || [];
+            const mapped = raw.map((u: any) => ({
+              ...u,
+              id: u.id_pengguna || u.id,
+            }));
+            setSellers(mapped as SellerInfo[]);
             setTotalPages((data as { totalPages: number }).totalPages || 1);
           }
         }

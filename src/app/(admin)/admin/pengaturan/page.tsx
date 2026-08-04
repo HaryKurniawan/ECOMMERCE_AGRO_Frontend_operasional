@@ -1,11 +1,21 @@
 "use client";
 
-import { Settings, Shield, Bell, User, Key, Globe } from "lucide-react";
+import {
+  Settings,
+  Shield,
+  Bell,
+  User,
+  Key,
+  Globe,
+  Percent,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { useAuthStore } from "@/store/auth-store";
 
 export default function PengaturanPage() {
   const { user } = useAuthStore();
+  const router = useRouter();
 
   const settingsGroups = [
     {
@@ -15,13 +25,20 @@ export default function PengaturanPage() {
           icon: User,
           title: "Profil Saya",
           desc: "Kelola informasi pribadi Anda",
+          path: "#",
         },
         {
           icon: Key,
           title: "Kata Sandi",
           desc: "Perbarui kata sandi akun Anda",
+          path: "#",
         },
-        { icon: Shield, title: "Keamanan 2FA", desc: "Autentikasi dua faktor" },
+        {
+          icon: Shield,
+          title: "Keamanan 2FA",
+          desc: "Autentikasi dua faktor",
+          path: "#",
+        },
       ],
     },
     {
@@ -31,13 +48,26 @@ export default function PengaturanPage() {
           icon: Bell,
           title: "Notifikasi",
           desc: "Atur preferensi pemberitahuan",
+          path: "#",
         },
         {
           icon: Globe,
           title: "Bahasa & Wilayah",
           desc: "Pengaturan lokalisasi",
+          path: "#",
         },
-        { icon: Settings, title: "Tampilan", desc: "Tema dan ukuran teks" },
+        {
+          icon: Percent,
+          title: "Pajak (PPN)",
+          desc: "Atur tarif PPN dan keaktifan pajak",
+          path: "/admin/pengaturan/ppn",
+        },
+        {
+          icon: Settings,
+          title: "Tampilan",
+          desc: "Tema dan ukuran teks",
+          path: "#",
+        },
       ],
     },
   ];
@@ -63,6 +93,9 @@ export default function PengaturanPage() {
               {group.items.map((item, j) => (
                 <button
                   key={j}
+                  onClick={() =>
+                    item.path && item.path !== "#" && router.push(item.path)
+                  }
                   className="w-full flex items-start gap-4 p-4 text-left hover:bg-gray-50 transition-colors"
                 >
                   <div className="w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 border border-gray-100">

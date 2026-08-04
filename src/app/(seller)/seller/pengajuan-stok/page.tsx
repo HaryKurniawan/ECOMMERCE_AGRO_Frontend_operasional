@@ -33,7 +33,8 @@ interface RequestItem {
 }
 
 interface StockRequest {
-  id: string;
+  id?: string;
+  id_pengajuanStok?: string;
   tokoId: string;
   gudangId: string;
   status:
@@ -73,7 +74,10 @@ export default function SellerStockRequestsPage() {
       if (showLoading) setLoading(true);
       const res = await gudangApi.getStockRequests();
       const rawData = res?.data?.data || res?.data || [];
-      setRequests(Array.isArray(rawData) ? rawData : []);
+      const arrayData = Array.isArray(rawData) ? rawData : [];
+      setRequests(
+        arrayData.map((r: any) => ({ ...r, id: r.id || r.id_pengajuanStok })),
+      );
 
       const whRes = await gudangApi.getWarehouses();
       const whData = whRes?.data?.data || whRes?.data || [];
