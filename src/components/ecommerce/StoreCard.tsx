@@ -75,7 +75,7 @@ const StoreCard: React.FC<StoreCardProps> = ({
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {store.komoditasUnggulan.slice(0, 3).map((k, i) => (
+            {store.komoditasUnggulan?.slice(0, 3).map((k, i) => (
               <span key={i} className="badge-store">
                 {k}
               </span>

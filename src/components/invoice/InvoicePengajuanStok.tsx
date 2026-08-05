@@ -82,7 +82,7 @@ function buildInvoiceNo(id: string, createdAt: string): string {
   const d = new Date(createdAt);
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yyyy = d.getFullYear();
-  const prefix = id.slice(0, 3).toUpperCase();
+  const prefix = id?.slice(0, 3).toUpperCase() || "INV";
   const romanMonth: Record<number, string> = {
     1: "I",
     2: "II",

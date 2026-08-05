@@ -401,7 +401,7 @@ export default function KelolaProdukPage({
       } else if (fieldName === "images") {
         updatePayload.gambarUrl = fieldValue[0]?.value || undefined;
         updatePayload.fotoLainnya = fieldValue
-          .slice(1)
+          ?.slice(1)
           .map((img: any) => img.value)
           .filter(Boolean);
       }
@@ -480,7 +480,7 @@ export default function KelolaProdukPage({
         namaEtalase: editForm.namaEtalase || null,
         gambarUrl: editForm.images[0]?.value || undefined,
         fotoLainnya: editForm.images
-          .slice(1)
+          ?.slice(1)
           .map((img) => img.value)
           .filter(Boolean),
       });

@@ -574,7 +574,7 @@ export default function DetailTokoPage() {
                         className="hover:bg-gray-50 transition-colors"
                       >
                         <td className="px-4 py-3 font-mono font-medium text-emerald-600">
-                          #{order.id.slice(-8).toUpperCase()}
+                          #{order?.id?.slice(-8).toUpperCase() ?? "-"}
                         </td>
                         <td className="px-4 py-3 text-gray-500">
                           {formatTanggal(order.createdAt)}
