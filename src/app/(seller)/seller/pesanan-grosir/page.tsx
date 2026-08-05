@@ -418,109 +418,117 @@ const GrosirOrdersPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filtered.map((order) => (
-            <div
-              key={order.id}
-              onClick={() => router.push(`/seller/pesanan-grosir/${order.id}`)}
-              className="bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-md hover:shadow-slate-100/60 transition-all duration-200 cursor-pointer overflow-hidden"
-            >
-              {/* Header strip */}
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
-                <div className="flex items-center gap-2.5">
-                  <p className="text-sm font-medium text-slate-800">
-                    {order.konsumen?.nama || "Guest User"}
-                  </p>
-                  <span
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide ${statusColor(order.status)}`}
-                  >
-                    {order.status.replace(/_/g, " ")}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-emerald-600">
-                    {formatRupiah(Number(order.totalHarga || 0))}
-                  </p>
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="px-5 py-4">
-                {/* Meta row */}
-                <div className="flex items-center gap-3 mb-4 text-[11px] text-slate-400">
-                  <span className="font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
-                    #{order.id.slice(0, 8).toUpperCase()}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.clipboard.writeText(order.id);
-                    }}
-                    title="Salin ID"
-                    className="text-slate-300 hover:text-emerald-500 transition-colors"
-                  >
-                    <Copy size={11} />
-                  </button>
-                  <span>•</span>
-                  <span>{formatTanggal(order.createdAt)}</span>
-                </div>
-
-                {/* Items */}
-                {order.item && order.item.length > 0 ? (
-                  <div className="space-y-2.5">
-                    {order.item.slice(0, 2).map((item, i: number) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center text-sm flex-shrink-0 border border-slate-100">
-                          <Package size={14} className="text-slate-300" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-medium text-slate-700 truncate">
-                            {item.produk?.nama?.replace(" - ", " ") || "—"}
-                          </p>
-                          <p className="text-[11px] text-slate-400">
-                            {item.jumlah} kg ×{" "}
-                            {formatRupiah(Number(item.harga))}
-                          </p>
-                        </div>
-                        <p className="text-[12px] font-medium text-slate-600 whitespace-nowrap">
-                          {formatRupiah(
-                            Number(item.jumlah) * Number(item.harga),
-                          )}
-                        </p>
-                      </div>
-                    ))}
-                    {order.item.length > 2 && (
-                      <p className="text-[11px] text-slate-400 pl-12">
-                        +{order.item.length - 2} produk lainnya
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400 italic">
-                    Data produk tidak tersedia
-                  </p>
-                )}
-              </div>
-
-              {/* Footer actions */}
+          {filtered.map((order, idx) => {
+            const orderId =
+              order?.id || order?.id_pesanan || order?.id_pesananEcom;
+            return (
               <div
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center justify-between gap-2 px-5 py-3 bg-slate-50/60 border-t border-slate-100/80"
+                key={orderId || idx}
+                onClick={() => router.push(`/seller/pesanan-grosir/${orderId}`)}
+                className="bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-md hover:shadow-slate-100/60 transition-all duration-200 cursor-pointer overflow-hidden"
               >
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* Aksi grosir khusus dapat ditambahkan di sini nantinya */}
+                {/* Header strip */}
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
+                  <div className="flex items-center gap-2.5">
+                    <p className="text-sm font-medium text-slate-800">
+                      {order.konsumen?.nama || "Guest User"}
+                    </p>
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide ${statusColor(order.status)}`}
+                    >
+                      {order.status.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-emerald-600">
+                      {formatRupiah(Number(order.totalHarga || 0))}
+                    </p>
+                  </div>
                 </div>
 
-                <button
-                  onClick={() =>
-                    router.push(`/seller/pesanan-grosir/${order.id}`)
-                  }
-                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-emerald-600 font-medium transition-colors whitespace-nowrap"
+                {/* Body */}
+                <div className="px-5 py-4">
+                  {/* Meta row */}
+                  <div className="flex items-center gap-3 mb-4 text-[11px] text-slate-400">
+                    <span className="font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
+                      #
+                      {orderId
+                        ? String(orderId).slice(0, 8).toUpperCase()
+                        : "..."}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (orderId)
+                          navigator.clipboard.writeText(String(orderId));
+                      }}
+                      title="Salin ID"
+                      className="text-slate-300 hover:text-emerald-500 transition-colors"
+                    >
+                      <Copy size={11} />
+                    </button>
+                    <span>•</span>
+                    <span>{formatTanggal(order.createdAt)}</span>
+                  </div>
+
+                  {/* Items */}
+                  {order.item && order.item.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {order.item.slice(0, 2).map((item, i: number) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-9 h-9 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center text-sm flex-shrink-0 border border-slate-100">
+                            <Package size={14} className="text-slate-300" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-medium text-slate-700 truncate">
+                              {item.produk?.nama?.replace(" - ", " ") || "—"}
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              {item.jumlah} kg ×{" "}
+                              {formatRupiah(Number(item.harga))}
+                            </p>
+                          </div>
+                          <p className="text-[12px] font-medium text-slate-600 whitespace-nowrap">
+                            {formatRupiah(
+                              Number(item.jumlah) * Number(item.harga),
+                            )}
+                          </p>
+                        </div>
+                      ))}
+                      {order.item.length > 2 && (
+                        <p className="text-[11px] text-slate-400 pl-12">
+                          +{order.item.length - 2} produk lainnya
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">
+                      Data produk tidak tersedia
+                    </p>
+                  )}
+                </div>
+
+                {/* Footer actions */}
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center justify-between gap-2 px-5 py-3 bg-slate-50/60 border-t border-slate-100/80"
                 >
-                  Detail <ChevronRight size={13} />
-                </button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Aksi grosir khusus dapat ditambahkan di sini nantinya */}
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      router.push(`/seller/pesanan-grosir/${orderId}`)
+                    }
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-emerald-600 font-medium transition-colors whitespace-nowrap"
+                  >
+                    Detail <ChevronRight size={13} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

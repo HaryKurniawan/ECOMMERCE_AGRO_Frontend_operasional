@@ -597,8 +597,8 @@ const DashboardSellerPage: React.FC = () => {
             </div>
           ) : (
             <div>
-              {safeOrders.slice(0, 4).map((p: any) => (
-                <OrderRow key={p.id} order={p} />
+              {safeOrders.slice(0, 4).map((p: any, idx: number) => (
+                <OrderRow key={p?.id || idx} order={p} />
               ))}
             </div>
           )}

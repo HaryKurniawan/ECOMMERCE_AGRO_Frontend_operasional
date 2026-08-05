@@ -168,13 +168,23 @@ export default function KurirOrderDetailPage() {
 
     // If status is IN_TRANSIT, go to the delivery proof page to finish delivery
     if (currentStatus === "IN_TRANSIT") {
-      router.push(`/kurir/pesanan/${order.id}/bukti`);
+      const actualId =
+        order.id ||
+        (order as any).id_pesanan ||
+        (order as any).id_pesananEcom ||
+        orderId;
+      router.push(`/kurir/pesanan/${actualId}/bukti`);
       return;
     }
 
     setActionLoading(true);
     try {
-      await ordersApi.advanceShippingStatus(order.id, {
+      const actualId =
+        order.id ||
+        (order as any).id_pesanan ||
+        (order as any).id_pesananEcom ||
+        orderId;
+      await ordersApi.advanceShippingStatus(actualId, {
         note: `Di-update oleh Kurir ${user?.name || ""}`,
       });
       await fetchOrder();

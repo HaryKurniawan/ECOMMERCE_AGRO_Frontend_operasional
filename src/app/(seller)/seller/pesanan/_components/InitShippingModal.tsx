@@ -74,7 +74,15 @@ const InitShippingModal: React.FC<InitShippingModalProps> = ({
                 Order
               </span>
               <span className="font-mono text-[11px] font-bold text-slate-700">
-                #{order.id.slice(0, 8).toUpperCase()}
+                #
+                {String(
+                  order.id ||
+                    (order as any).id_pesanan ||
+                    (order as any).id_pesananEcom ||
+                    "",
+                )
+                  .slice(0, 8)
+                  .toUpperCase()}
               </span>
             </div>
           </div>

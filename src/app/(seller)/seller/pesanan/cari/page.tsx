@@ -338,10 +338,12 @@ export default function SearchTransactionPage() {
 
             <button
               onClick={() => {
+                const orderId =
+                  order.id || order.id_pesanan || order.id_pesananEcom;
                 if (isGrosir) {
-                  router.push(`/seller/pesanan-grosir/${order.id}`);
+                  router.push(`/seller/pesanan-grosir/${orderId}`);
                 } else {
-                  router.push(`/seller/pesanan/${order.id}`);
+                  router.push(`/seller/pesanan/${orderId}`);
                 }
               }}
               className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-100/50 active:scale-95"

@@ -164,7 +164,7 @@ export default function PesananMasukPage() {
             </div>
           </div>
         ) : (
-          filtered.map((p) => <OrderCard key={p.id} order={p} />)
+          filtered.map((p, idx) => <OrderCard key={p?.id || idx} order={p} />)
         )}
       </div>
     </div>

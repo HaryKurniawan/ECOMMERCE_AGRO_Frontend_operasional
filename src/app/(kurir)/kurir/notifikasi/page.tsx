@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
@@ -35,11 +35,23 @@ export default function KurirNotifikasiPage() {
     queryFn: () => notificationsApi.getAll({ limit: 50 }),
   });
 
+  const getSafeNotifs = useCallback(() => {
+    const d1 = data?.data?.data;
+    const d2 = data?.data;
+    if (Array.isArray(d1)) return d1;
+    if (d1 && Array.isArray(d1.data)) return d1.data;
+    if (d1 && Array.isArray(d1.notifications)) return d1.notifications;
+    if (Array.isArray(d2)) return d2;
+    if (d2 && Array.isArray(d2.data)) return d2.data;
+    if (d2 && Array.isArray(d2.notifications)) return d2.notifications;
+    return [];
+  }, [data]);
+
   useEffect(() => {
     if (data?.data) {
-      setNotifications(data.data.data, data.data.unreadCount);
+      setNotifications(getSafeNotifs(), data.data.unreadCount || 0);
     }
-  }, [data, setNotifications]);
+  }, [data, setNotifications, getSafeNotifs]);
 
   const handleMarkAsRead = async (id: string, isRead: boolean) => {
     if (isRead) return;
@@ -98,7 +110,7 @@ export default function KurirNotifikasiPage() {
     }
   };
 
-  const notifs: ApiNotification[] = data?.data?.data || [];
+  const notifs: ApiNotification[] = getSafeNotifs();
 
   const filteredNotifs = notifs.filter((n: ApiNotification) => {
     if (activeTab === "Semua") return true;

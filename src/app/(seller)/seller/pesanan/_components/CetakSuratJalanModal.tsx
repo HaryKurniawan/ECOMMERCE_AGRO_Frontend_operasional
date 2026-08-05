@@ -112,7 +112,14 @@ export const SuratJalanDocument = React.forwardRef<
       (order as any).noTelepon ||
       "-";
 
-    const shortId = order.id.slice(0, 8).toUpperCase();
+    const shortId = String(
+      order.id ||
+        (order as any).id_pesanan ||
+        (order as any).id_pesananEcom ||
+        "",
+    )
+      .slice(0, 8)
+      .toUpperCase();
     const dateStr = new Date(order.createdAt)
       .toISOString()
       .slice(0, 10)
@@ -567,7 +574,14 @@ const CetakSuratJalanModal: React.FC<CetakSuratJalanModalProps> = ({
 <html lang="id">
 <head>
 <meta charset="UTF-8"/>
-<title>Surat Jalan #${order?.id?.slice(0, 8).toUpperCase()}</title>
+<title>Surat Jalan #${String(
+        order?.id ||
+          (order as any)?.id_pesanan ||
+          (order as any)?.id_pesananEcom ||
+          "",
+      )
+        .slice(0, 8)
+        .toUpperCase()}</title>
 <style>
   @page { size: A5 landscape; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -619,7 +633,15 @@ const CetakSuratJalanModal: React.FC<CetakSuratJalanModalProps> = ({
                   Surat Jalan / Delivery Note
                 </p>
                 <p className="text-[11px] text-slate-500 font-mono">
-                  #{order.id.slice(0, 8).toUpperCase()}
+                  #
+                  {String(
+                    order.id ||
+                      (order as any).id_pesanan ||
+                      (order as any).id_pesananEcom ||
+                      "",
+                  )
+                    .slice(0, 8)
+                    .toUpperCase()}
                 </p>
               </div>
             </div>

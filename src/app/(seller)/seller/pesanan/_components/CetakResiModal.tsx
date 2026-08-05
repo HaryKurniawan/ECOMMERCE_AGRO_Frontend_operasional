@@ -56,7 +56,14 @@ const ShippingLabel = React.forwardRef<HTMLDivElement, ShippingLabelProps>(
       (order as any).customerPhone ||
       (order as any).noTelepon ||
       null;
-    const shortId = order.id.slice(0, 8).toUpperCase();
+    const shortId = String(
+      order.id ||
+        (order as any).id_pesanan ||
+        (order as any).id_pesananEcom ||
+        "",
+    )
+      .slice(0, 8)
+      .toUpperCase();
     const itemSummary = order.items
       ?.slice(0, 2)
       .map(
@@ -357,7 +364,14 @@ const CetakResiModal: React.FC<CetakResiModalProps> = ({
 <html lang="id">
 <head>
 <meta charset="UTF-8"/>
-<title>Resi #${order?.id?.slice(0, 8).toUpperCase()}</title>
+<title>Resi #${String(
+        order?.id ||
+          (order as any)?.id_pesanan ||
+          (order as any)?.id_pesananEcom ||
+          "",
+      )
+        .slice(0, 8)
+        .toUpperCase()}</title>
 <style>
   @page { size: 100mm auto; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -412,7 +426,15 @@ const CetakResiModal: React.FC<CetakResiModalProps> = ({
                   Cetak Resi
                 </p>
                 <p className="text-[10px] text-slate-400 font-mono">
-                  #{order.id.slice(0, 8).toUpperCase()}
+                  #
+                  {String(
+                    order.id ||
+                      (order as any).id_pesanan ||
+                      (order as any).id_pesananEcom ||
+                      "",
+                  )
+                    .slice(0, 8)
+                    .toUpperCase()}
                 </p>
               </div>
             </div>

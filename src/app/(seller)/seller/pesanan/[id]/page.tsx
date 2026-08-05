@@ -198,8 +198,8 @@ export default function DetailPesananSellerPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleCopyId = () => {
-    if (!order?.id) return;
-    navigator.clipboard.writeText(order.id);
+    if (!id) return;
+    navigator.clipboard.writeText(id);
     setCopiedId(true);
     toast.success("ID Pesanan disalin!");
     setTimeout(() => setCopiedId(false), 2000);
@@ -269,7 +269,10 @@ export default function DetailPesananSellerPage() {
 
   const handleInitShipping = async () => {
     if (!order) return;
-    if (!myStore?.courierStaff) {
+    if (
+      !myStore?.courierStaff &&
+      (!myStore?.kurirStaffs || myStore.kurirStaffs.length === 0)
+    ) {
       toast.error(
         "Gudang Anda belum didaftarkan Kurir oleh Admin. Hubungi Admin Pusat untuk menugaskan kurir ke gudang Anda.",
       );
@@ -277,7 +280,12 @@ export default function DetailPesananSellerPage() {
     }
     setActionLoading("init");
     try {
-      await shippingApi.init(order.id);
+      const orderId =
+        order.id ||
+        (order as any).id_pesanan ||
+        (order as any).id_pesananEcom ||
+        id;
+      await shippingApi.init(orderId);
       await fetchOrder();
       setSuccessMessage("Status pesanan berhasil diperbarui!");
       setShowSuccessModal(true);
@@ -312,7 +320,12 @@ export default function DetailPesananSellerPage() {
             undefined;
         }
       }
-      await shippingApi.advance(order.id, payload);
+      const orderId =
+        order.id ||
+        (order as any).id_pesanan ||
+        (order as any).id_pesananEcom ||
+        id;
+      await shippingApi.advance(orderId, payload);
       await fetchOrder();
       setSuccessMessage("Status pesanan berhasil diperbarui!");
       setShowSuccessModal(true);
@@ -450,7 +463,7 @@ export default function DetailPesananSellerPage() {
             No. Pesanan:
           </span>
           <span className="font-mono text-sm font-bold text-slate-800">
-            #{order.id}
+            #{id}
           </span>
           <button
             onClick={handleCopyId}

@@ -653,9 +653,9 @@ const DashboardAdminPage: React.FC = () => {
                 Belum ada pesanan masuk.
               </div>
             )}
-            {orders.map((p) => (
+            {orders.map((p, idx) => (
               <div
-                key={p.id}
+                key={p?.id || p?.id_pesanan || p?.id_pesananEcom || idx}
                 className="flex items-center justify-between py-2.5 hover:bg-gray-50 -mx-1 px-1 rounded-xl transition-colors"
               >
                 <div className="flex items-center gap-2.5">

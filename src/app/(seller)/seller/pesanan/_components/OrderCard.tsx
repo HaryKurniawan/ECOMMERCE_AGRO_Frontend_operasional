@@ -15,6 +15,7 @@ interface OrderCardProps {
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   const router = useRouter();
   const shipping = order.shipping;
+  const orderId = order.id || order.id_pesanan || order.id_pesananEcom;
 
   const customerName =
     order.penerima ||
@@ -25,7 +26,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
 
   return (
     <div
-      onClick={() => router.push(`/seller/pesanan/${order.id}`)}
+      onClick={() => router.push(`/seller/pesanan/${orderId}`)}
       className="bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-md hover:shadow-slate-100/60 transition-all duration-200 cursor-pointer overflow-hidden"
     >
       {/* Header strip */}
@@ -50,12 +51,12 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
         {/* Meta row */}
         <div className="flex items-center gap-3 mb-4 text-[11px] text-slate-400">
           <span className="font-mono bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
-            #{order.id.slice(0, 8).toUpperCase()}
+            #{orderId ? String(orderId).slice(0, 8).toUpperCase() : "..."}
           </span>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              navigator.clipboard.writeText(order.id);
+              if (orderId) navigator.clipboard.writeText(String(orderId));
             }}
             title="Salin ID"
             className="text-slate-300 hover:text-emerald-500 transition-colors"
@@ -148,7 +149,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
         </div>
 
         <button
-          onClick={() => router.push(`/seller/pesanan/${order.id}`)}
+          onClick={() => router.push(`/seller/pesanan/${orderId}`)}
           className="flex items-center gap-1 text-xs text-slate-400 hover:text-emerald-600 font-medium transition-colors whitespace-nowrap"
         >
           Detail <ChevronRight size={13} />
