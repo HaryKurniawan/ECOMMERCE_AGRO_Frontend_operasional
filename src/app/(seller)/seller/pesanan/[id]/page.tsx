@@ -308,10 +308,17 @@ export default function DetailPesananSellerPage() {
       const payload: any = { note, sendEmailNotification };
       if (kurirId) {
         const selectedCourier =
-          myStore?.kurirStaffs?.find((c: any) => c.id === kurirId) ||
-          (myStore?.courierStaff?.id === kurirId ? myStore.courierStaff : null);
+          myStore?.kurirStaffs?.find(
+            (c: any) => (c.id || c.id_pengguna) === kurirId,
+          ) ||
+          (myStore?.courierStaff &&
+          (myStore.courierStaff.id || myStore.courierStaff.id_pengguna) ===
+            kurirId
+            ? myStore.courierStaff
+            : null);
         if (selectedCourier) {
-          payload.kurirPenggunaId = selectedCourier.id;
+          payload.kurirPenggunaId =
+            selectedCourier.id || selectedCourier.id_pengguna;
           payload.kurirName =
             selectedCourier.nama || selectedCourier.name || "Kurir Toko";
           payload.kurirPhone =
@@ -851,13 +858,12 @@ export default function DetailPesananSellerPage() {
         <AdvanceStatusModal
           order={order as any}
           onClose={() => setShowAdvanceModal(false)}
-          couriers={
-            myStore?.kurirStaffs && myStore.kurirStaffs.length > 0
-              ? myStore.kurirStaffs
-              : myStore?.courierStaff
-                ? [myStore.courierStaff]
-                : []
-          }
+          couriers={(myStore?.kurirStaffs && myStore.kurirStaffs.length > 0
+            ? myStore.kurirStaffs
+            : myStore?.courierStaff
+              ? [myStore.courierStaff]
+              : []
+          ).map((c: any) => ({ ...c, id: c.id || c.id_pengguna }))}
           onConfirm={handleAdvanceStatus}
           loading={actionLoading === "advance"}
         />

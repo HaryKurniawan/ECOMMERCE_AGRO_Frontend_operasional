@@ -703,7 +703,7 @@ export default function SellerProductStockDetailPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                      {filteredProductLogs.map((log) => {
+                      {filteredProductLogs.map((log, index) => {
                         const isKeluar = log.tipe === "KELUAR";
                         const isChange = log.tipe === "PERUBAHAN";
                         const isMasuk = log.tipe === "MASUK";
@@ -723,7 +723,7 @@ export default function SellerProductStockDetailPage() {
 
                         return (
                           <tr
-                            key={log.id}
+                            key={log.id ? `${log.id}-${index}` : index}
                             className={`transition-colors ${isKeluar ? "bg-rose-50/30 hover:bg-rose-50/50" : "hover:bg-slate-50/50"}`}
                           >
                             <td className="p-3 text-xs font-normal text-slate-500">
@@ -770,7 +770,7 @@ export default function SellerProductStockDetailPage() {
 
                 {/* Mobile Cards View */}
                 <div className="md:hidden relative border-l border-slate-100 pl-4 py-2 space-y-5">
-                  {filteredProductLogs.map((log) => {
+                  {filteredProductLogs.map((log, index) => {
                     const isKeluar = log.tipe === "KELUAR";
                     const isChange = log.tipe === "PERUBAHAN";
                     const isMasuk = log.tipe === "MASUK";
@@ -793,7 +793,10 @@ export default function SellerProductStockDetailPage() {
                         : `+${Math.abs(log.change)}`;
 
                     return (
-                      <div key={log.id} className="relative group text-left">
+                      <div
+                        key={log.id ? `${log.id}-${index}` : index}
+                        className="relative group text-left"
+                      >
                         <span
                           className={`absolute -left-[21px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center shrink-0 ${bulletColor}`}
                         />
@@ -842,7 +845,7 @@ export default function SellerProductStockDetailPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {batches.map((batch) => {
+                {batches.map((batch, index) => {
                   let expireInfo = null;
                   let isExpired = false;
                   let isExpiringSoon = false;
@@ -879,7 +882,7 @@ export default function SellerProductStockDetailPage() {
 
                   return (
                     <div
-                      key={batch.id}
+                      key={batch.id ? `${batch.id}-${index}` : index}
                       className={`p-4 rounded-2xl border transition-all ${
                         isExpired
                           ? "bg-rose-50/30 border-rose-200"
@@ -894,8 +897,9 @@ export default function SellerProductStockDetailPage() {
                             No. Pengajuan
                           </p>
                           <p className="text-[12px] font-semibold text-slate-700">
-                            {batch.pengajuanStok?.id
-                              ? `#${batch.pengajuanStok.id.substring(0, 8).toUpperCase()}`
+                            {batch.pengajuanStok?.id_pengajuanStok ||
+                            batch.pengajuanStokId
+                              ? `#${(batch.pengajuanStok?.id_pengajuanStok || batch.pengajuanStokId).substring(0, 8).toUpperCase()}`
                               : "N/A"}
                           </p>
                         </div>
