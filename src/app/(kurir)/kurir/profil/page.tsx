@@ -14,6 +14,7 @@ import {
   Mail,
   TrendingUp,
   CheckCircle2,
+  Bell,
 } from "lucide-react";
 
 import { ordersApi } from "@/lib/ecommerce-api";
@@ -94,54 +95,43 @@ export default function KurirProfilPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-28">
-      {/* Clean Header */}
+      {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-3 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                <User size={18} className="text-gray-700" strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-gray-600">
-                  PROFIL KURIR
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => router.push("/kurir/chat")}
-              className="w-10 h-10 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors relative"
-            >
-              <MessageCircle size={16} strokeWidth={2} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white text-[9px] font-bold flex items-center justify-center text-white">
-                3
-              </span>
-            </button>
-          </div>
+        <div className="px-6 py-3 flex items-center justify-between">
+          <h1 className="text-xl font-medium text-gray-900">Profil</h1>
+          <button
+            onClick={() => router.push("/kurir/notifikasi")}
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors relative"
+          >
+            <Bell size={18} strokeWidth={2.5} />
+            <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 min-w-[20px] h-[20px] bg-red-500 rounded-full border-2 border-white text-[10px] font-bold flex items-center justify-center text-white shadow-sm leading-none">
+              3
+            </span>
+          </button>
         </div>
       </div>
 
       {/* Profile Card */}
       <div className="px-5 pt-5 max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg border border-gray-200 p-5 mb-4">
+        <div className="bg-primary-600 rounded-2xl p-5 mb-4 shadow-md shadow-primary-600/20 text-white">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-              <User size={28} className="text-gray-600" strokeWidth={2} />
+            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center border border-white/30 shadow-sm backdrop-blur-sm">
+              <User size={28} className="text-white" strokeWidth={2} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-lg text-gray-900 truncate">
+              <h3 className="font-bold text-lg text-white truncate">
                 {user.name}
               </h3>
-              <p className="text-sm text-gray-500 truncate flex items-center gap-1.5 mt-0.5">
+              <p className="text-sm text-primary-100 truncate flex items-center gap-1.5 mt-0.5">
                 <Mail size={12} strokeWidth={2} />
                 {user.email}
               </p>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-gray-100">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200">
-              <CheckCircle2 size={13} strokeWidth={2} />
+          <div className="pt-3 border-t border-white/20">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 text-white px-3 py-1.5 rounded-lg border border-white/30 backdrop-blur-sm">
+              <CheckCircle2 size={13} strokeWidth={2.5} />
               KURIR INTERNAL
             </span>
           </div>
@@ -193,16 +183,16 @@ export default function KurirProfilPage() {
               </p>
             )}
           </div>
-          <div className="bg-white p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+          <div className="bg-white p-4 rounded-lg border border-primary-200 bg-primary-50">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-emerald-200">
+              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center border border-primary-200">
                 <CheckCircle2
                   size={14}
-                  className="text-emerald-600"
+                  className="text-primary-600"
                   strokeWidth={2}
                 />
               </div>
-              <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">
+              <p className="text-[10px] font-semibold text-primary-700 uppercase tracking-wide">
                 Total
               </p>
             </div>
@@ -210,12 +200,12 @@ export default function KurirProfilPage() {
               <div className="h-8 flex items-center">
                 <Loader2
                   size={18}
-                  className="animate-spin text-emerald-300"
+                  className="animate-spin text-primary-300"
                   strokeWidth={2}
                 />
               </div>
             ) : (
-              <p className="text-2xl font-bold text-emerald-700">
+              <p className="text-2xl font-bold text-primary-700">
                 {totalLifetime}
               </p>
             )}

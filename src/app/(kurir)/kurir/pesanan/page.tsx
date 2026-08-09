@@ -44,7 +44,7 @@ function MobileSegmentedControl({
     <div className="relative flex p-1 bg-white rounded-xl border border-slate-200 overflow-x-auto w-full hide-scrollbar">
       {/* Animated Pill */}
       <div
-        className="absolute top-1 bottom-1 bg-emerald-600 rounded-lg transition-all duration-300 ease-out"
+        className="absolute top-1 bottom-1 bg-primary-600 rounded-lg transition-all duration-300 ease-out"
         style={{
           width: `calc(${pillWidth}% - 4px)`, // -4px accounts for the 2px padding on each side (p-1 is 4px total)
           left: `calc(${pillLeft}% + 2px)`, // +2px for the p-1 offset
@@ -97,10 +97,10 @@ function CustomSortDropdown({
     <div className="relative h-[42px] group shrink-0" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-[42px] h-[42px] flex items-center justify-center bg-white border shadow-sm rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer ${
+        className={`w-[42px] h-[42px] flex items-center justify-center bg-white border shadow-sm rounded-xl focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all cursor-pointer ${
           isOpen
-            ? "border-emerald-500 ring-4 ring-emerald-500/10"
-            : "border-slate-200 hover:border-emerald-300"
+            ? "border-primary-500 ring-4 ring-primary-500/10"
+            : "border-slate-200 hover:border-primary-300"
         }`}
         title={selectedOption?.label}
       >
@@ -108,8 +108,8 @@ function CustomSortDropdown({
           size={16}
           className={`transition-colors ${
             isOpen
-              ? "text-emerald-600"
-              : "text-slate-500 group-hover:text-emerald-600"
+              ? "text-primary-600"
+              : "text-slate-500 group-hover:text-primary-600"
           }`}
           strokeWidth={2.5}
         />
@@ -132,13 +132,13 @@ function CustomSortDropdown({
               }}
               className={`w-full text-left px-4 py-3 text-xs font-semibold transition-colors flex items-center justify-between ${
                 value === opt.value
-                  ? "bg-emerald-50 text-emerald-700"
+                  ? "bg-primary-50 text-primary-700"
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
               {opt.label}
               {value === opt.value && (
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
               )}
             </button>
           ))}
@@ -327,26 +327,26 @@ export default function KurirTasksPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ── Clean Minimalist Header (Sticky) ── */}
-      <div className="sticky top-0 z-20 bg-emerald-700 text-white shadow-sm rounded-b-2xl">
+      <div className="sticky top-0 z-20 bg-primary-700 text-white shadow-sm rounded-b-2xl">
         {/* Top Bar */}
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-500/50 rounded-xl flex items-center justify-center border border-emerald-400/30">
+              <div className="w-10 h-10 bg-primary-500/50 rounded-xl flex items-center justify-center border border-primary-400/30">
                 <Truck size={18} className="text-white" strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-xs font-bold text-emerald-50 tracking-wider">
+                <p className="text-xs font-bold text-primary-50 tracking-wider">
                   KURIR INTERNAL
                 </p>
               </div>
             </div>
             <button
               onClick={() => router.push("/kurir/notifikasi")}
-              className="w-10 h-10 bg-emerald-500/50 border border-emerald-400/30 rounded-xl flex items-center justify-center text-white hover:bg-emerald-500/70 transition-colors relative"
+              className="w-10 h-10 bg-primary-500/50 border border-primary-400/30 rounded-xl flex items-center justify-center text-white hover:bg-primary-500/70 transition-colors relative"
             >
               <Bell size={18} strokeWidth={2.5} />
-              <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 px-1.5 bg-red-500 rounded-full border-2 border-emerald-600 text-[10px] font-bold flex items-center justify-center text-white shadow-sm">
+              <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 px-1.5 bg-red-500 rounded-full border-2 border-primary-600 text-[10px] font-bold flex items-center justify-center text-white shadow-sm">
                 3
               </span>
             </button>
@@ -363,10 +363,10 @@ export default function KurirTasksPage() {
             ].map((s) => (
               <div
                 key={s.label}
-                className="bg-emerald-500/30 rounded-xl p-3 flex flex-col justify-center items-center border border-white/25 shadow-sm"
+                className="bg-primary-500/30 rounded-xl p-3 flex flex-col justify-center items-center border border-white/25 shadow-sm"
               >
                 <p className="text-2xl font-bold text-white mb-0.5">{s.val}</p>
-                <p className="text-xs font-medium text-emerald-50 tracking-wide">
+                <p className="text-xs font-medium text-primary-50 tracking-wide">
                   {s.label}
                 </p>
               </div>
@@ -449,7 +449,7 @@ export default function KurirTasksPage() {
         {loading ? (
           <div className="flex flex-col items-center py-24">
             <Loader2
-              className="w-10 h-10 animate-spin text-emerald-600 mb-4"
+              className="w-10 h-10 animate-spin text-primary-600 mb-4"
               strokeWidth={2}
             />
             <p className="text-sm text-gray-500 font-medium">
@@ -537,7 +537,7 @@ function OrderCard({
   const resiId = toResiId(order.id);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-emerald-200 transition-colors shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-primary-200 transition-colors shadow-sm">
       {/* Card Header - Nama Penerima + Status (Clickable) */}
       <div
         role="button"
@@ -580,7 +580,7 @@ function OrderCard({
             )}
             <div className="flex items-center justify-between py-2 border-t border-gray-100 mt-2 pt-2">
               <span className="text-xs font-semibold text-gray-700">Total</span>
-              <span className="text-sm font-bold text-emerald-600">
+              <span className="text-sm font-bold text-primary-600">
                 {formatRupiah(order.totalHarga || 0)}
               </span>
             </div>
@@ -639,7 +639,7 @@ function OrderCard({
         )}
 
         {(isCompleted || status === "ARRIVED") && (
-          <div className="flex items-center justify-center gap-2 py-3 mt-2 bg-emerald-50 rounded-lg text-emerald-700 text-sm font-semibold border border-emerald-200">
+          <div className="flex items-center justify-center gap-2 py-3 mt-2 bg-primary-50 rounded-lg text-primary-700 text-sm font-semibold border border-primary-200">
             <CheckCircle2 size={15} strokeWidth={2} />
             Paket Telah Terkirim
           </div>
@@ -672,7 +672,7 @@ function BatchCard({ batch, onAction }: { batch: any; onAction: () => void }) {
     SIAP_KIRIM: { label: "Siap Dikirim", color: "bg-blue-100 text-blue-800" },
     DALAM_PERJALANAN: {
       label: "Dalam Perjalanan",
-      color: "bg-emerald-100 text-emerald-800",
+      color: "bg-primary-100 text-primary-800",
     },
     SELESAI: { label: "Selesai", color: "bg-gray-100 text-gray-800" },
   };
@@ -681,12 +681,12 @@ function BatchCard({ batch, onAction }: { batch: any; onAction: () => void }) {
 
   return (
     <div
-      className={`rounded-xl border-2 overflow-hidden ${isPagi ? "border-emerald-500 shadow-emerald-100" : "border-blue-500 shadow-blue-100"} shadow-sm bg-white relative`}
+      className={`rounded-xl border-2 overflow-hidden ${isPagi ? "border-primary-500 shadow-primary-100" : "border-blue-500 shadow-blue-100"} shadow-sm bg-white relative`}
     >
       {/* Ribbon */}
       <div
         className={`absolute top-0 right-0 px-3 py-1 text-[10px] font-bold text-white rounded-bl-lg
-        ${isPagi ? "bg-emerald-500" : "bg-blue-500"}`}
+        ${isPagi ? "bg-primary-500" : "bg-blue-500"}`}
       >
         REKOMENDASI {batch.tipeBatch}
       </div>
@@ -695,7 +695,7 @@ function BatchCard({ batch, onAction }: { batch: any; onAction: () => void }) {
         <div className="flex items-center gap-3 mb-3">
           <div
             className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
-            ${isPagi ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"}`}
+            ${isPagi ? "bg-primary-100 text-primary-600" : "bg-blue-100 text-blue-600"}`}
           >
             <Package size={20} strokeWidth={2} />
           </div>
@@ -751,7 +751,7 @@ function BatchCard({ batch, onAction }: { batch: any; onAction: () => void }) {
             <button
               onClick={() => router.push(`/kurir/batch/${batch.id}`)}
               className={`w-full py-3 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-colors
-                ${isPagi ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"}`}
+                ${isPagi ? "bg-primary-600 hover:bg-primary-700" : "bg-blue-600 hover:bg-blue-700"}`}
             >
               <Navigation2 size={18} strokeWidth={2.5} />
               Buka Peta Rute
@@ -761,7 +761,7 @@ function BatchCard({ batch, onAction }: { batch: any; onAction: () => void }) {
               onClick={handleStart}
               disabled={loading}
               className={`w-full py-3 rounded-lg font-bold text-white flex items-center justify-center gap-2 transition-colors
-                ${isPagi ? "bg-emerald-600 hover:bg-emerald-700" : "bg-blue-600 hover:bg-blue-700"} disabled:opacity-70`}
+                ${isPagi ? "bg-primary-600 hover:bg-primary-700" : "bg-blue-600 hover:bg-blue-700"} disabled:opacity-70`}
             >
               {loading ? (
                 <Loader2 size={18} className="animate-spin" strokeWidth={2.5} />
@@ -792,7 +792,7 @@ function StatusBadge({ status }: { status: string }) {
   const label = step?.label || status;
 
   return (
-    <span className="text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-200 bg-white text-emerald-600 shadow-sm">
+    <span className="text-xs font-semibold px-2.5 py-1 rounded-md border border-primary-200 bg-white text-primary-600 shadow-sm">
       {label}
     </span>
   );

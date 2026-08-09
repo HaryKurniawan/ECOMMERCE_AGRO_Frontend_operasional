@@ -97,6 +97,7 @@ export default function MapView({
       center,
       zoom: 14,
       zoomControl: false,
+      attributionControl: false,
     });
 
     // Tile layer
@@ -206,30 +207,44 @@ export default function MapView({
       <div ref={containerRef} className="w-full h-full" />
 
       {/* Map legend */}
-      <div className="absolute top-20 left-3 z-[500] bg-white/95 backdrop-blur-sm rounded-xl shadow-md px-3 py-2 space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="text-[12px]">📍</span>
-          <span className="text-[10px] font-semibold text-[#5C7C54]">
+      <div className="absolute top-20 left-3 z-[500] bg-white/95 backdrop-blur-sm rounded-xl shadow-md px-3 py-2.5 space-y-2">
+        <div className="flex items-center gap-2.5">
+          <div className="w-4 h-4 flex items-center justify-center">
+            <div className="w-4 h-4 rounded-full bg-[#5C7C54]/25 flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-[#5C7C54] border border-white shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-gray-700">
             Posisi Anda
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[12px]">🎯</span>
-          <span className="text-[10px] font-semibold text-[#3d5a35]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-4 h-4 flex items-center justify-center">
+            <svg
+              viewBox="0 0 32 42"
+              fill="none"
+              className="w-[14px] h-[18px] drop-shadow-sm"
+            >
+              <path
+                d="M16 0C7.163 0 0 7.163 0 16c0 12 16 26 16 26s16-14 16-26C32 7.163 24.837 0 16 0z"
+                fill="#3d5a35"
+              />
+              <circle cx="16" cy="16" r="6" fill="white" />
+            </svg>
+          </div>
+          <span className="text-[11px] font-semibold text-gray-700">
             Tujuan
           </span>
         </div>
-        {routeLayRef.current && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="w-4 h-4 flex items-center justify-center">
             <div
-              className="w-4 h-1 rounded"
+              className="w-4 h-1.5 rounded-full"
               style={{ backgroundColor: "#5C7C54" }}
             />
-            <span className="text-[10px] font-semibold text-gray-500">
-              Rute
-            </span>
           </div>
-        )}
+          <span className="text-[11px] font-semibold text-gray-700">Rute</span>
+        </div>
       </div>
     </div>
   );

@@ -33,6 +33,7 @@ interface OrderInfo {
 }
 
 export default function DeliveryProofPage() {
+  const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const params = useParams();
   const orderId = params.id as string;
@@ -82,7 +83,7 @@ export default function DeliveryProofPage() {
 
   const captureGps = () => {
     if (!navigator.geolocation) {
-      message.warning("GPS tidak tersedia di perangkat ini");
+      messageApi.warning("GPS tidak tersedia di perangkat ini");
       return;
     }
     setGpsLoading(true);
@@ -90,11 +91,11 @@ export default function DeliveryProofPage() {
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setGpsLoading(false);
-        message.success("Lokasi berhasil diambil");
+        messageApi.success("Lokasi berhasil diambil");
       },
       () => {
         setGpsLoading(false);
-        message.error("Gagal mengambil lokasi");
+        messageApi.error("Gagal mengambil lokasi");
       },
       { enableHighAccuracy: true, timeout: 8000 },
     );
@@ -104,7 +105,7 @@ export default function DeliveryProofPage() {
 
   const handleSubmit = async () => {
     if (photos.length === 0) {
-      message.error("Minimal 1 foto wajib dilampirkan");
+      messageApi.error("Minimal 1 foto wajib dilampirkan");
       return;
     }
 
@@ -127,7 +128,7 @@ export default function DeliveryProofPage() {
 
       setShowSuccessModal(true);
     } catch (err: any) {
-      message.error(
+      messageApi.error(
         err?.response?.data?.message ||
           err?.message ||
           "Gagal mengirim bukti pengiriman",
@@ -145,7 +146,7 @@ export default function DeliveryProofPage() {
   if (!_hasHydrated || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
       </div>
     );
   }
@@ -165,7 +166,7 @@ export default function DeliveryProofPage() {
         </p>
         <button
           onClick={() => router.push(`/kurir/pesanan/${orderId}`)}
-          className="text-emerald-600 text-sm font-bold"
+          className="text-primary-600 text-sm font-medium"
         >
           ← Kembali ke Detail
         </button>
@@ -175,16 +176,17 @@ export default function DeliveryProofPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {contextHolder}
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-20">
-        <div className="flex items-center gap-3 px-4 h-14">
+        <div className="flex items-center justify-center px-4 h-14 relative">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-xl hover:bg-gray-50 text-gray-500 transition-colors"
+            className="p-2 -ml-2 rounded-xl hover:bg-gray-50 text-gray-500 transition-colors absolute left-4"
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="font-bold text-gray-900 text-[15px] flex-1">
+          <h1 className="font-medium text-gray-900 text-[15px]">
             Bukti Penerimaan Barang
           </h1>
         </div>
@@ -194,18 +196,18 @@ export default function DeliveryProofPage() {
         {/* Order summary */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-              <User size={18} className="text-emerald-600" />
+            <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+              <User size={18} className="text-primary-600" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
                 Penerima
               </p>
-              <p className="font-bold text-gray-900 text-[15px] leading-tight">
+              <p className="font-medium text-gray-900 text-[15px] leading-tight">
                 {penerima}
               </p>
             </div>
-            <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
+            <span className="text-[10px] font-mono font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-lg">
               AGJ-{orderId.slice(0, 6).toUpperCase()}
             </span>
           </div>
@@ -220,12 +222,12 @@ export default function DeliveryProofPage() {
         </div>
 
         {/* Info banner */}
-        <div className="flex items-start gap-2 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3">
+        <div className="flex items-start gap-2 bg-primary-50 border border-primary-100 rounded-2xl px-4 py-3">
           <Package
             size={16}
-            className="text-emerald-600 flex-shrink-0 mt-0.5"
+            className="text-primary-600 flex-shrink-0 mt-0.5"
           />
-          <p className="text-[12px] text-emerald-700 leading-relaxed">
+          <p className="text-[12px] text-primary-700 leading-relaxed">
             Lampirkan foto sebagai bukti barang telah diterima (minimal 1,
             maksimal 3 foto), lalu kirim untuk menyelesaikan pengiriman.
           </p>
@@ -253,7 +255,7 @@ export default function DeliveryProofPage() {
             onChange={(e) => setCatatan(e.target.value.slice(0, 500))}
             placeholder="Contoh: Diterima langsung oleh penerima, dititipkan ke satpam, dll."
             rows={3}
-            className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 resize-none"
+            className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400 resize-none"
           />
           <p className="text-[11px] text-gray-400 mt-1 text-right">
             {catatan.length} / 500
@@ -264,9 +266,9 @@ export default function DeliveryProofPage() {
         <button
           onClick={captureGps}
           disabled={gpsLoading}
-          className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold border transition-all active:scale-[0.98] ${
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-medium border transition-all active:scale-[0.98] ${
             coords
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              ? "bg-primary-50 text-primary-700 border-primary-200"
               : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
           }`}
         >
@@ -279,7 +281,7 @@ export default function DeliveryProofPage() {
           )}
           {coords
             ? `Lokasi tersimpan (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
-            : "Tandai Lokasi Pengiriman (Opsional)"}
+            : "Simpan Titik Lokasi Saat Ini (Opsional)"}
         </button>
       </div>
 
@@ -289,7 +291,7 @@ export default function DeliveryProofPage() {
           <button
             onClick={() => router.back()}
             disabled={submitting}
-            className="px-4 py-3.5 rounded-xl font-bold text-gray-700 text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-gray-100 hover:bg-gray-200 border border-gray-200 disabled:opacity-60"
+            className="px-4 py-3.5 rounded-xl font-medium text-gray-700 text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-gray-100 hover:bg-gray-200 border border-gray-200 disabled:opacity-60"
           >
             <ArrowLeft size={16} strokeWidth={2.5} />
             Batal
@@ -297,7 +299,7 @@ export default function DeliveryProofPage() {
           <button
             onClick={handleSubmit}
             disabled={submitting || photos.length === 0}
-            className="flex-1 py-3.5 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200"
+            className="flex-1 py-3.5 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-200"
           >
             {submitting ? (
               <Loader2 size={18} className="animate-spin" />
@@ -314,10 +316,10 @@ export default function DeliveryProofPage() {
       {showSuccessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 flex flex-col items-center text-center shadow-xl animate-in fade-in zoom-in duration-200">
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-8 h-8 text-primary-600" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
               Paket Terkirim
             </h3>
             <p className="text-gray-500 text-sm mb-6">
@@ -325,7 +327,7 @@ export default function DeliveryProofPage() {
             </p>
             <button
               onClick={handleGoHome}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors"
+              className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-xl transition-colors"
             >
               Kembali ke Beranda
             </button>

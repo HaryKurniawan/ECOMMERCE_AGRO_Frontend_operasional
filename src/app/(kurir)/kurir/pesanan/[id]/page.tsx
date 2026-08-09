@@ -187,7 +187,12 @@ export default function KurirOrderDetailPage() {
       await ordersApi.advanceShippingStatus(actualId, {
         note: `Di-update oleh Kurir ${user?.name || ""}`,
       });
-      await fetchOrder();
+
+      if (currentStatus === "PICKED_UP") {
+        router.push(`/kurir/pesanan/${actualId}/peta`);
+      } else {
+        await fetchOrder();
+      }
     } catch (err: any) {
       alert(err.message || "Gagal update status");
     } finally {
@@ -482,26 +487,23 @@ export default function KurirOrderDetailPage() {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] z-20 pb-safe">
           <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2">
             <button
-              onClick={() => setShowConfirmModal(true)}
-              disabled={actionLoading}
-              className="flex-1 py-3.5 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200"
+              onClick={() => router.push(`/kurir/pesanan/${order.id}/peta`)}
+              className="flex-1 py-3.5 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-200"
             >
-              {actionLoading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <>
-                  <action.icon size={16} strokeWidth={2.5} />
-                  {action.label}
-                  <ArrowRight size={15} strokeWidth={2.5} />
-                </>
-              )}
+              <MapPin size={16} strokeWidth={2.5} />
+              Buka Peta Pengiriman
             </button>
             <button
-              onClick={() => router.push(`/kurir/pesanan/${order.id}/peta`)}
-              className="w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 active:scale-[0.98] transition-all"
-              title="Lihat Peta Full"
+              onClick={() => setShowConfirmModal(true)}
+              disabled={actionLoading}
+              className="w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center bg-primary-50 text-primary-600 border border-primary-100 hover:bg-primary-100 active:scale-[0.98] transition-all disabled:opacity-60"
+              title={action.label}
             >
-              <MapPin size={20} strokeWidth={2.5} />
+              {actionLoading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <action.icon size={20} strokeWidth={2.5} />
+              )}
             </button>
           </div>
         </div>
@@ -525,7 +527,7 @@ export default function KurirOrderDetailPage() {
             <div className="max-w-2xl mx-auto px-4 py-3">
               <button
                 onClick={() => router.push(`/kurir/pesanan/${order.id}/bukti`)}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-medium text-white text-sm transition-all active:scale-[0.98] bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-200"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-medium text-white text-sm transition-all active:scale-[0.98] bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-200"
               >
                 <ClipboardCheck size={16} strokeWidth={2.5} />
                 Lengkapi Bukti Penerimaan
@@ -561,7 +563,7 @@ export default function KurirOrderDetailPage() {
                     setShowConfirmModal(false);
                     handleAction();
                   }}
-                  className="flex-1 py-2.5 rounded-xl font-medium text-white bg-emerald-600 hover:bg-emerald-700 transition-colors text-sm"
+                  className="flex-1 py-2.5 rounded-xl font-medium text-white bg-primary-600 hover:bg-primary-700 transition-colors text-sm"
                 >
                   Ya, Lanjutkan
                 </button>
