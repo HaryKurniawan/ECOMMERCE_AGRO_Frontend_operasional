@@ -55,11 +55,7 @@ export default function SellerConversationPage() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       <OperationalChat
-        currentUserId={
-          convType === "ADMIN_CS"
-            ? user.id
-            : user.tokoId || user.toko?.id || user.id
-        }
+        currentUserId={user.id}
         chatType={convType}
         initialConversationId={conversationId}
       />

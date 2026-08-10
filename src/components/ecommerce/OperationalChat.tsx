@@ -91,6 +91,7 @@ export default function OperationalChat({
 
   useEffect(() => {
     let isMounted = true;
+    let eventSource: EventSource | null = null;
 
     const initChat = async () => {
       try {
@@ -113,8 +114,10 @@ export default function OperationalChat({
           await fetchMessages(activeConvId);
           chatApi.markAsRead(activeConvId).catch(() => {});
 
+          if (!isMounted) return;
+
           // SSE Real-time Streaming
-          const eventSource = new EventSource(
+          eventSource = new EventSource(
             `/api/proxy/chat/conversations/${activeConvId}/stream`,
             { withCredentials: true },
           );
@@ -197,10 +200,6 @@ export default function OperationalChat({
           eventSource.onerror = (err) => {
             console.error("SSE connection error:", err);
           };
-
-          return () => {
-            eventSource.close();
-          };
         }
       } catch (err: any) {
         if (isMounted) {
@@ -218,6 +217,9 @@ export default function OperationalChat({
 
     return () => {
       isMounted = false;
+      if (eventSource) {
+        eventSource.close();
+      }
     };
   }, [fetchMessages, chatType, tokoId, initialConversationId, currentUserId]);
 
