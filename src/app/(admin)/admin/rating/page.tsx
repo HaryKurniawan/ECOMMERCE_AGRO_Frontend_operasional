@@ -17,10 +17,13 @@ import {
   EyeOff,
   AlertTriangle,
   X,
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 
-import { reviewsApi } from "@/lib/ecommerce-api";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { SortDropdown } from "@/components/ecommerce/SortDropdown";
+import { reviewsApi, productsApi } from "@/lib/ecommerce-api";
 
 interface ReviewItem {
   id: string;
@@ -43,8 +46,23 @@ interface ReviewItem {
   };
 }
 
+interface ProductItem {
+  id: string;
+  nama: string;
+  gambarUrl?: string;
+  rating: number;
+  terjual?: number;
+  category?: { nama: string };
+  ulasanCount?: number;
+}
+
 export default function AdminRatingPage() {
+  const [activeTab, setActiveTab] = useState<"products" | "reviews">(
+    "products",
+  );
+
   // Data State
+  const [products, setProducts] = useState<ProductItem[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +71,9 @@ export default function AdminRatingPage() {
   const [searchText, setSearchText] = useState("");
   const [showOnlyReported, setShowOnlyReported] = useState(false);
   const [starFilter, setStarFilter] = useState<number | "all">("all");
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
 
   // Takedown Confirmation Modal State
   const [confirmingTakedownId, setConfirmingTakedownId] = useState<
@@ -60,101 +81,119 @@ export default function AdminRatingPage() {
   >(null);
   const [takedownLoading, setTakedownLoading] = useState(false);
 
-  // Pagination
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-
   // Derived: safely compute reported count from confirmed array
   const reportedCount = useMemo(() => {
     if (!Array.isArray(reviews)) return 0;
     return reviews.filter((r) => r.statusLaporan === "REPORTED").length;
   }, [reviews]);
 
-  // Fetch reviews function
-  const fetchReviews = async (
-    currentPage = 1,
-    search = "",
-    star = starFilter,
-    reportedOnly = showOnlyReported,
-  ) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      let res;
-      if (reportedOnly) {
-        // Fetch flagged/reported reviews using adminGetReported
-        res = await reviewsApi.adminGetReported({
-          page: currentPage,
-          limit: 20,
-        });
-      } else {
-        // Fetch all reviews using adminGetAllReviews (newly added usecase)
-        res = await reviewsApi.adminGetAllReviews({
-          page: currentPage,
-          limit: 20,
-          search: search || undefined,
-        });
-      }
-
-      // Ensure fetched result is always an array and mapped to the expected type
-      const rawData = res?.data?.data || res?.data || [];
-      const fetchedReviews: ReviewItem[] = (
-        Array.isArray(rawData) ? rawData : []
-      ).map((r: any) => ({
-        ...r,
-        id: r.id || r.id_ulasanProduk,
-        pengguna: {
-          ...r.pengguna,
-          id: r.pengguna?.id || r.pengguna?.id_pengguna,
-        },
-        produk: {
-          ...r.produk,
-          id: r.produk?.id || r.produk?.id_produk,
-        },
-      }));
-      setReviews(fetchedReviews);
-      setTotalItems(res?.data?.total ?? fetchedReviews.length);
-      setTotalPages(res?.data?.totalPages ?? 1);
-    } catch (err: any) {
-      console.error("Error fetching admin reviews:", err);
-      setError(err.message || "Gagal mengambil data ulasan untuk admin.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reload on filter toggle
+  // Fetch initial data
   useEffect(() => {
-    fetchReviews(1, searchText, starFilter, showOnlyReported);
-    setPage(1);
-  }, [showOnlyReported, starFilter]);
+    async function initData() {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // Handle Search submit
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchReviews(1, searchText, starFilter, showOnlyReported);
-    setPage(1);
-  };
+        const [prodRes, reviewsRes] = await Promise.all([
+          productsApi.getAll({ limit: 500 }),
+          reviewsApi.adminGetAllReviews({ limit: 1000 }),
+        ]);
 
-  // Clear all filters
+        const rawProducts = prodRes?.data?.data || prodRes?.data || [];
+        const rawReviews = reviewsRes?.data?.data || reviewsRes?.data || [];
+
+        const fetchedReviews: ReviewItem[] = (
+          Array.isArray(rawReviews) ? rawReviews : []
+        ).map((r: any) => ({
+          ...r,
+          id: r.id || r.id_ulasanProduk,
+          pengguna: {
+            ...r.pengguna,
+            id: r.pengguna?.id || r.pengguna?.id_pengguna,
+          },
+          produk: {
+            ...r.produk,
+            id: r.produk?.id || r.produk?.id_produk,
+          },
+        }));
+
+        setReviews(fetchedReviews);
+
+        const fetchedProducts = (
+          Array.isArray(rawProducts) ? rawProducts : []
+        ).map((p: any) => {
+          const productReviews = fetchedReviews.filter(
+            (r: any) => r.produk?.id === (p.id || p.id_produk),
+          );
+          const totalRating = productReviews.reduce(
+            (sum: number, r: any) => sum + r.rating,
+            0,
+          );
+
+          return {
+            id: p.id || p.id_produk,
+            nama: p.nama?.replace(" - ", " "),
+            gambarUrl: p.gambarUrl || p.gambar,
+            rating:
+              p.rating ||
+              (productReviews.length > 0
+                ? Number((totalRating / productReviews.length).toFixed(1))
+                : 0),
+            category: p.kategori || p.category,
+            terjual: p.terjual || 0,
+            ulasanCount: productReviews.length,
+          };
+        });
+
+        setProducts(fetchedProducts);
+      } catch (err: any) {
+        console.error("Error fetching admin ratings data:", err);
+        setError(err.message || "Gagal memuat data rating.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    initData();
+  }, []);
+
+  // Filtered reviews list
+  const filteredReviews = useMemo(() => {
+    return reviews.filter((r) => {
+      if (showOnlyReported && r.statusLaporan !== "REPORTED") return false;
+      if (selectedProductId && r.produk?.id !== selectedProductId) return false;
+      if (starFilter !== "all" && r.rating !== starFilter) return false;
+
+      if (searchText) {
+        const lowerSearch = searchText.toLowerCase();
+        if (
+          !r.ulasan?.toLowerCase().includes(lowerSearch) &&
+          !r.pengguna?.nama?.toLowerCase().includes(lowerSearch) &&
+          !r.produk?.nama?.toLowerCase().includes(lowerSearch)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [reviews, selectedProductId, starFilter, searchText, showOnlyReported]);
+
+  const selectedProduct = useMemo(() => {
+    if (!selectedProductId) return null;
+    return products.find((p) => p.id === selectedProductId) || null;
+  }, [products, selectedProductId]);
+
   const handleResetFilters = () => {
     setSearchText("");
     setStarFilter("all");
     setShowOnlyReported(false);
-    fetchReviews(1, "", "all", false);
-    setPage(1);
+    setSelectedProductId(null);
   };
 
-  // Trigger Takedown Execution
   const handleTakedownConfirm = async () => {
     if (!confirmingTakedownId) return;
     setTakedownLoading(true);
     try {
       await reviewsApi.adminTakedown(confirmingTakedownId);
-
-      // Update review status locally to show Takedown Badge immediately
       setReviews((prev) =>
         prev.map((r) => {
           if (r.id === confirmingTakedownId) {
@@ -167,7 +206,6 @@ export default function AdminRatingPage() {
           return r;
         }),
       );
-
       setConfirmingTakedownId(null);
     } catch (err: any) {
       console.error("Takedown error:", err);
@@ -177,23 +215,36 @@ export default function AdminRatingPage() {
     }
   };
 
-  // Render elegant stars
   const renderStars = (rating: number, size = 16) => {
     const stars = [];
+    const floor = Math.floor(rating);
+    const hasHalf = rating % 1 >= 0.4;
+
     for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <Star
-          key={i}
-          size={size}
-          className={
-            i <= rating
-              ? "text-amber-400 fill-amber-400"
-              : "text-gray-200 fill-gray-200"
-          }
-        />,
-      );
+      if (i <= floor) {
+        stars.push(
+          <Star
+            key={i}
+            size={size}
+            className="text-amber-400 fill-amber-400"
+          />,
+        );
+      } else if (i === floor + 1 && hasHalf) {
+        stars.push(
+          <div key={i} className="relative inline-block">
+            <Star size={size} className="text-gray-200 fill-gray-200" />
+            <div className="absolute top-0 left-0 overflow-hidden w-1/2">
+              <Star size={size} className="text-amber-400 fill-amber-400" />
+            </div>
+          </div>,
+        );
+      } else {
+        stars.push(
+          <Star key={i} size={size} className="text-gray-200 fill-gray-200" />,
+        );
+      }
     }
-    return <div className="flex gap-0.5">{stars}</div>;
+    return <div className="flex gap-0.5 items-center">{stars}</div>;
   };
 
   return (
@@ -207,7 +258,7 @@ export default function AdminRatingPage() {
           </h1>
           <p className="text-gray-500 mt-1 text-sm">
             Auditing feedback dari konsumen, monitoring ulasan bermasalah, dan
-            lakukan moderasi/takedown jika melanggar kebijakan.
+            lakukan moderasi/takedown.
           </p>
         </div>
 
@@ -215,7 +266,7 @@ export default function AdminRatingPage() {
         <div className="flex items-center gap-6 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
           <div className="text-center border-r border-gray-100 pr-5">
             <span className="block text-2xl font-black text-gray-900">
-              {totalItems}
+              {reviews.length}
             </span>
             <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
               Total Ulasan
@@ -232,30 +283,37 @@ export default function AdminRatingPage() {
         </div>
       </div>
 
-      {/* Audit Tool-Bar */}
-      <div className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm space-y-4">
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex flex-col md:flex-row gap-4 items-center justify-between"
-        >
-          {/* Real-time search */}
-          <div className="relative group w-full md:max-w-md">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors"
-            />
-            <input
-              type="text"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              placeholder="Cari ulasan, produk, atau pembeli..."
-              className="w-full pl-11 pr-4 py-3 bg-gray-50/50 focus:bg-white border border-gray-100 focus:border-emerald-500 rounded-2xl text-xs focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all"
-            />
-          </div>
+      {/* Tabs Switcher */}
+      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-20">
+        <SegmentedControl
+          value={activeTab}
+          onChange={(val) => {
+            setActiveTab(val as "products" | "reviews");
+            if (val === "products") setSelectedProductId(null);
+          }}
+          options={[
+            {
+              value: "products",
+              label: (
+                <div className="flex items-center gap-2 text-sm">
+                  <ShoppingBag size={15} /> Daftar Rating Produk
+                </div>
+              ),
+            },
+            {
+              value: "reviews",
+              label: (
+                <div className="flex items-center gap-2 text-sm">
+                  <MessageSquare size={15} /> Semua Ulasan & Rating
+                </div>
+              ),
+            },
+          ]}
+        />
 
-          {/* Filter options */}
+        {/* Global Review Filters (Visible only when in reviews tab) */}
+        {activeTab === "reviews" && (
           <div className="flex flex-wrap gap-3 items-center w-full md:w-auto justify-end">
-            {/* Flags/Reports only toggle */}
             <button
               type="button"
               onClick={() => setShowOnlyReported(!showOnlyReported)}
@@ -276,45 +334,52 @@ export default function AdminRatingPage() {
               Hanya Ulasan Dilaporkan
             </button>
 
-            {/* Star selector */}
-            {!showOnlyReported && (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  Bintang:
-                </span>
-                <select
-                  value={starFilter}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setStarFilter(val === "all" ? "all" : Number(val));
-                  }}
-                  className="bg-white border border-gray-100 rounded-2xl px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none"
-                >
-                  <option value="all">Semua Bintang</option>
-                  <option value="5">5 Bintang</option>
-                  <option value="4">4 Bintang</option>
-                  <option value="3">3 Bintang</option>
-                  <option value="2">2 Bintang</option>
-                  <option value="1">1 Bintang</option>
-                </select>
-              </div>
-            )}
+            <div className="relative w-full sm:w-56 md:w-64">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Cari ulasan / pembeli..."
+                className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm"
+              />
+            </div>
 
-            {/* Clear Button */}
-            {(searchText || starFilter !== "all" || showOnlyReported) && (
+            <div className="w-full sm:w-auto flex shrink-0">
+              <SortDropdown
+                value={starFilter.toString()}
+                onChange={(val) =>
+                  setStarFilter(val === "all" ? "all" : Number(val))
+                }
+                options={[
+                  { value: "all", label: "Semua Bintang" },
+                  { value: "5", label: "5 Bintang" },
+                  { value: "4", label: "4 Bintang" },
+                  { value: "3", label: "3 Bintang" },
+                  { value: "2", label: "2 Bintang" },
+                  { value: "1", label: "1 Bintang" },
+                ]}
+              />
+            </div>
+
+            {(selectedProductId ||
+              starFilter !== "all" ||
+              searchText ||
+              showOnlyReported) && (
               <button
-                type="button"
                 onClick={handleResetFilters}
-                className="px-4 py-2.5 rounded-2xl text-xs font-bold bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-600 transition-all"
+                className="text-[10px] font-medium text-red-500 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-100 px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors whitespace-nowrap shrink-0 shadow-sm"
               >
-                Reset Filter
+                Reset <X size={12} />
               </button>
             )}
           </div>
-        </form>
+        )}
       </div>
 
-      {/* REVIEWS GRID STREAM */}
       {loading ? (
         <div className="flex flex-col justify-center items-center py-20 gap-3">
           <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
@@ -328,189 +393,311 @@ export default function AdminRatingPage() {
             <p className="text-sm opacity-90">{error}</p>
           </div>
         </div>
-      ) : reviews.length === 0 ? (
-        <div className="bg-white rounded-3xl p-24 text-center border border-gray-100 shadow-sm space-y-4">
-          <MessageSquare className="w-16 h-16 text-gray-100 mx-auto" />
-          <h3 className="text-gray-900 font-bold text-lg">
-            Tidak Ada Ulasan Ditemukan
-          </h3>
-          <p className="text-gray-400 text-sm max-w-sm mx-auto">
-            Seluruh ulasan aman atau tidak ada data yang memenuhi kriteria
-            pencarian Anda.
-          </p>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className={`bg-white border rounded-3xl p-6 shadow-sm flex flex-col justify-between transition-all relative ${
-                review.isHidden
-                  ? "border-red-100/80 bg-red-50/[0.01]"
-                  : review.statusLaporan === "REPORTED"
-                    ? "border-amber-100 shadow-md shadow-amber-500/[0.01]"
-                    : "border-gray-50 hover:border-gray-100"
-              }`}
-            >
-              {/* Flagged Banner */}
-              {review.statusLaporan === "REPORTED" && !review.isHidden && (
-                <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
-                  <AlertTriangle size={11} className="animate-bounce" /> Review
-                  Dilaporkan Oleh Seller
+        <>
+          {activeTab === "products" && (
+            <div className="space-y-6">
+              {products.length === 0 ? (
+                <div className="bg-white rounded-3xl py-20 text-center border border-slate-100 shadow-sm max-w-xl mx-auto space-y-4">
+                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100/50 text-slate-300">
+                    <ShoppingBag size={24} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-slate-700 font-medium text-base">
+                      Belum Ada Produk
+                    </h3>
+                    <p className="text-slate-400 text-xs font-medium max-w-xs mx-auto leading-relaxed">
+                      Belum ada produk aktif di aplikasi.
+                    </p>
+                  </div>
                 </div>
-              )}
-
-              {/* Takedown Approved Banner */}
-              {review.isHidden && (
-                <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-red-600 to-rose-700 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
-                  <EyeOff size={11} /> Ulasan Telah Ditakedown (Hidden)
-                </div>
-              )}
-
-              {/* Space for banner if active */}
-              <div
-                className={
-                  review.statusLaporan === "REPORTED" || review.isHidden
-                    ? "pt-4"
-                    : ""
-                }
-              />
-
-              {/* Reviewer Details and Stars */}
-              <div className="space-y-4 flex-1">
-                <div className="flex justify-between items-start pt-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center border border-gray-100 shadow-inner">
-                      <User size={16} />
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-gray-900 text-sm">
-                        {review.pengguna.nama}
-                      </h4>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
-                        <Calendar size={11} />
-                        <span>
-                          {new Date(review.createdAt).toLocaleDateString(
-                            "id-ID",
-                            { day: "numeric", month: "long", year: "numeric" },
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {products.map((p) => (
+                    <div
+                      key={p.id}
+                      className="bg-white border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-slate-100/40 rounded-3xl p-5 flex flex-col justify-between transition-all duration-300 group"
+                    >
+                      <div className="flex gap-4">
+                        <div className="relative w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
+                          {p.gambarUrl ? (
+                            <Image
+                              src={p.gambarUrl}
+                              alt={p.nama || "Produk"}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                              <ShoppingBag size={20} strokeWidth={1.5} />
+                            </div>
                           )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-sm text-slate-800 line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
+                            {p.nama}
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="mt-5 pt-4 border-t border-slate-50 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Star
+                            size={16}
+                            className="text-amber-400 fill-amber-400"
+                          />
+                          <span className="font-bold text-slate-800 text-sm">
+                            {p.rating || "0.0"}
+                          </span>
+                          <span className="text-slate-400 text-xs font-medium">
+                            ({p.ulasanCount || 0} Ulasan)
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedProductId(p.id);
+                            setActiveTab("reviews");
+                          }}
+                          className="w-8 h-8 rounded-full bg-slate-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-50 transition-colors shrink-0"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "reviews" && (
+            <div className="space-y-6">
+              {selectedProduct && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        setSelectedProductId(null);
+                        setActiveTab("products");
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
+                    >
+                      <ChevronRight size={18} className="rotate-180" />
+                    </button>
+                    <div className="flex items-center gap-3 border-l border-slate-200 pl-3">
+                      <div className="relative w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0">
+                        {selectedProduct.gambarUrl ? (
+                          <Image
+                            src={selectedProduct.gambarUrl}
+                            alt={selectedProduct.nama || ""}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-300">
+                            <ShoppingBag size={16} />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">
+                          Menampilkan Ulasan Untuk
+                        </span>
+                        <h2 className="font-bold text-slate-800 text-sm leading-tight line-clamp-1">
+                          {selectedProduct.nama}
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-4 border-l border-slate-100 pl-4">
+                    <div className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Star
+                          size={14}
+                          className="text-amber-400 fill-amber-400"
+                        />
+                        <span className="font-bold text-slate-800">
+                          {selectedProduct.rating || "0.0"}
                         </span>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-end gap-1">
-                    {renderStars(review.rating, 11)}
-                    <span className="text-[10px] font-bold text-gray-400">
-                      Rating: {review.rating}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Review Text */}
-                {review.ulasan ? (
-                  <p className="text-gray-700 text-xs leading-relaxed font-medium bg-gray-50 p-3 rounded-2xl border border-gray-100/50">
-                    &ldquo;{review.ulasan}&rdquo;
-                  </p>
-                ) : (
-                  <p className="text-gray-400 text-[11px] italic pl-1">
-                    Konsumen tidak memberikan komentar tertulis.
-                  </p>
-                )}
-
-                {/* Flag Reason Panel */}
-                {review.statusLaporan === "REPORTED" &&
-                  review.alasanLaporan && (
-                    <div className="bg-amber-50/70 border border-amber-100 p-3 rounded-2xl space-y-1">
-                      <span className="text-[9px] uppercase font-bold text-amber-700 tracking-wider block">
-                        Alasan Laporan Seller:
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Rating Rata-rata
                       </span>
-                      <p className="text-[11px] text-amber-800 leading-normal italic font-medium">
-                        &ldquo;{review.alasanLaporan}&rdquo;
-                      </p>
                     </div>
-                  )}
-              </div>
-
-              {/* Product and Action buttons */}
-              <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between gap-4">
-                {/* Product Widget */}
-                <div className="flex items-center gap-2.5 max-w-[60%]">
-                  <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
-                    {review.produk.gambarUrl ? (
-                      <Image
-                        src={review.produk.gambarUrl}
-                        alt={review.produk.nama?.replace(" - ", " ")}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-300">
-                        <ShoppingBag size={12} />
+                    <div className="text-right">
+                      <div className="font-bold text-slate-800">
+                        {selectedProduct.ulasanCount || 0}
                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block">
-                      Produk
-                    </span>
-                    <span className="font-bold text-gray-800 text-[11px] line-clamp-1">
-                      {review.produk.nama?.replace(" - ", " ")}
-                    </span>
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Total Ulasan
+                      </span>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* Moderate Action */}
-                <div className="flex gap-2">
-                  {review.isHidden ? (
-                    <span className="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
-                      <CheckCircle size={10} /> Sukses Takedown
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmingTakedownId(review.id)}
-                      className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+              {filteredReviews.length === 0 ? (
+                <div className="bg-white rounded-3xl p-24 text-center border border-gray-100 shadow-sm space-y-4">
+                  <MessageSquare className="w-16 h-16 text-gray-100 mx-auto" />
+                  <h3 className="text-gray-900 font-bold text-lg">
+                    Tidak Ada Ulasan Ditemukan
+                  </h3>
+                  <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                    Seluruh ulasan aman atau tidak ada data yang memenuhi
+                    kriteria pencarian Anda.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {filteredReviews.map((review) => (
+                    <div
+                      key={review.id}
+                      className={`bg-white border rounded-3xl p-6 shadow-sm flex flex-col justify-between transition-all relative ${
+                        review.isHidden
+                          ? "border-red-100/80 bg-red-50/[0.01]"
+                          : review.statusLaporan === "REPORTED"
+                            ? "border-amber-100 shadow-md shadow-amber-500/[0.01]"
+                            : "border-gray-50 hover:border-gray-100"
+                      }`}
                     >
-                      <Trash2 size={13} /> Takedown
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+                      {/* Flagged Banner */}
+                      {review.statusLaporan === "REPORTED" &&
+                        !review.isHidden && (
+                          <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
+                            <AlertTriangle
+                              size={11}
+                              className="animate-bounce"
+                            />{" "}
+                            Review Dilaporkan Oleh Seller
+                          </div>
+                        )}
 
-      {/* Pagination Controls */}
-      {!showOnlyReported && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-6">
-          <button
-            onClick={() => {
-              const prev = Math.max(1, page - 1);
-              setPage(prev);
-              fetchReviews(prev, searchText);
-            }}
-            disabled={page === 1}
-            className="px-4 py-2 rounded-xl border border-gray-100 text-xs font-bold text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-          >
-            Sebelumnya
-          </button>
-          <span className="text-xs text-gray-400 font-medium px-2">
-            Halaman <span className="font-bold text-gray-800">{page}</span> dari{" "}
-            <span className="font-bold text-gray-800">{totalPages}</span>
-          </span>
-          <button
-            onClick={() => {
-              const next = Math.min(totalPages, page + 1);
-              setPage(next);
-              fetchReviews(next, searchText);
-            }}
-            disabled={page === totalPages}
-            className="px-4 py-2 rounded-xl border border-gray-100 text-xs font-bold text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-          >
-            Selanjutnya
-          </button>
-        </div>
+                      {/* Takedown Approved Banner */}
+                      {review.isHidden && (
+                        <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-red-600 to-rose-700 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
+                          <EyeOff size={11} /> Ulasan Telah Ditakedown (Hidden)
+                        </div>
+                      )}
+
+                      <div
+                        className={
+                          review.statusLaporan === "REPORTED" || review.isHidden
+                            ? "pt-4"
+                            : ""
+                        }
+                      />
+
+                      {/* Reviewer Details and Stars */}
+                      <div className="space-y-4 flex-1">
+                        <div className="flex justify-between items-start pt-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center border border-gray-100 shadow-inner">
+                              <User size={16} />
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-gray-900 text-sm">
+                                {review.pengguna?.nama || "Pengguna"}
+                              </h4>
+                              <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
+                                <Calendar size={11} />
+                                <span>
+                                  {review.createdAt
+                                    ? new Date(
+                                        review.createdAt,
+                                      ).toLocaleDateString("id-ID", {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                      })
+                                    : ""}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-1">
+                            {renderStars(review.rating, 11)}
+                            <span className="text-[10px] font-bold text-gray-400">
+                              Rating: {review.rating}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Review Text */}
+                        {review.ulasan ? (
+                          <p className="text-gray-700 text-xs leading-relaxed font-medium bg-gray-50 p-3 rounded-2xl border border-gray-100/50">
+                            &ldquo;{review.ulasan}&rdquo;
+                          </p>
+                        ) : (
+                          <p className="text-gray-400 text-[11px] italic pl-1">
+                            Konsumen tidak memberikan komentar tertulis.
+                          </p>
+                        )}
+
+                        {/* Flag Reason Panel */}
+                        {review.statusLaporan === "REPORTED" &&
+                          review.alasanLaporan && (
+                            <div className="bg-amber-50/70 border border-amber-100 p-3 rounded-2xl space-y-1">
+                              <span className="text-[9px] uppercase font-bold text-amber-700 tracking-wider block">
+                                Alasan Laporan Seller:
+                              </span>
+                              <p className="text-[11px] text-amber-800 leading-normal italic font-medium">
+                                &ldquo;{review.alasanLaporan}&rdquo;
+                              </p>
+                            </div>
+                          )}
+                      </div>
+
+                      {/* Product and Action buttons */}
+                      <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2.5 max-w-[60%]">
+                          <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
+                            {review.produk?.gambarUrl ? (
+                              <Image
+                                src={review.produk.gambarUrl}
+                                alt={
+                                  review.produk.nama?.replace(" - ", " ") || ""
+                                }
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <ShoppingBag size={12} />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block">
+                              Produk
+                            </span>
+                            <span className="font-bold text-gray-800 text-[11px] line-clamp-1">
+                              {review.produk?.nama?.replace(" - ", " ")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          {review.isHidden ? (
+                            <span className="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                              <CheckCircle size={10} /> Sukses Takedown
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmingTakedownId(review.id)}
+                              className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                            >
+                              <Trash2 size={13} /> Takedown
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {/* Takedown Confirmation Modal */}
