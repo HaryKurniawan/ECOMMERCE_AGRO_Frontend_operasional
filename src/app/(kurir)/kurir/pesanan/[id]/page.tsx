@@ -486,24 +486,27 @@ export default function KurirOrderDetailPage() {
       {action && status !== "ARRIVED" && status !== "PREPARING" && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)] z-20 pb-safe">
           <div className="max-w-2xl mx-auto px-4 py-3 flex gap-2">
-            <button
-              onClick={() => router.push(`/kurir/pesanan/${order.id}/peta`)}
-              className="flex-1 py-3.5 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-200"
-            >
-              <MapPin size={16} strokeWidth={2.5} />
-              Buka Peta Pengiriman
-            </button>
-            {status !== "IN_TRANSIT" && (
+            {status === "IN_TRANSIT" ? (
+              <button
+                onClick={() => router.push(`/kurir/pesanan/${order.id}/peta`)}
+                className="flex-1 py-3.5 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-200"
+              >
+                <MapPin size={16} strokeWidth={2.5} />
+                Buka Peta Pengiriman
+              </button>
+            ) : (
               <button
                 onClick={() => setShowConfirmModal(true)}
                 disabled={actionLoading}
-                className="w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center bg-primary-50 text-primary-600 border border-primary-100 hover:bg-primary-100 active:scale-[0.98] transition-all disabled:opacity-60"
-                title={action.label}
+                className="flex-1 py-3.5 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-200"
               >
                 {actionLoading ? (
                   <Loader2 size={20} className="animate-spin" />
                 ) : (
-                  <action.icon size={20} strokeWidth={2.5} />
+                  <>
+                    <action.icon size={20} strokeWidth={2.5} />
+                    {action.label}
+                  </>
                 )}
               </button>
             )}

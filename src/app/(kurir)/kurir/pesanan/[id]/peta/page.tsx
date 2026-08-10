@@ -315,7 +315,7 @@ export default function KurirMapPage() {
         </div>
 
         {/* Bottom Row: Actions */}
-        {isReady && (
+        {!loading && order && (
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowArrivalModal(true)}
