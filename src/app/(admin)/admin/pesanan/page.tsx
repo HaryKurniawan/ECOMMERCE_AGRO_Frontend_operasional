@@ -33,6 +33,7 @@ interface OrderItem {
 
 interface OrderData {
   id: string;
+  id_pesanan?: string;
   status: string;
   createdAt?: string;
   tanggal?: string;
@@ -284,8 +285,9 @@ export default function ManajemenPesananPage() {
                 {filteredOrders.map((order) => {
                   const store = getStoreName(order);
                   const customer = getCustomerName(order);
-                  const shortId = order.id
-                    ? `#${order.id.slice(-8).toUpperCase()}`
+                  const orderId = order.id || order.id_pesanan;
+                  const shortId = orderId
+                    ? `#${orderId.slice(-8).toUpperCase()}`
                     : "—";
                   const allItems = order.items || order.item || [];
                   const firstItem = allItems[0];
@@ -302,9 +304,9 @@ export default function ManajemenPesananPage() {
 
                   return (
                     <tr
-                      key={order.id}
+                      key={orderId || Math.random().toString()}
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/admin/pesanan/${order.id}`)}
+                      onClick={() => router.push(`/admin/pesanan/${orderId}`)}
                     >
                       <td className="px-4 py-3">
                         <span className="font-mono font-semibold text-gray-700">

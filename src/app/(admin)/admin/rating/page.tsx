@@ -98,11 +98,22 @@ export default function AdminRatingPage() {
         });
       }
 
-      // Ensure fetched result is always an array
+      // Ensure fetched result is always an array and mapped to the expected type
       const rawData = res?.data?.data || res?.data || [];
-      const fetchedReviews: ReviewItem[] = Array.isArray(rawData)
-        ? rawData
-        : [];
+      const fetchedReviews: ReviewItem[] = (
+        Array.isArray(rawData) ? rawData : []
+      ).map((r: any) => ({
+        ...r,
+        id: r.id || r.id_ulasanProduk,
+        pengguna: {
+          ...r.pengguna,
+          id: r.pengguna?.id || r.pengguna?.id_pengguna,
+        },
+        produk: {
+          ...r.produk,
+          id: r.produk?.id || r.produk?.id_produk,
+        },
+      }));
       setReviews(fetchedReviews);
       setTotalItems(res?.data?.total ?? fetchedReviews.length);
       setTotalPages(res?.data?.totalPages ?? 1);

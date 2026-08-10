@@ -493,18 +493,6 @@ export default function KurirOrderDetailPage() {
               <MapPin size={16} strokeWidth={2.5} />
               Buka Peta Pengiriman
             </button>
-            <button
-              onClick={() => setShowConfirmModal(true)}
-              disabled={actionLoading}
-              className="w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center bg-primary-50 text-primary-600 border border-primary-100 hover:bg-primary-100 active:scale-[0.98] transition-all disabled:opacity-60"
-              title={action.label}
-            >
-              {actionLoading ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                <action.icon size={20} strokeWidth={2.5} />
-              )}
-            </button>
           </div>
         </div>
       )}

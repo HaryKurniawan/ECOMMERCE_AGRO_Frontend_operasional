@@ -615,11 +615,18 @@ export default function PenggunaDetailPage() {
                             ord.item?.[0]?.produk?.toko?.nama || "Agro Market";
                           return (
                             <tr
-                              key={ord.id}
+                              key={
+                                ord.id ||
+                                (ord as any).id_pesanan ||
+                                Math.random().toString()
+                              }
                               className="hover:bg-emerald-50/20 transition-colors"
                             >
                               <td className="px-6 py-4 font-mono font-bold text-emerald-600">
-                                #{ord.id.slice(-8).toUpperCase()}
+                                #
+                                {String(ord.id || (ord as any).id_pesanan || "")
+                                  .slice(-8)
+                                  .toUpperCase()}
                               </td>
                               <td className="px-6 py-4 text-gray-500 font-medium">
                                 {formatTanggal(ord.createdAt)}
