@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Loader2, AlertCircle, PackageOpen } from "lucide-react";
 
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
@@ -10,6 +10,9 @@ import EtalaseCard from "./_components/EtalaseCard";
 import SellerProductHeader from "./_components/SellerProductHeader";
 
 const ProdukSayaPage: React.FC = () => {
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   // Hook
   const {
     store,
@@ -23,9 +26,16 @@ const ProdukSayaPage: React.FC = () => {
     handleToggleStatus,
     handleRemoveFromEtalase,
     handleUpdateProduct,
+    refresh,
+    totalPages,
+    totalItems,
   } = useSellerProducts();
 
   // Local UI State
+  // Fetch when page, search, or status changes
+  useEffect(() => {
+    refresh(page, limit, true);
+  }, [page, limit, refresh]);
 
   const getStatusColor = (s: string) => {
     const status = s.toLowerCase();
@@ -88,7 +98,10 @@ const ProdukSayaPage: React.FC = () => {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1); // reset page on search
+            }}
             placeholder="Cari produk di etalase..."
             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 outline-none shadow-sm transition-all text-gray-700 font-normal"
           />
@@ -97,7 +110,10 @@ const ProdukSayaPage: React.FC = () => {
         <div className="py-1.5 shrink-0">
           <SegmentedControl
             value={filterStatus}
-            onChange={setFilterStatus}
+            onChange={(val) => {
+              setFilterStatus(val);
+              setPage(1); // reset page on filter change
+            }}
             options={[
               { label: "Semua", value: "semua" },
               { label: "Aktif", value: "active" },
@@ -135,6 +151,29 @@ const ProdukSayaPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-6 pb-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1 || loading}
+            className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm font-medium text-gray-500">
+            Hal {page} dari {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || loading}
+            className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            Berikutnya
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -65,7 +65,7 @@ const UserRoleBadge: React.FC<UserRoleBadgeProps> = ({ role = "USER" }) => {
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-bold border ${badge.cls}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-normal border ${badge.cls}`}
     >
       {badge.label}
     </span>

@@ -38,67 +38,98 @@ export const useSellerOrders = () => {
   const [myStore, setMyStore] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const fetchOrders = useCallback(async (showLoading = true) => {
-    try {
-      if (showLoading) setLoading(true);
-      const storeRes = await storesApi.getMyStore();
-      const storeData = storeRes?.data?.data || storeRes?.data;
-      if (!storeData?.id) {
-        setErrorText("Toko tidak ditemukan.");
-        return;
-      }
-      setMyStore(storeData);
-      const ordersRes = await ordersApi.sellerGetOrders(storeData.id, {
-        isGrosir: false,
-      });
-      const rawList =
-        ordersRes?.data?.data?.data ||
-        ordersRes?.data?.data ||
-        ordersRes?.data ||
-        [];
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
-      const list = Array.isArray(rawList)
-        ? rawList
-            .filter((o: any) => !o.isGrosir)
-            .map((o: any) => ({
-              ...o,
-              shipping: o.shipping || o.pengiriman,
-              customer: o.customer
-                ? {
-                    ...o.customer,
-                    phone:
-                      o.customer.phone ||
-                      o.customer.noTelepon ||
-                      o.konsumen?.noTelepon ||
-                      o.konsumen?.addresses?.[0]?.telepon,
-                  }
-                : o.konsumen
+  const fetchOrders = useCallback(
+    async (
+      page: number = 1,
+      limit: number = 10,
+      status?: string,
+      showLoading = true,
+    ) => {
+      try {
+        if (showLoading) setLoading(true);
+        const storeRes = await storesApi.getMyStore();
+        const storeData = storeRes?.data?.data || storeRes?.data;
+        if (!storeData?.id) {
+          setErrorText("Toko tidak ditemukan.");
+          return;
+        }
+        setMyStore(storeData);
+
+        const queryParams: any = { isGrosir: false, page, limit };
+        if (status && status !== "semua") {
+          // handle special cases like "TIBA" on backend or frontend?
+          // The backend only filters by pesanan status.
+          // For now, pass status directly.
+          if (status === "TIBA") {
+            // "TIBA" is actually a shipping status. We might just fetch DIKIRIM and filter on frontend for now, or backend needs update.
+            // Let's just fetch DIKIRIM for TIBA.
+            queryParams.status = "DIKIRIM";
+          } else {
+            queryParams.status = status;
+          }
+        }
+
+        const ordersRes = await ordersApi.sellerGetOrders(
+          storeData.id,
+          queryParams,
+        );
+
+        const responseData = ordersRes?.data?.data || ordersRes?.data;
+        const rawList = responseData?.data || responseData || [];
+
+        if (responseData?.totalPages) {
+          setTotalPages(responseData.totalPages);
+          setTotalItems(responseData.total || 0);
+        }
+
+        const list = Array.isArray(rawList)
+          ? rawList
+              .filter((o: any) => !o.isGrosir)
+              .map((o: any) => ({
+                ...o,
+                shipping: o.shipping || o.pengiriman,
+                customer: o.customer
                   ? {
-                      name: o.konsumen.nama,
-                      email: o.konsumen.email,
+                      ...o.customer,
                       phone:
-                        o.konsumen.noTelepon ||
-                        o.konsumen.addresses?.[0]?.telepon,
+                        o.customer.phone ||
+                        o.customer.noTelepon ||
+                        o.konsumen?.noTelepon ||
+                        o.konsumen?.addresses?.[0]?.telepon,
                     }
-                  : undefined,
-              items: (o.items || o.item || []).map((it: any) => ({
-                ...it,
-                product: it.product || it.produk,
-              })),
-            }))
-        : [];
+                  : o.konsumen
+                    ? {
+                        name: o.konsumen.nama,
+                        email: o.konsumen.email,
+                        phone:
+                          o.konsumen.noTelepon ||
+                          o.konsumen.addresses?.[0]?.telepon,
+                      }
+                    : undefined,
+                items: (o.items || o.item || []).map((it: any) => ({
+                  ...it,
+                  product: it.product || it.produk,
+                })),
+              }))
+          : [];
 
-      setOrders(list);
-    } catch (err) {
-      console.error(err);
-      setErrorText("Gagal memuat pesanan.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setOrders(list);
+      } catch (err) {
+        console.error(err);
+        setErrorText("Gagal memuat pesanan.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    fetchOrders(true);
+    // Initial fetch is now handled by the component using the hook so it can pass states
+    // fetchOrders(1, 10, "semua", true);
 
     // SSE Real-time Updates for Seller Orders
     let eventSource: EventSource | null = null;
@@ -191,5 +222,7 @@ export const useSellerOrders = () => {
     fetchOrders,
     handleInitShipping,
     handleAdvanceStatus,
+    totalPages,
+    totalItems,
   };
 };

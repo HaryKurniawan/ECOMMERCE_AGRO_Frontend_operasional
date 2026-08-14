@@ -23,24 +23,21 @@ export const useSellerDashboard = () => {
 
   const store = storeQuery.data ?? null;
 
-  const ordersQuery = useQuery({
-    queryKey: queryKeys.sellerDashboard.orders(store?.id ?? ""),
-    queryFn: () =>
-      ordersApi.sellerGetOrders(store?.id as string, { isGrosir: false }),
-    select: (res): ApiOrderItem[] => {
-      const inner = res?.data?.data;
-      const rawList = Array.isArray(inner?.data)
-        ? inner.data
-        : Array.isArray(inner)
-          ? inner
-          : [];
-      return rawList.filter((o: any) => !o.isGrosir);
-    },
+  const statsQuery = useQuery({
+    queryKey: queryKeys.sellerDashboard.stats(store?.id ?? ""),
+    queryFn: () => ordersApi.getDashboardStats(store?.id as string),
+    select: (res) => res?.data?.data || res?.data,
     enabled: !!store?.id,
     staleTime: 2 * 60 * 1000,
   });
 
-  const orders = ordersQuery.data ?? [];
+  const dashboardStats = statsQuery.data || {
+    statusCounts: {},
+    revenue: 0,
+    recentOrders: [],
+    latestOrders: [],
+    totalOrders: 0,
+  };
 
   const bookingsQuery = { isLoading: false, data: [] }; // Mock hook to avoid breaking existing usages until full removal
 
@@ -48,14 +45,11 @@ export const useSellerDashboard = () => {
 
   const stats = useMemo(() => {
     if (!store) return [];
-    const safeOrders = Array.isArray(orders) ? orders : [];
-    const pesananBaru = safeOrders.filter(
-      (p) => p.status === "MENUNGGU_BAYAR" || p.status === "DIPROSES",
-    ).length;
-    const bookingBaru = bookings.filter((b) => b.status === "DIAJUKAN").length;
-    const pendapatanBulan = safeOrders
-      .filter((p) => p.status === "SELESAI" || p.status === "DIKIRIM")
-      .reduce((sum, p) => sum + (Number(p.totalHarga) || 0), 0);
+
+    const pesananBaru =
+      (dashboardStats.statusCounts["MENUNGGU_BAYAR"] || 0) +
+      (dashboardStats.statusCounts["DIPROSES"] || 0);
+    const bookingBaru = 0; // bookings not used anymore
 
     return [
       {
@@ -95,25 +89,26 @@ export const useSellerDashboard = () => {
       },
       {
         label: "Pendapatan",
-        value: formatRupiah(pendapatanBulan),
+        value: formatRupiah(dashboardStats.revenue || 0),
         icon: DollarSign,
         color: "bg-green-100 text-green-600",
         path: "/seller/pesanan",
       },
     ];
-  }, [store, orders, bookings]);
+  }, [store, dashboardStats]);
 
   return {
     store,
-    orders,
+    orders: dashboardStats.latestOrders, // Keep exporting orders for backwards compat, but it's latest now
+    dashboardStats,
     bookings,
     loading:
-      storeQuery.isLoading || ordersQuery.isLoading || bookingsQuery.isLoading,
+      storeQuery.isLoading || statsQuery.isLoading || bookingsQuery.isLoading,
     stats,
 
     refetch: () => {
       storeQuery.refetch();
-      ordersQuery.refetch();
+      statsQuery.refetch();
     },
   };
 };

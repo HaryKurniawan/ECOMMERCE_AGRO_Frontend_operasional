@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SortDropdown } from "@/components/ecommerce/SortDropdown";
 import { reviewsApi, productsApi } from "@/lib/ecommerce-api";
 
@@ -99,8 +98,19 @@ export default function AdminRatingPage() {
           reviewsApi.adminGetAllReviews({ limit: 1000 }),
         ]);
 
-        const rawProducts = prodRes?.data?.data || prodRes?.data || [];
-        const rawReviews = reviewsRes?.data?.data || reviewsRes?.data || [];
+        // Backend wraps response via TransformInterceptor:
+        // axios res.data → { success, data: { data: [...], total, page }, timestamp }
+        // So the actual array is at res.data.data.data
+        const rawProducts =
+          prodRes?.data?.data?.data ||
+          prodRes?.data?.data ||
+          prodRes?.data ||
+          [];
+        const rawReviews =
+          reviewsRes?.data?.data?.data ||
+          reviewsRes?.data?.data ||
+          reviewsRes?.data ||
+          [];
 
         const fetchedReviews: ReviewItem[] = (
           Array.isArray(rawReviews) ? rawReviews : []
@@ -248,68 +258,73 @@ export default function AdminRatingPage() {
   };
 
   return (
-    <div className="p-4 lg:p-8 max-w-[1600px] mx-auto space-y-8 animate-fade-in font-sans">
+    <div className="w-full p-4 lg:p-8 max-w-[1600px] mx-auto space-y-8 animate-fade-in font-sans">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-gray-100">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-            <ShieldAlert className="text-[#10B981]" size={28} /> Audit Ulasan &
-            Rating
+          <h1 className="text-xl text-gray-900 tracking-tight flex items-center gap-3">
+            <ShieldAlert className="text-[#10B981] stroke-[1.5]" size={24} />{" "}
+            Audit Ulasan & Rating
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <p className="text-gray-400 mt-1.5 text-sm">
             Auditing feedback dari konsumen, monitoring ulasan bermasalah, dan
             lakukan moderasi/takedown.
           </p>
         </div>
 
         {/* Global Stats Banner */}
-        <div className="flex items-center gap-6 bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-          <div className="text-center border-r border-gray-100 pr-5">
-            <span className="block text-2xl font-black text-gray-900">
+        <div className="flex items-center gap-8">
+          <div className="flex flex-col items-end">
+            <span className="block text-xl text-gray-800 leading-none">
               {reviews.length}
             </span>
-            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-              Total Ulasan
-            </span>
+            <span className="text-xs text-gray-400 mt-1">Total Ulasan</span>
           </div>
-          <div className="text-center">
-            <span className="block text-2xl font-black text-rose-600">
-              {reportedCount}+
+          <div className="flex flex-col items-end">
+            <span className="block text-xl text-rose-500 leading-none">
+              {reportedCount}
             </span>
-            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-              Laporan Masuk
-            </span>
+            <span className="text-xs text-gray-400 mt-1">Laporan Masuk</span>
           </div>
         </div>
       </div>
 
       {/* Tabs Switcher */}
-      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-20">
-        <SegmentedControl
-          value={activeTab}
-          onChange={(val) => {
-            setActiveTab(val as "products" | "reviews");
-            if (val === "products") setSelectedProductId(null);
-          }}
-          options={[
-            {
-              value: "products",
-              label: (
-                <div className="flex items-center gap-2 text-sm">
-                  <ShoppingBag size={15} /> Daftar Rating Produk
-                </div>
-              ),
-            },
-            {
-              value: "reviews",
-              label: (
-                <div className="flex items-center gap-2 text-sm">
-                  <MessageSquare size={15} /> Semua Ulasan & Rating
-                </div>
-              ),
-            },
-          ]}
-        />
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100">
+        <div className="flex items-center gap-8 w-full md:w-auto overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => {
+              setActiveTab("products");
+              setSelectedProductId(null);
+            }}
+            className={`pb-3 text-sm flex items-center gap-2 transition-colors relative whitespace-nowrap ${
+              activeTab === "products"
+                ? "text-gray-900"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <ShoppingBag size={16} className="stroke-[1.5]" /> Daftar Rating
+            Produk
+            {activeTab === "products" && (
+              <span className="absolute bottom-0 left-0 w-full h-[1px] bg-gray-900" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("reviews")}
+            className={`pb-3 text-sm flex items-center gap-2 transition-colors relative whitespace-nowrap ${
+              activeTab === "reviews"
+                ? "text-gray-900"
+                : "text-gray-400 hover:text-gray-600"
+            }`}
+          >
+            <MessageSquare size={16} className="stroke-[1.5]" /> Semua Ulasan &
+            Rating
+            {activeTab === "reviews" && (
+              <span className="absolute bottom-0 left-0 w-full h-[1px] bg-gray-900" />
+            )}
+          </button>
+        </div>
 
         {/* Global Review Filters (Visible only when in reviews tab) */}
         {activeTab === "reviews" && (
@@ -317,7 +332,7 @@ export default function AdminRatingPage() {
             <button
               type="button"
               onClick={() => setShowOnlyReported(!showOnlyReported)}
-              className={`px-4 py-2.5 rounded-2xl text-xs font-bold border transition-all flex items-center gap-2 ${
+              className={`px-4 py-2.5 rounded-2xl text-xs font-normal border transition-all flex items-center gap-2 ${
                 showOnlyReported
                   ? "bg-rose-50 border-rose-100 text-rose-700 shadow-sm"
                   : "bg-white border-gray-100 text-gray-600 hover:bg-gray-50"
@@ -344,7 +359,7 @@ export default function AdminRatingPage() {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Cari ulasan / pembeli..."
-                className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm"
+                className="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm font-normal focus:outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-white shadow-sm"
               />
             </div>
 
@@ -371,7 +386,7 @@ export default function AdminRatingPage() {
               showOnlyReported) && (
               <button
                 onClick={handleResetFilters}
-                className="text-[10px] font-medium text-red-500 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-100 px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors whitespace-nowrap shrink-0 shadow-sm"
+                className="text-[10px] font-normal text-red-500 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-100 px-3 py-2 rounded-xl flex items-center justify-center gap-1 transition-colors whitespace-nowrap shrink-0 shadow-sm"
               >
                 Reset <X size={12} />
               </button>
@@ -383,13 +398,13 @@ export default function AdminRatingPage() {
       {loading ? (
         <div className="flex flex-col justify-center items-center py-20 gap-3">
           <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
-          <p className="text-gray-400 font-medium">Memuat data audit...</p>
+          <p className="text-gray-400 font-normal">Memuat data audit...</p>
         </div>
       ) : error ? (
         <div className="bg-red-50 text-red-600 p-8 rounded-3xl border border-red-100 flex items-center gap-4 max-w-2xl mx-auto">
           <AlertCircle size={32} />
           <div>
-            <h3 className="font-bold text-lg">Error Auditing</h3>
+            <h3 className="font-normal text-lg">Error Auditing</h3>
             <p className="text-sm opacity-90">{error}</p>
           </div>
         </div>
@@ -403,16 +418,16 @@ export default function AdminRatingPage() {
                     <ShoppingBag size={24} />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-slate-700 font-medium text-base">
+                    <h3 className="text-slate-700 font-normal text-base">
                       Belum Ada Produk
                     </h3>
-                    <p className="text-slate-400 text-xs font-medium max-w-xs mx-auto leading-relaxed">
+                    <p className="text-slate-400 text-xs font-normal max-w-xs mx-auto leading-relaxed">
                       Belum ada produk aktif di aplikasi.
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {products.map((p) => (
                     <div
                       key={p.id}
@@ -434,7 +449,7 @@ export default function AdminRatingPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-sm text-slate-800 line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
+                          <h3 className="font-normal text-sm text-slate-800 line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
                             {p.nama}
                           </h3>
                         </div>
@@ -445,10 +460,10 @@ export default function AdminRatingPage() {
                             size={16}
                             className="text-amber-400 fill-amber-400"
                           />
-                          <span className="font-bold text-slate-800 text-sm">
+                          <span className="font-normal text-slate-800 text-sm">
                             {p.rating || "0.0"}
                           </span>
-                          <span className="text-slate-400 text-xs font-medium">
+                          <span className="text-slate-400 text-xs font-normal">
                             ({p.ulasanCount || 0} Ulasan)
                           </span>
                         </div>
@@ -499,10 +514,10 @@ export default function AdminRatingPage() {
                         )}
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">
+                        <span className="text-[10px] font-normal text-slate-400 uppercase tracking-widest block mb-0.5">
                           Menampilkan Ulasan Untuk
                         </span>
-                        <h2 className="font-bold text-slate-800 text-sm leading-tight line-clamp-1">
+                        <h2 className="font-normal text-slate-800 text-sm leading-tight line-clamp-1">
                           {selectedProduct.nama}
                         </h2>
                       </div>
@@ -515,19 +530,19 @@ export default function AdminRatingPage() {
                           size={14}
                           className="text-amber-400 fill-amber-400"
                         />
-                        <span className="font-bold text-slate-800">
+                        <span className="font-normal text-slate-800">
                           {selectedProduct.rating || "0.0"}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-500 font-medium">
+                      <span className="text-[10px] text-slate-500 font-normal">
                         Rating Rata-rata
                       </span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-slate-800">
+                      <div className="font-normal text-slate-800">
                         {selectedProduct.ulasanCount || 0}
                       </div>
-                      <span className="text-[10px] text-slate-500 font-medium">
+                      <span className="text-[10px] text-slate-500 font-normal">
                         Total Ulasan
                       </span>
                     </div>
@@ -538,7 +553,7 @@ export default function AdminRatingPage() {
               {filteredReviews.length === 0 ? (
                 <div className="bg-white rounded-3xl p-24 text-center border border-gray-100 shadow-sm space-y-4">
                   <MessageSquare className="w-16 h-16 text-gray-100 mx-auto" />
-                  <h3 className="text-gray-900 font-bold text-lg">
+                  <h3 className="text-gray-900 font-normal text-lg">
                     Tidak Ada Ulasan Ditemukan
                   </h3>
                   <p className="text-gray-400 text-sm max-w-sm mx-auto">
@@ -562,7 +577,7 @@ export default function AdminRatingPage() {
                       {/* Flagged Banner */}
                       {review.statusLaporan === "REPORTED" &&
                         !review.isHidden && (
-                          <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
+                          <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-normal uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
                             <AlertTriangle
                               size={11}
                               className="animate-bounce"
@@ -573,7 +588,7 @@ export default function AdminRatingPage() {
 
                       {/* Takedown Approved Banner */}
                       {review.isHidden && (
-                        <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-red-600 to-rose-700 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
+                        <div className="absolute top-0 inset-x-0 bg-gradient-to-r from-red-600 to-rose-700 text-white text-[10px] font-normal uppercase tracking-widest text-center py-1.5 rounded-t-[22px] flex items-center justify-center gap-1.5 shadow-sm">
                           <EyeOff size={11} /> Ulasan Telah Ditakedown (Hidden)
                         </div>
                       )}
@@ -594,7 +609,7 @@ export default function AdminRatingPage() {
                               <User size={16} />
                             </div>
                             <div>
-                              <h4 className="font-extrabold text-gray-900 text-sm">
+                              <h4 className="font-normal text-gray-900 text-sm">
                                 {review.pengguna?.nama || "Pengguna"}
                               </h4>
                               <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
@@ -616,7 +631,7 @@ export default function AdminRatingPage() {
 
                           <div className="flex flex-col items-end gap-1">
                             {renderStars(review.rating, 11)}
-                            <span className="text-[10px] font-bold text-gray-400">
+                            <span className="text-[10px] font-normal text-gray-400">
                               Rating: {review.rating}
                             </span>
                           </div>
@@ -624,7 +639,7 @@ export default function AdminRatingPage() {
 
                         {/* Review Text */}
                         {review.ulasan ? (
-                          <p className="text-gray-700 text-xs leading-relaxed font-medium bg-gray-50 p-3 rounded-2xl border border-gray-100/50">
+                          <p className="text-gray-700 text-xs leading-relaxed font-normal bg-gray-50 p-3 rounded-2xl border border-gray-100/50">
                             &ldquo;{review.ulasan}&rdquo;
                           </p>
                         ) : (
@@ -637,10 +652,10 @@ export default function AdminRatingPage() {
                         {review.statusLaporan === "REPORTED" &&
                           review.alasanLaporan && (
                             <div className="bg-amber-50/70 border border-amber-100 p-3 rounded-2xl space-y-1">
-                              <span className="text-[9px] uppercase font-bold text-amber-700 tracking-wider block">
+                              <span className="text-[9px] uppercase font-normal text-amber-700 tracking-wider block">
                                 Alasan Laporan Seller:
                               </span>
-                              <p className="text-[11px] text-amber-800 leading-normal italic font-medium">
+                              <p className="text-[11px] text-amber-800 leading-normal italic font-normal">
                                 &ldquo;{review.alasanLaporan}&rdquo;
                               </p>
                             </div>
@@ -667,10 +682,10 @@ export default function AdminRatingPage() {
                             )}
                           </div>
                           <div>
-                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest block">
+                            <span className="text-[9px] font-normal text-gray-400 uppercase tracking-widest block">
                               Produk
                             </span>
-                            <span className="font-bold text-gray-800 text-[11px] line-clamp-1">
+                            <span className="font-normal text-gray-800 text-[11px] line-clamp-1">
                               {review.produk?.nama?.replace(" - ", " ")}
                             </span>
                           </div>
@@ -678,13 +693,13 @@ export default function AdminRatingPage() {
 
                         <div className="flex gap-2">
                           {review.isHidden ? (
-                            <span className="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 font-bold text-[10px] uppercase tracking-wider flex items-center gap-1">
+                            <span className="px-3 py-1.5 rounded-xl bg-red-50 text-red-600 font-normal text-[10px] uppercase tracking-wider flex items-center gap-1">
                               <CheckCircle size={10} /> Sukses Takedown
                             </span>
                           ) : (
                             <button
                               onClick={() => setConfirmingTakedownId(review.id)}
-                              className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                              className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white font-normal text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                             >
                               <Trash2 size={13} /> Takedown
                             </button>
@@ -709,7 +724,7 @@ export default function AdminRatingPage() {
                 <AlertTriangle size={24} className="text-rose-600" />
               </div>
               <div>
-                <h3 className="font-extrabold text-gray-900 text-lg">
+                <h3 className="font-normal text-gray-900 text-lg">
                   Konfirmasi Takedown
                 </h3>
                 <p className="text-xs text-gray-400">Moderasi Ulasan Pembeli</p>
@@ -726,14 +741,14 @@ export default function AdminRatingPage() {
               <button
                 onClick={() => setConfirmingTakedownId(null)}
                 disabled={takedownLoading}
-                className="px-5 py-2.5 rounded-2xl border border-gray-200 hover:bg-gray-50 text-xs font-bold text-gray-600 transition-colors"
+                className="px-5 py-2.5 rounded-2xl border border-gray-200 hover:bg-gray-50 text-xs font-normal text-gray-600 transition-colors"
               >
                 Batal
               </button>
               <button
                 onClick={handleTakedownConfirm}
                 disabled={takedownLoading}
-                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white text-xs font-bold transition-all shadow-md shadow-rose-600/10 flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white text-xs font-normal transition-all shadow-md shadow-rose-600/10 flex items-center gap-1.5"
               >
                 {takedownLoading ? (
                   <>

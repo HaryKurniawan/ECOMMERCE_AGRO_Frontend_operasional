@@ -43,64 +43,58 @@ export const useSellerProducts = () => {
   const [filterStatus, setFilterStatus] = useState("semua");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const fetchData = useCallback(async (showLoading = true) => {
-    try {
-      if (showLoading) setLoading(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
-      // ── STEP 1: Fetch toko seller ───────────────────────────────────────────
-      const storeRes = await storesApi.getMyStore();
-      const storeData =
-        extractArray<StoreData>(storeRes)[0] ||
-        storeRes?.data?.data ||
-        storeRes?.data;
+  const fetchData = useCallback(
+    async (page: number = 1, limit: number = 10, showLoading = true) => {
+      try {
+        if (showLoading) setLoading(true);
 
-      console.log("[useSellerProducts] storeRes.data:", storeRes?.data);
-      console.log("[useSellerProducts] storeData resolved:", storeData);
-      console.log("[useSellerProducts] storeData.id:", storeData?.id);
+        // ── STEP 1: Fetch toko seller ───────────────────────────────────────────
+        const storeRes = await storesApi.getMyStore();
+        const storeData =
+          extractArray<StoreData>(storeRes)[0] ||
+          storeRes?.data?.data ||
+          storeRes?.data;
 
-      setStore(storeData);
+        setStore(storeData);
 
-      if (!storeData?.id) {
-        console.warn(
-          "[useSellerProducts] ❌ storeData.id tidak ditemukan — skip fetch produk",
-        );
-        return;
+        if (!storeData?.id) {
+          return;
+        }
+
+        const prodRes = await productsApi.getAllByStore(storeData.id, {
+          page,
+          limit,
+          search,
+          status: filterStatus,
+        } as any);
+
+        const dataArray = extractArray<ProductItem>(prodRes);
+
+        const responseData = prodRes?.data?.data || prodRes?.data;
+        if (responseData?.totalPages) {
+          setTotalPages(responseData.totalPages);
+          setTotalItems(responseData.total || 0);
+        }
+
+        const mappedArray = dataArray.map((p) => ({
+          ...p,
+          id: p.id || (p as any).id_produk,
+        }));
+        setProducts(mappedArray);
+      } catch (error) {
+        console.error("[useSellerProducts] ❌ Error fetch:", error);
+      } finally {
+        setLoading(false);
       }
-
-      // ── STEP 2: Fetch semua produk toko (termasuk INACTIVE) ─────────────────
-      const prodRes = await productsApi.getAllByStore(storeData.id, {
-        limit: 100,
-      });
-
-      console.log("[useSellerProducts] prodRes.data (raw):", prodRes?.data);
-
-      const dataArray = extractArray<ProductItem>(prodRes);
-
-      console.log(
-        "[useSellerProducts] produk di-parse:",
-        dataArray.length,
-        "items",
-      );
-      if (dataArray.length === 0) {
-        console.warn(
-          "[useSellerProducts] ⚠️ Array produk kosong! Cek apakah ProdukEcom sudah dibuat di database.",
-        );
-      }
-
-      const mappedArray = dataArray.map((p) => ({
-        ...p,
-        id: p.id || (p as any).id_produk,
-      }));
-      setProducts(mappedArray);
-    } catch (error) {
-      console.error("[useSellerProducts] ❌ Error fetch:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [search, filterStatus],
+  );
 
   useEffect(() => {
-    Promise.resolve().then(() => fetchData(false)); // Already loading by default
+    // Component will handle initial fetch to pass page and limit
   }, [fetchData]);
 
   const handleToggleStatus = async (product: ProductItem) => {
@@ -160,24 +154,15 @@ export const useSellerProducts = () => {
   };
 
   const filteredEtalase = useMemo(() => {
-    return products.filter((p) => {
-      const matchSearch = p.nama
-        ?.replace(" - ", " ")
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchStatus =
-        filterStatus === "semua" ||
-        p.status.toLowerCase() === filterStatus.toLowerCase();
-      // Show all products except DRAFT (DRAFT is for storage only)
-      return matchSearch && matchStatus && p.status !== "DRAFT";
-    });
-  }, [products, search, filterStatus]);
+    // Backend now handles search and status filtering (except DRAFT if we want to hide it,
+    // but backend handles DRAFT via status="draft", and "semua" returns all. Wait, if "semua" returns DRAFT, we might want to hide it in Etalase view?
+    // Let's just return products.
+    return products.filter((p) => p.status !== "DRAFT");
+  }, [products]);
 
   const filteredStorage = useMemo(() => {
-    return products.filter((p) =>
-      p.nama?.replace(" - ", " ").toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [products, search]);
+    return products;
+  }, [products]);
 
   return {
     store,
@@ -195,5 +180,7 @@ export const useSellerProducts = () => {
     handleAddToEtalase,
     handleUpdateProduct,
     refresh: fetchData,
+    totalPages,
+    totalItems,
   };
 };

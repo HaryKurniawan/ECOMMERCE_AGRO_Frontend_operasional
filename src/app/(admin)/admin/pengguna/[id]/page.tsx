@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   User,
   ArrowLeft,
@@ -16,10 +15,8 @@ import {
   MessageSquare,
   DollarSign,
   XCircle,
-  Clock,
   Store,
   ChevronRight,
-  ExternalLink,
   Lock,
   MessageCircle,
   Star,
@@ -31,7 +28,6 @@ import { formatTanggal, formatRupiah } from "@/lib/ecommerce-api";
 import { storesApi } from "@/lib/api/stores";
 import { ordersApi } from "@/lib/api/orders";
 import { apiClient } from "@/lib/api-client";
-import PageHeader from "@/components/ui/PageHeader";
 
 import UserRoleBadge from "../_components/UserRoleBadge";
 
@@ -185,7 +181,6 @@ export default function PenggunaDetailPage() {
       // 2. Fetch specific role content
       if (role === "SELLER") {
         setActiveTab("toko");
-        // Fetch seller store summary
         try {
           const storeRes = await storesApi.adminGetAll({ limit: 100 });
           const raw = storeRes?.data?.data || storeRes?.data || [];
@@ -200,7 +195,6 @@ export default function PenggunaDetailPage() {
           console.warn("Gagal memuat detail toko seller:", err);
         }
 
-        // Fetch seller chat rooms
         try {
           const chatRes = await apiClient.get(
             `/chat/admin/conversations/user/${id}`,
@@ -211,7 +205,6 @@ export default function PenggunaDetailPage() {
         }
       } else if (role === "USER" || role === "KONSUMEN") {
         setActiveTab("transaksi");
-        // Fetch consumer orders
         try {
           const ordersRes = await ordersApi.adminGetAll({ limit: 1000 });
           const raw = ordersRes?.data?.data || ordersRes?.data || [];
@@ -224,7 +217,6 @@ export default function PenggunaDetailPage() {
           console.warn("Gagal memuat histori transaksi pembeli:", err);
         }
 
-        // Fetch consumer chat rooms
         try {
           const chatRes = await apiClient.get(
             `/chat/admin/conversations/user/${id}`,
@@ -235,7 +227,6 @@ export default function PenggunaDetailPage() {
         }
       } else if (role === "CS") {
         setActiveTab("chat");
-        // Fetch CS chat history handled directly
         try {
           const chatRes = await apiClient.get("/chat/admin/conversations");
           const arr = chatRes?.data?.data || chatRes?.data || [];
@@ -327,9 +318,9 @@ export default function PenggunaDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-40 gap-4 min-h-[500px]">
-        <Loader2 size={40} className="animate-spin text-emerald-600" />
-        <p className="text-gray-400 font-bold animate-pulse text-sm">
+      <div className="flex flex-col items-center justify-center py-32 gap-3 min-h-[400px]">
+        <Loader2 size={32} className="animate-spin text-emerald-600" />
+        <p className="text-slate-400 font-normal text-xs">
           Memuat data audit detail pengguna...
         </p>
       </div>
@@ -338,18 +329,20 @@ export default function PenggunaDetailPage() {
 
   if (error || !userData) {
     return (
-      <div className="max-w-xl mx-auto py-20 px-4">
-        <div className="bg-red-50 text-red-600 p-8 rounded-[32px] border border-red-100 flex flex-col items-center gap-4 text-center shadow-lg shadow-red-50/50">
-          <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
-            <AlertCircle size={24} />
+      <div className="max-w-md mx-auto py-20 px-4">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col items-center gap-3 text-center">
+          <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500">
+            <AlertCircle size={20} />
           </div>
-          <h2 className="text-xl font-bold">Terjadi Kesalahan</h2>
-          <p className="text-sm font-medium leading-relaxed">
+          <h2 className="text-base font-normal text-slate-800">
+            Terjadi Kesalahan
+          </h2>
+          <p className="text-xs font-normal text-slate-500 leading-relaxed">
             {error || "Pengguna tidak ditemukan"}
           </p>
           <button
             onClick={() => router.push("/admin/pengguna")}
-            className="mt-4 px-6 py-2.5 bg-white border border-red-200 rounded-xl shadow-sm text-red-600 font-bold text-sm hover:bg-red-100/50 transition-colors"
+            className="mt-3 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-700 font-normal text-xs hover:bg-slate-50 transition-colors"
           >
             Kembali ke Daftar Pengguna
           </button>
@@ -370,246 +363,284 @@ export default function PenggunaDetailPage() {
             : userData.peran;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16 px-4 lg:px-8">
-      {/* Back Button */}
-      <div>
-        <button
-          onClick={() => router.push("/admin/pengguna")}
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-emerald-600 font-bold transition-all text-sm mb-6 bg-white border border-gray-100 px-4 py-2 rounded-2xl shadow-sm hover:shadow active:scale-95"
-        >
-          <ArrowLeft size={16} /> Kembali ke Daftar Pengguna
-        </button>
-
-        <PageHeader
-          title="Detail Audit Pengguna"
-          description={`Laporan detail profil lengkap, rincian e-commerce, dan audit histori chat obrolan untuk peran ${roleLabel}.`}
-          icon={User}
-          iconColor="text-emerald-600"
-        />
+    <div className="w-full max-w-[1600px] mx-auto p-4 lg:p-8 space-y-6 animate-fade-in font-sans">
+      {/* Top Action Bar & Header */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 pb-2 border-b border-slate-100">
+          <div>
+            <h1 className="text-xl font-normal text-slate-900 tracking-tight flex items-center gap-2.5">
+              <User className="text-emerald-600 stroke-[1.5]" size={22} />{" "}
+              Detail Audit Pengguna
+            </h1>
+            <p className="text-slate-400 mt-1 text-xs font-normal">
+              Laporan profil lengkap, transaksi e-commerce, dan audit histori
+              chat untuk peran {roleLabel}.
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Profile & Detail Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Col: Profile Details Card */}
-        <div className="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm h-fit space-y-8 hover:border-emerald-100 transition-colors">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[28px] flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-emerald-100">
+      {/* ── BENTO GRID LAYOUT ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Bento Card 1: Profil Pengguna (Left Column - 4/12) */}
+        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
+          {/* Identity Header */}
+          <div className="flex flex-col items-center text-center space-y-3 pb-6 border-b border-slate-100">
+            <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-700 font-normal text-lg">
               {initials}
             </div>
 
             <div>
-              <h2 className="text-xl font-bold text-gray-900 leading-snug">
+              <h2 className="text-base font-normal text-slate-900 leading-snug">
                 {userData.nama || "—"}
               </h2>
-              <p className="text-gray-400 text-xs mt-0.5">{userData.email}</p>
+              <p className="text-slate-400 text-xs mt-0.5 font-normal">
+                {userData.email}
+              </p>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-1">
               <UserRoleBadge role={userData.peran} />
             </div>
           </div>
 
-          <div className="border-t border-gray-50 pt-6 space-y-5">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-              Informasi Kontak
-            </h3>
-
-            <div className="flex items-center gap-4 text-sm font-medium">
-              <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 flex-shrink-0">
-                <Mail size={16} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                  Email
-                </p>
-                <p className="text-gray-700 truncate">{userData.email}</p>
-              </div>
+          {/* Contact & Detail Info */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-400 font-normal uppercase tracking-wider">
+                Informasi Kontak
+              </span>
             </div>
 
-            <div className="flex items-center gap-4 text-sm font-medium">
-              <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 flex-shrink-0">
-                <Phone size={16} />
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 text-xs">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 mt-0.5">
+                  <Mail size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    Email
+                  </p>
+                  <p className="text-slate-700 font-normal truncate mt-0.5">
+                    {userData.email}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                  Nomor Telepon
-                </p>
-                <p className="text-gray-700">{userData.noTelepon || "—"}</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 text-sm font-medium">
-              <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 flex-shrink-0">
-                <Calendar size={16} />
+              <div className="flex items-start gap-3 text-xs">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 mt-0.5">
+                  <Phone size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    Nomor Telepon
+                  </p>
+                  <p className="text-slate-700 font-normal mt-0.5">
+                    {userData.noTelepon || "—"}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                  Bergabung Pada
-                </p>
-                <p className="text-gray-700">
-                  {userData.createdAt ? formatTanggal(userData.createdAt) : "—"}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-4 text-sm font-medium">
-              <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 flex-shrink-0">
-                <CheckCircle2 size={16} />
+              <div className="flex items-start gap-3 text-xs">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 mt-0.5">
+                  <Calendar size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    Bergabung Pada
+                  </p>
+                  <p className="text-slate-700 font-normal mt-0.5">
+                    {userData.createdAt
+                      ? formatTanggal(userData.createdAt)
+                      : "—"}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                  Status Verifikasi
-                </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {userData.emailTerverifikasiPada ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-wide border border-green-100">
-                      Email Terverifikasi
-                    </span>
-                  ) : (
-                    <div className="flex flex-col items-start gap-1.5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wide border border-amber-100">
-                        Email Belum Verifikasi
+
+              <div className="flex items-start gap-3 text-xs pt-1">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 flex-shrink-0 mt-0.5">
+                  <CheckCircle2 size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    Status Verifikasi
+                  </p>
+                  <div className="mt-1">
+                    {userData.emailTerverifikasiPada ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[11px] font-normal border border-emerald-200">
+                        Email Terverifikasi
                       </span>
-                      <button
-                        onClick={handleResendVerification}
-                        disabled={resendingEmail}
-                        className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline disabled:opacity-50 disabled:hover:no-underline flex items-center gap-1"
-                      >
-                        {resendingEmail ? (
-                          <>
-                            <Loader2 size={10} className="animate-spin" />{" "}
-                            Mengirim...
-                          </>
-                        ) : (
-                          "Kirim Ulang Link"
-                        )}
-                      </button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex flex-col items-start gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[11px] font-normal border border-amber-200">
+                          Email Belum Verifikasi
+                        </span>
+                        <button
+                          onClick={handleResendVerification}
+                          disabled={resendingEmail}
+                          className="text-[11px] font-normal text-emerald-600 hover:text-emerald-700 hover:underline disabled:opacity-50 flex items-center gap-1"
+                        >
+                          {resendingEmail ? (
+                            <>
+                              <Loader2 size={10} className="animate-spin" />{" "}
+                              Mengirim...
+                            </>
+                          ) : (
+                            "Kirim Ulang Link"
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Col: Custom Tabs & Dynamic Details */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Tab Selector for Consumers and Sellers */}
-          {(mappedRole === "USER" || mappedRole === "SELLER") && (
-            <div className="flex gap-2 p-1.5 bg-gray-50 rounded-2xl border border-gray-100 max-w-sm">
-              {mappedRole === "USER" && (
-                <button
-                  onClick={() => setActiveTab("transaksi")}
-                  className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all ${
-                    activeTab === "transaksi"
-                      ? "bg-white text-emerald-700 shadow"
-                      : "text-gray-400 hover:text-gray-700"
-                  }`}
-                >
-                  Daftar Transaksi
-                </button>
-              )}
+        {/* Bento Content Area (Right Column - 8/12) */}
+        <div className="lg:col-span-8 space-y-5">
+          {/* Bento Stats Tiles (For Consumer / User Role) */}
+          {mappedRole === "USER" && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-[11px] font-normal">Total Pesanan</span>
+                  <ShoppingBag size={15} className="text-emerald-600" />
+                </div>
+                <p className="text-xl font-normal text-slate-900">
+                  {consumerStats.total}
+                </p>
+              </div>
 
-              {mappedRole === "SELLER" && (
-                <button
-                  onClick={() => setActiveTab("toko")}
-                  className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all ${
-                    activeTab === "toko"
-                      ? "bg-white text-emerald-700 shadow"
-                      : "text-gray-400 hover:text-gray-700"
-                  }`}
-                >
-                  Informasi Toko
-                </button>
-              )}
+              <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-[11px] font-normal">
+                    Belanja Sukses
+                  </span>
+                  <DollarSign size={15} className="text-blue-500" />
+                </div>
+                <p className="text-xl font-normal text-slate-900 truncate">
+                  {formatRupiah(consumerStats.spent)}
+                </p>
+              </div>
 
-              <button
-                onClick={() => setActiveTab("chat")}
-                className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all ${
-                  activeTab === "chat"
-                    ? "bg-white text-emerald-700 shadow"
-                    : "text-gray-400 hover:text-gray-700"
-                }`}
-              >
-                Histori Obrolan Chat
-              </button>
+              <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-[11px] font-normal">Selesai</span>
+                  <CheckCircle2 size={15} className="text-emerald-500" />
+                </div>
+                <p className="text-xl font-normal text-slate-900">
+                  {consumerStats.completed}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between text-slate-400 mb-2">
+                  <span className="text-[11px] font-normal">Dibatalkan</span>
+                  <XCircle size={15} className="text-rose-500" />
+                </div>
+                <p className="text-xl font-normal text-slate-900">
+                  {consumerStats.cancelled}
+                </p>
+              </div>
             </div>
           )}
 
-          {/* ── TABS: CONSUMER ORDERS ── */}
-          {activeTab === "transaksi" && mappedRole === "USER" && (
-            <div className="space-y-8">
-              {/* Consumer Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-                  <ShoppingBag size={20} className="text-emerald-500 mb-2" />
-                  <p className="text-2xl font-black text-gray-900">
-                    {consumerStats.total}
-                  </p>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                    Total Pesanan
-                  </p>
-                </div>
-                <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-                  <DollarSign size={20} className="text-blue-500 mb-2" />
-                  <p className="text-2xl font-black text-gray-900 truncate">
-                    {formatRupiah(consumerStats.spent)}
-                  </p>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                    Belanja Sukses
-                  </p>
-                </div>
-                <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-                  <CheckCircle2 size={20} className="text-green-500 mb-2" />
-                  <p className="text-2xl font-black text-gray-900">
-                    {consumerStats.completed}
-                  </p>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                    Selesai
-                  </p>
-                </div>
-                <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-                  <XCircle size={20} className="text-red-500 mb-2" />
-                  <p className="text-2xl font-black text-gray-900">
-                    {consumerStats.cancelled}
-                  </p>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                    Dibatalkan
-                  </p>
-                </div>
-              </div>
+          {/* Bento Main Tab Container */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
+            {/* Minimalist Tab Navigation Bar */}
+            {(mappedRole === "USER" || mappedRole === "SELLER") && (
+              <div className="flex items-center gap-6 border-b border-slate-100 overflow-x-auto no-scrollbar">
+                {mappedRole === "USER" && (
+                  <button
+                    onClick={() => setActiveTab("transaksi")}
+                    className={`pb-3 text-xs flex items-center gap-2 transition-colors relative whitespace-nowrap ${
+                      activeTab === "transaksi"
+                        ? "text-slate-900 font-normal"
+                        : "text-slate-400 hover:text-slate-600 font-normal"
+                    }`}
+                  >
+                    <ShoppingBag size={14} className="stroke-[1.5]" /> Daftar
+                    Transaksi
+                    {activeTab === "transaksi" && (
+                      <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-900" />
+                    )}
+                  </button>
+                )}
 
-              {/* Orders List Table */}
-              <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 overflow-hidden">
-                <h3 className="font-bold text-lg text-gray-800 mb-6 flex items-center gap-2">
-                  <ShoppingBag size={20} className="text-emerald-500" /> Histori
-                  Transaksi Belanja
-                </h3>
+                {mappedRole === "SELLER" && (
+                  <button
+                    onClick={() => setActiveTab("toko")}
+                    className={`pb-3 text-xs flex items-center gap-2 transition-colors relative whitespace-nowrap ${
+                      activeTab === "toko"
+                        ? "text-slate-900 font-normal"
+                        : "text-slate-400 hover:text-slate-600 font-normal"
+                    }`}
+                  >
+                    <Store size={14} className="stroke-[1.5]" /> Informasi Toko
+                    {activeTab === "toko" && (
+                      <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-900" />
+                    )}
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setActiveTab("chat")}
+                  className={`pb-3 text-xs flex items-center gap-2 transition-colors relative whitespace-nowrap ${
+                    activeTab === "chat"
+                      ? "text-slate-900 font-normal"
+                      : "text-slate-400 hover:text-slate-600 font-normal"
+                  }`}
+                >
+                  <MessageSquare size={14} className="stroke-[1.5]" /> Histori
+                  Obrolan Chat
+                  {activeTab === "chat" && (
+                    <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-900" />
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* TAB CONTENT: ORDERS LIST */}
+            {activeTab === "transaksi" && mappedRole === "USER" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-normal text-slate-400 uppercase tracking-wider">
+                    Histori Transaksi Belanja
+                  </h3>
+                  <span className="text-xs text-slate-400 font-normal">
+                    {orders.length} Transaksi
+                  </span>
+                </div>
 
                 {orders.length === 0 ? (
-                  <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100/50">
-                    <ShoppingBag className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                    <h4 className="font-bold text-gray-900 text-base">
+                  <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <p className="text-slate-700 font-normal text-xs">
                       Belum Ada Transaksi
-                    </h4>
-                    <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-                      Pengguna ini belum pernah melakukan transaksi pembelian di
-                      platform.
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Pengguna ini belum pernah melakukan transaksi pembelian.
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto text-[13px] rounded-2xl border border-gray-100">
+                  <div className="overflow-x-auto text-xs rounded-xl border border-slate-200">
                     <table className="w-full text-left whitespace-nowrap">
                       <thead>
-                        <tr className="bg-gray-50 text-gray-500 border-b border-gray-100 font-bold uppercase tracking-wider text-[10px]">
-                          <th className="px-6 py-4">ID Transaksi</th>
-                          <th className="px-6 py-4">Tanggal</th>
-                          <th className="px-6 py-4">Toko / Seller</th>
-                          <th className="px-6 py-4">Total</th>
-                          <th className="px-6 py-4">Status</th>
+                        <tr className="bg-slate-50/80 text-slate-400 border-b border-slate-200 text-[11px] font-normal uppercase tracking-wider">
+                          <th className="px-5 py-3 font-normal">
+                            ID Transaksi
+                          </th>
+                          <th className="px-5 py-3 font-normal">Tanggal</th>
+                          <th className="px-5 py-3 font-normal">
+                            Toko / Seller
+                          </th>
+                          <th className="px-5 py-3 font-normal">Total</th>
+                          <th className="px-5 py-3 font-normal">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-50">
+                      <tbody className="divide-y divide-slate-100">
                         {orders.map((ord) => {
                           const storeName =
                             ord.item?.[0]?.produk?.toko?.nama || "Agro Market";
@@ -620,39 +651,39 @@ export default function PenggunaDetailPage() {
                                 (ord as any).id_pesanan ||
                                 Math.random().toString()
                               }
-                              className="hover:bg-emerald-50/20 transition-colors"
+                              className="hover:bg-slate-50/60 transition-colors"
                             >
-                              <td className="px-6 py-4 font-mono font-bold text-emerald-600">
+                              <td className="px-5 py-3 font-mono text-slate-700 font-normal">
                                 #
                                 {String(ord.id || (ord as any).id_pesanan || "")
                                   .slice(-8)
                                   .toUpperCase()}
                               </td>
-                              <td className="px-6 py-4 text-gray-500 font-medium">
+                              <td className="px-5 py-3 text-slate-500 font-normal">
                                 {formatTanggal(ord.createdAt)}
                               </td>
-                              <td className="px-6 py-4">
-                                <span className="font-bold text-gray-800 flex items-center gap-1.5">
+                              <td className="px-5 py-3 text-slate-700 font-normal">
+                                <span className="flex items-center gap-1.5">
                                   <Store
-                                    size={14}
-                                    className="text-orange-400 flex-shrink-0"
+                                    size={13}
+                                    className="text-slate-400 flex-shrink-0"
                                   />
                                   {storeName}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 font-bold text-gray-900">
+                              <td className="px-5 py-3 text-slate-800 font-normal">
                                 {formatRupiah(ord.totalHarga)}
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-5 py-3">
                                 <span
-                                  className={`px-2.5 py-1 text-[9px] font-bold rounded-lg uppercase tracking-wider ${
+                                  className={`px-2 py-0.5 text-[10px] font-normal rounded-md uppercase tracking-wide border ${
                                     ["COMPLETED", "DELIVERED"].includes(
                                       ord.status,
                                     )
-                                      ? "bg-green-50 text-green-700 border border-green-100"
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                       : ord.status === "CANCELLED"
-                                        ? "bg-red-50 text-red-700 border border-red-100"
-                                        : "bg-amber-50 text-amber-700 border border-amber-100"
+                                        ? "bg-rose-50 text-rose-700 border-rose-200"
+                                        : "bg-amber-50 text-amber-700 border-amber-200"
                                   }`}
                                 >
                                   {ord.status}
@@ -666,221 +697,230 @@ export default function PenggunaDetailPage() {
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ── TABS: SELLER TOKO INFO ── */}
-          {activeTab === "toko" && mappedRole === "SELLER" && (
-            <div className="space-y-6">
-              {storeData ? (
-                <div className="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm space-y-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-50 pb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-500 text-white rounded-2xl flex items-center justify-center text-xl font-bold shadow-lg shadow-orange-100">
-                        {storeData.nama?.charAt(0) || "🏪"}
+            {/* TAB CONTENT: SELLER STORE INFO */}
+            {activeTab === "toko" && mappedRole === "SELLER" && (
+              <div className="space-y-6">
+                {storeData ? (
+                  <div className="space-y-5">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl flex items-center justify-center text-lg font-normal">
+                          {storeData.nama?.charAt(0) || "🏪"}
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-normal text-slate-900">
+                            {storeData.nama}
+                          </h3>
+                          <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5 font-normal">
+                            <Store size={12} className="text-slate-400" />
+                            {storeData.kabupaten || "Daerah Belum Diset"}
+                            {storeData.wilayah ? ` • ${storeData.wilayah}` : ""}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {storeData.nama}
-                        </h3>
-                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                          <Store size={12} className="text-orange-500" />
-                          {storeData.kabupaten || "Daerah Belum Diset"}
-                          {storeData.wilayah ? ` • ${storeData.wilayah}` : ""}
+
+                      <span
+                        className={`px-2.5 py-0.5 rounded-md text-[10px] font-normal uppercase tracking-wider border ${
+                          storeData.status === "ACTIVE"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {storeData.status === "ACTIVE"
+                          ? "Aktif"
+                          : "Menunggu / Nonaktif"}
+                      </span>
+                    </div>
+
+                    {/* Quick Store Stats */}
+                    <div className="grid grid-cols-3 gap-3.5">
+                      <div className="bg-slate-50/60 border border-slate-200 rounded-xl p-3.5 text-center">
+                        <Package
+                          size={15}
+                          className="text-slate-400 mx-auto mb-1"
+                        />
+                        <p className="text-lg font-normal text-slate-900">
+                          {storeData.totalProduk || 0}
+                        </p>
+                        <p className="text-[10px] font-normal text-slate-400 uppercase mt-0.5">
+                          Produk Aktif
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-50/60 border border-slate-200 rounded-xl p-3.5 text-center">
+                        <ShoppingBag
+                          size={15}
+                          className="text-slate-400 mx-auto mb-1"
+                        />
+                        <p className="text-lg font-normal text-slate-900">
+                          {storeData.totalPesanan || 0}
+                        </p>
+                        <p className="text-[10px] font-normal text-slate-400 uppercase mt-0.5">
+                          Total Pesanan
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-50/60 border border-slate-200 rounded-xl p-3.5 text-center">
+                        <Star
+                          size={15}
+                          className="text-amber-400 fill-amber-400 mx-auto mb-1"
+                        />
+                        <p className="text-lg font-normal text-slate-900">
+                          {Number(storeData.rating || 0).toFixed(1)}
+                        </p>
+                        <p className="text-[10px] font-normal text-slate-400 uppercase mt-0.5">
+                          Rating Toko
                         </p>
                       </div>
                     </div>
 
-                    <span
-                      className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider ${
-                        storeData.status === "ACTIVE"
-                          ? "bg-green-50 text-green-700 border border-green-100"
-                          : "bg-amber-50 text-amber-700 border border-amber-100"
-                      }`}
+                    <div className="space-y-1 bg-slate-50/50 p-4 rounded-xl border border-slate-200 text-xs font-normal text-slate-600">
+                      <p className="text-slate-400 text-[11px] uppercase tracking-wider mb-1 font-normal">
+                        Alamat Toko
+                      </p>
+                      <p className="text-slate-700">
+                        {storeData.alamat || "Alamat belum diset."}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => router.push(`/admin/toko/${storeData.id}`)}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-normal transition-colors"
                     >
-                      {storeData.status === "ACTIVE"
-                        ? "Aktif"
-                        : "Menunggu / Nonaktif"}
-                    </span>
+                      <span>Masuk ke Dashboard Toko</span>
+                      <ChevronRight size={14} />
+                    </button>
                   </div>
-
-                  {/* Quick Store Stats */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-orange-50/40 border border-orange-50 rounded-2xl p-4 text-center">
-                      <Package
-                        size={18}
-                        className="text-orange-600 mx-auto mb-1.5"
-                      />
-                      <p className="text-xl font-black text-gray-900">
-                        {storeData.totalProduk || 0}
-                      </p>
-                      <p className="text-[9px] font-bold text-orange-800/60 uppercase mt-0.5">
-                        Produk Aktif
-                      </p>
-                    </div>
-
-                    <div className="bg-blue-50/40 border border-blue-50 rounded-2xl p-4 text-center">
-                      <ShoppingBag
-                        size={18}
-                        className="text-blue-500 mx-auto mb-1.5"
-                      />
-                      <p className="text-xl font-black text-gray-900">
-                        {storeData.totalPesanan || 0}
-                      </p>
-                      <p className="text-[9px] font-bold text-blue-800/60 uppercase mt-0.5">
-                        Total Pesanan
-                      </p>
-                    </div>
-
-                    <div className="bg-amber-50/40 border border-amber-50 rounded-2xl p-4 text-center">
-                      <Star
-                        size={18}
-                        className="text-amber-500 fill-amber-500 mx-auto mb-1.5"
-                      />
-                      <p className="text-xl font-black text-gray-900">
-                        {Number(storeData.rating || 0).toFixed(1)}
-                      </p>
-                      <p className="text-[9px] font-bold text-amber-800/60 uppercase mt-0.5">
-                        Rating Toko
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 bg-gray-50/50 p-5 rounded-2xl border border-gray-50 text-xs font-semibold text-gray-500">
-                    <p className="text-gray-400 font-bold text-[10px] uppercase tracking-wider mb-1">
-                      Lokasi Distribusi Toko
-                    </p>
-                    <p>
-                      <span className="text-gray-400">Alamat Lengkap:</span>{" "}
-                      {storeData.alamat || "Alamat belum diset."}
+                ) : (
+                  <div className="p-8 text-center bg-slate-50/50 rounded-xl border border-slate-100">
+                    <Store size={32} className="text-slate-300 mx-auto mb-2" />
+                    <h4 className="font-normal text-slate-800 text-xs">
+                      Toko Belum Dibuat
+                    </h4>
+                    <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
+                      Seller ini telah disetujui bergabung namun belum
+                      mendaftarkan toko fisiknya di platform.
                     </p>
                   </div>
+                )}
+              </div>
+            )}
 
-                  <button
-                    onClick={() => router.push(`/admin/toko/${storeData.id}`)}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-sm font-bold shadow-lg shadow-emerald-100 transition-all active:scale-95"
-                  >
-                    <span>Masuk ke Dashboard Manajemen Seller</span>
-                    <ChevronRight size={16} />
-                  </button>
+            {/* TAB CONTENT: CHAT LOGS */}
+            {activeTab === "chat" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-normal text-slate-400 uppercase tracking-wider">
+                    Audit Log Obrolan Chat
+                  </h3>
+                  <span className="text-xs text-slate-400 font-normal">
+                    {conversations.length} Percakapan
+                  </span>
                 </div>
-              ) : (
-                <div className="bg-white rounded-[32px] border border-gray-100 p-12 text-center shadow-sm">
-                  <Store size={40} className="text-gray-200 mx-auto mb-4" />
-                  <h4 className="font-bold text-gray-900 text-base">
-                    Toko Belum Dibuat
-                  </h4>
-                  <p className="text-xs text-gray-400 mt-2 max-w-sm mx-auto">
-                    Seller ini telah disetujui bergabung namun belum
-                    menginisialisasi atau mendaftarkan toko fisiknya di
-                    platform.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* ── TABS: HISTORI OBROLAN CHAT (AUDIT MONITOR) ── */}
-          {activeTab === "chat" && (
-            <div className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 overflow-hidden">
-              <h3 className="font-bold text-lg text-gray-800 mb-6 flex items-center gap-2">
-                <MessageSquare size={20} className="text-emerald-500" /> Audit
-                Log Obrolan Chat
-              </h3>
-
-              {conversations.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100/50">
-                  <MessageSquare className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                  <h4 className="font-bold text-gray-900 text-base">
-                    Tidak Ada Log Obrolan
-                  </h4>
-                  <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-                    Pengguna ini tidak memiliki rekam percakapan chat aktif di
-                    database.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto text-[13px] rounded-2xl border border-gray-100">
-                  <table className="w-full text-left whitespace-nowrap">
-                    <thead>
-                      <tr className="bg-gray-50 text-gray-500 border-b border-gray-100 font-bold uppercase tracking-wider text-[10px]">
-                        <th className="px-6 py-4">Lawan Bicara</th>
-                        <th className="px-6 py-4">Tipe Percakapan</th>
-                        <th className="px-6 py-4">Pesan Terakhir</th>
-                        <th className="px-6 py-4">Waktu</th>
-                        <th className="px-6 py-4 text-right">Tindakan</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {conversations.map((room) => {
-                        const isCS = room.tipe === "ADMIN_CS";
-                        return (
-                          <tr
-                            key={room.id}
-                            className="hover:bg-emerald-50/20 transition-colors"
-                          >
-                            <td className="px-6 py-4">
-                              <span className="font-bold text-gray-800 flex items-center gap-2">
-                                <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-                                  {room.otherParticipantName?.charAt(0) || "P"}
+                {conversations.length === 0 ? (
+                  <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <MessageSquare className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <p className="text-slate-700 font-normal text-xs">
+                      Tidak Ada Log Obrolan
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Pengguna ini tidak memiliki rekam percakapan chat aktif di
+                      database.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto text-xs rounded-xl border border-slate-200">
+                    <table className="w-full text-left whitespace-nowrap">
+                      <thead>
+                        <tr className="bg-slate-50/80 text-slate-400 border-b border-slate-200 text-[11px] font-normal uppercase tracking-wider">
+                          <th className="px-5 py-3 font-normal">
+                            Lawan Bicara
+                          </th>
+                          <th className="px-5 py-3 font-normal">Tipe</th>
+                          <th className="px-5 py-3 font-normal">
+                            Pesan Terakhir
+                          </th>
+                          <th className="px-5 py-3 font-normal">Waktu</th>
+                          <th className="px-5 py-3 text-right font-normal">
+                            Tindakan
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {conversations.map((room) => {
+                          const isCS = room.tipe === "ADMIN_CS";
+                          return (
+                            <tr
+                              key={room.id}
+                              className="hover:bg-slate-50/60 transition-colors"
+                            >
+                              <td className="px-5 py-3 text-slate-800 font-normal">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-6 h-6 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-normal">
+                                    {room.otherParticipantName?.charAt(0) ||
+                                      "P"}
+                                  </span>
+                                  <span>{room.otherParticipantName}</span>
+                                </div>
+                              </td>
+                              <td className="px-5 py-3">
+                                <span
+                                  className={`px-2 py-0.5 text-[10px] font-normal rounded-md uppercase tracking-wider border ${
+                                    isCS
+                                      ? "bg-blue-50 text-blue-700 border-blue-200"
+                                      : "bg-purple-50 text-purple-700 border-purple-200"
+                                  }`}
+                                >
+                                  {isCS ? "Layanan CS" : "Transaksi Penjual"}
                                 </span>
-                                {room.otherParticipantName}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={`px-2 py-0.5 text-[9px] font-bold rounded-lg uppercase tracking-wider ${
-                                  isCS
-                                    ? "bg-blue-50 text-blue-700 border border-blue-100"
-                                    : "bg-purple-50 text-purple-700 border border-purple-100"
-                                }`}
-                              >
-                                {isCS ? "Layanan CS" : "Transaksi Penjual"}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-gray-500 font-medium max-w-xs truncate">
-                              {room.pesanTerakhir || (
-                                <span className="italic text-gray-300">
-                                  Belum ada obrolan
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-gray-500 font-medium">
-                              {room.waktuPesanTerakhir
-                                ? formatTanggal(room.waktuPesanTerakhir)
-                                : formatTanggal(room.updatedAt)}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => openChatAudit(room)}
-                                className="px-3.5 py-1.5 bg-gray-50 hover:bg-emerald-600 text-gray-600 hover:text-white rounded-xl text-xs font-bold transition-all border border-gray-200/50 hover:border-emerald-600"
-                              >
-                                Lihat Isi Chat
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+                              </td>
+                              <td className="px-5 py-3 text-slate-500 font-normal max-w-xs truncate">
+                                {room.pesanTerakhir || (
+                                  <span className="italic text-slate-300">
+                                    Belum ada obrolan
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-5 py-3 text-slate-400 font-normal">
+                                {room.waktuPesanTerakhir
+                                  ? formatTanggal(room.waktuPesanTerakhir)
+                                  : formatTanggal(room.updatedAt)}
+                              </td>
+                              <td className="px-5 py-3 text-right">
+                                <button
+                                  onClick={() => openChatAudit(room)}
+                                  className="px-3 py-1 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-normal transition-colors border border-slate-200"
+                                >
+                                  Lihat Isi Chat
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* ── AUDIT LOG DIALOG MODAL (READ-ONLY VIEW) ── */}
       <Modal
         title={
-          <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-            <MessageCircle className="text-emerald-600" size={20} />
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+            <MessageCircle className="text-emerald-600" size={18} />
             <div>
-              <p className="text-sm font-black text-gray-900">
+              <p className="text-xs font-normal text-slate-800">
                 Log Audit Obrolan:{" "}
                 {selectedRoom?.otherParticipantName || "Unknown"}
               </p>
-              <p className="text-[10px] text-gray-400 font-medium">
+              <p className="text-[10px] text-slate-400 font-normal">
                 ID Kamar: {selectedRoom?.id}
               </p>
             </div>
@@ -889,46 +929,43 @@ export default function PenggunaDetailPage() {
         open={auditModalOpen}
         onCancel={() => setAuditModalOpen(false)}
         footer={null}
-        width={650}
+        width={600}
         centered
         styles={{
           body: { padding: "16px" },
         }}
-        className="custom-audit-modal"
       >
         <div className="space-y-4">
           {/* Read Only Locked Warning Banner */}
-          <div className="flex items-center gap-2.5 p-3.5 bg-amber-50/70 border border-amber-100 text-amber-800 rounded-2xl text-[11px] font-semibold leading-relaxed">
-            <Lock size={16} className="text-amber-600 flex-shrink-0" />
+          <div className="flex items-start gap-2 p-3 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-xs font-normal leading-relaxed">
+            <Lock size={14} className="text-slate-400 flex-shrink-0 mt-0.5" />
             <span>
-              <strong>Mode Audit Terkunci:</strong> Anda memantau isi pesan
-              secara *Read-Only*. Anda tidak memiliki otorisasi untuk meretas
-              atau ikut campur mengirim pesan pada sesi percakapan mandiri ini.
+              Mode Audit Terkunci: Anda memantau isi percakapan secara read-only
+              tanpa otorisasi modifikasi pesan.
             </span>
           </div>
 
           {/* Messages View Area */}
-          <div className="h-[380px] overflow-y-auto bg-gray-50/70 rounded-3xl p-5 border border-gray-100 space-y-4 flex flex-col">
+          <div className="h-[360px] overflow-y-auto bg-slate-50/50 rounded-xl p-4 border border-slate-200 space-y-3 flex flex-col">
             {loadingMessages ? (
               <div className="flex flex-col items-center justify-center h-full gap-2">
-                <Loader2 className="animate-spin text-emerald-600" size={30} />
-                <p className="text-[11px] text-gray-400 font-bold">
-                  Mengunduh isi pesan log...
+                <Loader2 className="animate-spin text-emerald-600" size={24} />
+                <p className="text-[11px] text-slate-400 font-normal">
+                  Mengunduh isi pesan...
                 </p>
               </div>
             ) : roomMessages.length === 0 ? (
-              <div className="text-center my-auto text-gray-300 py-10">
+              <div className="text-center my-auto text-slate-300 py-8">
                 <MessageSquare
-                  className="mx-auto text-gray-200 mb-2"
-                  size={36}
+                  className="mx-auto text-slate-200 mb-1"
+                  size={28}
                 />
-                <p className="text-xs font-bold">
+                <p className="text-xs font-normal">
                   Tidak ada pesan log di dalam kamar obrolan ini.
                 </p>
               </div>
             ) : (
               roomMessages.map((msg) => {
-                // If sender ID is the target user under review (id), it's "Sent" by them (right side)
                 const isSentByTarget = msg.pengirimId === id;
                 return (
                   <div
@@ -940,15 +977,15 @@ export default function PenggunaDetailPage() {
                     }`}
                   >
                     <div
-                      className={`p-3.5 rounded-2xl text-xs font-semibold leading-relaxed shadow-sm ${
+                      className={`p-3 rounded-xl text-xs font-normal leading-relaxed ${
                         isSentByTarget
-                          ? "bg-emerald-600 text-white rounded-tr-none"
-                          : "bg-white text-gray-800 border border-gray-100 rounded-tl-none"
+                          ? "bg-slate-900 text-white rounded-tr-none"
+                          : "bg-white text-slate-800 border border-slate-200 rounded-tl-none"
                       }`}
                     >
                       {msg.isiPesan}
                     </div>
-                    <span className="text-[9px] text-gray-400 mt-1 font-bold">
+                    <span className="text-[9px] text-slate-400 mt-1 font-normal">
                       {formatTanggal(msg.createdAt)}
                     </span>
                   </div>
@@ -957,12 +994,12 @@ export default function PenggunaDetailPage() {
             )}
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-1">
             <button
               onClick={() => setAuditModalOpen(false)}
-              className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors shadow"
+              className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-normal hover:bg-slate-50 transition-colors"
             >
-              Tutup Audit
+              Tutup
             </button>
           </div>
         </div>

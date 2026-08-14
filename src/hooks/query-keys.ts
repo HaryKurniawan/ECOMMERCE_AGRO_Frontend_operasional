@@ -48,6 +48,7 @@ export const queryKeys = {
   sellerDashboard: {
     all: () => ["seller", "dashboard"] as const,
     orders: (tokoId: string) => ["seller", "orders", tokoId] as const,
+    stats: (tokoId: string) => ["seller", "stats", tokoId] as const,
     grosirOrders: (tokoId: string) =>
       ["seller", "orders", "grosir", tokoId] as const,
     bookings: (tokoId: string) => ["seller", "bookings", tokoId] as const,

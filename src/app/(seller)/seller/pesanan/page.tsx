@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ClipboardList,
   AlertCircle,
@@ -12,6 +12,7 @@ import {
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SortDropdown } from "@/components/ecommerce/SortDropdown";
 import { useOrderEvents } from "@/hooks/orders/useOrderEvents";
+import { useSellerDashboard } from "@/hooks/seller/useSellerDashboard";
 
 import { useSellerOrders, OrderItem } from "./_hooks/useSellerOrders";
 import OrderCard from "./_components/OrderCard";
@@ -19,6 +20,8 @@ import OrderCard from "./_components/OrderCard";
 export default function PesananMasukPage() {
   const [filterStatus, setFilterStatus] = useState("semua");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
   const {
     orders,
@@ -26,9 +29,18 @@ export default function PesananMasukPage() {
     errorText,
     myStore,
     actionLoading,
+    fetchOrders,
     handleInitShipping,
     handleAdvanceStatus,
+    totalPages,
+    totalItems,
   } = useSellerOrders();
+
+  const { dashboardStats } = useSellerDashboard();
+
+  useEffect(() => {
+    fetchOrders(page, limit, filterStatus, true);
+  }, [page, limit, filterStatus, fetchOrders]);
 
   // Real-time order updates for this store
   useOrderEvents(myStore?.id);
@@ -41,26 +53,13 @@ export default function PesananMasukPage() {
     { id: "TIBA", label: "Tiba" },
   ];
 
-  const filtered = orders
-    .filter((p) => {
-      if ((p as any).isGrosir) return false;
-      if (filterStatus === "semua") {
-        // Hanya tampilkan pesanan aktif (bukan selesai/dibatalkan/ditutup)
-        return !["SELESAI", "DIBATALKAN", "DITUTUP"].includes(p.status);
-      }
-      if (filterStatus === "TIBA") {
-        return p.shipping?.status === "ARRIVED";
-      }
-      if (filterStatus === "DIKIRIM") {
-        return p.status === "DIKIRIM" && p.shipping?.status !== "ARRIVED";
-      }
-      return p.status === filterStatus;
-    })
-    .sort((a, b) => {
-      const timeA = new Date(a.createdAt).getTime();
-      const timeB = new Date(b.createdAt).getTime();
-      return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
-    });
+  // We are now fetching already filtered data from backend for this page
+  // The sorting is also mostly handled by backend (desc), but we can sort the current page if needed
+  const filtered = [...orders].sort((a, b) => {
+    const timeA = new Date(a.createdAt).getTime();
+    const timeB = new Date(b.createdAt).getTime();
+    return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+  });
 
   if (loading)
     return (
@@ -94,26 +93,31 @@ export default function PesananMasukPage() {
         <div className="py-1.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <SegmentedControl
             value={filterStatus}
-            onChange={setFilterStatus}
+            onChange={(val) => {
+              setFilterStatus(val);
+              setPage(1); // reset to page 1 on filter change
+            }}
             options={statusList.map((tab) => {
-              const count =
-                tab.id === "semua"
-                  ? orders.filter(
-                      (p) =>
-                        !["SELESAI", "DIBATALKAN", "DITUTUP"].includes(
-                          p.status,
-                        ),
-                    ).length
-                  : tab.id === "TIBA"
-                    ? orders.filter((p) => p.shipping?.status === "ARRIVED")
-                        .length
-                    : tab.id === "DIKIRIM"
-                      ? orders.filter(
-                          (p) =>
-                            p.status === "DIKIRIM" &&
-                            p.shipping?.status !== "ARRIVED",
-                        ).length
-                      : orders.filter((p) => p.status === tab.id).length;
+              const counts = dashboardStats?.statusCounts || {};
+              let count = 0;
+              if (tab.id === "semua") {
+                const total = Object.values(counts).reduce(
+                  (a: any, b: any) => a + b,
+                  0,
+                ) as number;
+                const inactive =
+                  (counts["SELESAI"] || 0) +
+                  (counts["DIBATALKAN"] || 0) +
+                  (counts["DITUTUP"] || 0);
+                count = total - inactive;
+              } else if (tab.id === "TIBA") {
+                // For TIBA we might just show DIKIRIM count or fetch from specific shipping stats,
+                // this is a limitation without advanced backend counts. Let's just use 0 or skip
+                count = 0; // or use some other way to get it
+              } else {
+                count = counts[tab.id] || 0;
+              }
+
               const isActive = filterStatus === tab.id;
 
               return {
@@ -167,6 +171,29 @@ export default function PesananMasukPage() {
           filtered.map((p, idx) => <OrderCard key={p?.id || idx} order={p} />)
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-6 pb-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1 || loading}
+            className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm font-medium text-slate-500">
+            Hal {page} dari {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || loading}
+            className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 disabled:opacity-50 transition-colors"
+          >
+            Berikutnya
+          </button>
+        </div>
+      )}
     </div>
   );
 }

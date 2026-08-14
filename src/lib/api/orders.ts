@@ -42,6 +42,8 @@ export const ordersApi = {
       isGrosir?: boolean;
     },
   ) => apiClient.get(`/ecom-pesanan/penjual/${tokoId}`, { params }),
+  getDashboardStats: (tokoId: string) =>
+    apiClient.get(`/ecom-pesanan/penjual/${tokoId}/dashboard-stats`),
   confirmWholesale: (id: string, data: any) =>
     apiClient.patch(`/ecom-pesanan/${id}/konfirmasi-grosir`, data),
   ajukanGudang: (id: string, gudangId: string) =>

@@ -243,8 +243,15 @@ function OrderRow({ order }: { order: any }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const DashboardSellerPage: React.FC = () => {
   const router = useRouter();
-  const { store, orders, bookings, loading, stats, refetch } =
-    useSellerDashboard();
+  const {
+    store,
+    orders: safeOrders,
+    dashboardStats,
+    bookings,
+    loading,
+    stats,
+    refetch,
+  } = useSellerDashboard();
   const [creatingChat, setCreatingChat] = useState(false);
 
   const handleTanyaAdmin = async () => {
@@ -292,35 +299,24 @@ const DashboardSellerPage: React.FC = () => {
   }
 
   // ── Data derivations ─────────────────────────────────────────────────
-  const safeOrders = Array.isArray(orders) ? orders : [];
-  const chart7Day = compute7DayChart(safeOrders);
-  const trendPesanan = computeTrend(safeOrders);
+  const chart7Day = compute7DayChart(dashboardStats?.recentOrders || []);
+  const trendPesanan = computeTrend(dashboardStats?.recentOrders || []);
 
-  const pendingCount = safeOrders.filter((o) =>
-    ["MENUNGGU_BAYAR", "DIPROSES"].includes((o as any).status ?? ""),
-  ).length;
-  const selesaiCount = safeOrders.filter((o) =>
-    ["SELESAI", "selesai"].includes((o as any).status ?? ""),
-  ).length;
-  const dikirimCount = safeOrders.filter((o) =>
-    ["DIKIRIM", "dikirim"].includes((o as any).status ?? ""),
-  ).length;
-  const batalCount = safeOrders.filter((o) =>
-    ["DIBATALKAN", "dibatalkan"].includes((o as any).status ?? ""),
-  ).length;
+  const pendingCount =
+    (dashboardStats?.statusCounts["MENUNGGU_BAYAR"] || 0) +
+    (dashboardStats?.statusCounts["DIPROSES"] || 0);
+  const selesaiCount = dashboardStats?.statusCounts["SELESAI"] || 0;
+  const dikirimCount = dashboardStats?.statusCounts["DIKIRIM"] || 0;
+  const batalCount = dashboardStats?.statusCounts["DIBATALKAN"] || 0;
 
-  const revenue = safeOrders
-    .filter((o) => ["SELESAI", "DIKIRIM"].includes((o as any).status ?? ""))
-    .reduce((s, o) => s + Number((o as any).totalHarga || 0), 0);
+  const revenue = dashboardStats?.revenue || 0;
 
-  const avgOrderVal =
-    safeOrders.length > 0
-      ? safeOrders.reduce((s, o) => s + Number((o as any).totalHarga || 0), 0) /
-        safeOrders.length
-      : 0;
+  const totalOrdersCount = dashboardStats?.totalOrders || 0;
+
+  const avgOrderVal = totalOrdersCount > 0 ? revenue / totalOrdersCount : 0;
 
   const conversionRate =
-    safeOrders.length > 0 ? (selesaiCount / safeOrders.length) * 100 : 0;
+    totalOrdersCount > 0 ? (selesaiCount / totalOrdersCount) * 100 : 0;
 
   const distItems = [
     { label: "Pending", count: pendingCount, cls: "bg-amber-400" },
@@ -395,7 +391,7 @@ const DashboardSellerPage: React.FC = () => {
             <ShoppingBag size={15} />
           </div>
           <p className="text-lg font-medium text-slate-800 leading-none">
-            {safeOrders.length}
+            {totalOrdersCount}
           </p>
           <p className="text-[10px] text-slate-400 font-normal mt-1">
             Total Pesanan
@@ -493,7 +489,7 @@ const DashboardSellerPage: React.FC = () => {
           <KpiCard
             label="Rata-Rata Order"
             value={formatRupiah(avgOrderVal)}
-            sub={`dari ${safeOrders.length} pesanan`}
+            sub={`dari ${totalOrdersCount} pesanan`}
             icon={TrendingUp}
             chartData={chart7Day}
             chartColor="#f59e0b"
@@ -562,7 +558,7 @@ const DashboardSellerPage: React.FC = () => {
               Total Pesanan
             </span>
             <span className="text-[15px] font-medium text-slate-800">
-              {safeOrders.length}
+              {totalOrdersCount}
             </span>
           </div>
         </div>
@@ -597,7 +593,7 @@ const DashboardSellerPage: React.FC = () => {
             </div>
           ) : (
             <div>
-              {safeOrders.slice(0, 4).map((p: any, idx: number) => (
+              {safeOrders.map((p: any, idx: number) => (
                 <OrderRow key={p?.id || idx} order={p} />
               ))}
             </div>
