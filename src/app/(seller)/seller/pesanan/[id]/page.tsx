@@ -345,12 +345,17 @@ export default function DetailPesananSellerPage() {
   };
 
   const handleSellerConfirm = async () => {
-    if (!order?.id || confirmLoading) return;
+    const orderId =
+      order?.id ||
+      (order as any)?.id_pesananEcom ||
+      (order as any)?.id_pesanan ||
+      id;
+    if (!orderId || confirmLoading) return;
     try {
       setConfirmLoading(true);
-      await ordersApi.sellerConfirm(order.id);
+      await ordersApi.sellerConfirm(orderId);
       toast.success("Pesanan berhasil dikonfirmasi & ditutup!");
-      const res = await ordersApi.getById(order.id);
+      const res = await ordersApi.getById(orderId);
       const data = res?.data?.data || res?.data;
       if (data) setOrder({ ...order, ...data, status: "DITUTUP" });
     } catch (err: any) {

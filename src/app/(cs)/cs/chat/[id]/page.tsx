@@ -321,36 +321,51 @@ const AdminChatRoomPage: React.FC = () => {
     "Customer";
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center gap-3 shadow-sm z-20 border-b border-gray-100 flex-shrink-0">
+    <div className="flex-1 flex flex-col h-full bg-slate-50/50 relative overflow-hidden">
+      {/* Dynamic Background Pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(#3b82f6 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }}
+      />
+
+      {/* Header with Glassmorphism */}
+      <div className="backdrop-blur-xl bg-white/80 px-5 py-4 flex items-center gap-4 z-20 border-b border-slate-200/50 flex-shrink-0 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all">
         <button
           onClick={() => router.push("/cs/chat")}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600 md:hidden"
         >
           <ArrowLeft size={20} />
         </button>
-        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-          <User size={20} className="text-blue-600" />
+        <div className="relative">
+          <div className="w-11 h-11 bg-gradient-to-tr from-blue-100 to-indigo-50 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-200/50 shadow-sm">
+            <User size={20} className="text-blue-600" />
+          </div>
+          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="font-semibold text-gray-800 text-[15px] truncate">
+          <h1 className="font-bold text-slate-800 text-[16px] truncate tracking-tight">
             {customerName}
           </h1>
-          <p className="text-gray-500 text-[12px] font-medium">
-            Customer Service
-          </p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            <p className="text-slate-500 text-[12px] font-medium">
+              Online • Customer
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-4 bg-slate-50">
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 py-6 space-y-5 relative z-10 scroll-smooth">
         {groupedMessages.map((group) => (
           <div key={group.date}>
-            <div className="flex justify-center mb-4 mt-2">
-              <span className="bg-gray-200/60 text-gray-600 px-3 py-1 rounded-full text-[11px] font-medium">
+            <div className="flex justify-center mb-6 mt-4">
+              <div className="backdrop-blur-md bg-white/60 border border-slate-200/50 shadow-sm text-slate-500 px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wide uppercase">
                 {formatDateSeparator(group.messages[0].createdAt)}
-              </span>
+              </div>
             </div>
             <div className="space-y-2">
               {group.messages.map((msg) => {
@@ -399,13 +414,13 @@ const AdminChatRoomPage: React.FC = () => {
                     className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[85%] sm:max-w-[75%] px-4 py-2.5 shadow-sm relative group ${
+                      className={`max-w-[85%] sm:max-w-[70%] px-4 py-3 relative group transition-all hover:shadow-md ${
                         isMe
-                          ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm"
-                          : "bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-sm"
+                          ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-blue-500/20 rounded-2xl rounded-tr-sm shadow-sm"
+                          : "bg-white border border-slate-200/60 text-slate-800 rounded-2xl rounded-tl-sm shadow-sm backdrop-blur-sm"
                       }`}
                     >
-                      <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
+                      <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words font-medium">
                         {actualContent}
                       </p>
 
@@ -561,26 +576,27 @@ const AdminChatRoomPage: React.FC = () => {
         <div ref={messagesEndRef} className="h-2" />
       </div>
 
-      {/* Input */}
-      <div className="bg-white px-4 py-3 sm:py-4 flex items-center gap-3 border-t border-gray-100 flex-shrink-0">
-        <div className="flex-1 relative">
-          <input
-            ref={inputRef}
-            type="text"
+      {/* Input Area */}
+      <div className="backdrop-blur-xl bg-white/80 px-4 sm:px-6 py-4 flex items-end gap-3 z-20 border-t border-slate-200/50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] flex-shrink-0 transition-all">
+        <div className="flex-1 relative group">
+          <textarea
+            ref={inputRef as any}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ketik balasan..."
-            className="w-full py-3 px-5 bg-gray-100 hover:bg-gray-50 focus:bg-white border border-transparent focus:border-blue-300 rounded-full text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+            placeholder="Ketik balasan untuk customer..."
+            rows={1}
+            className="w-full py-3.5 px-6 bg-slate-100/80 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-blue-400 rounded-3xl text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-medium resize-none overflow-hidden min-h-[52px] max-h-[120px]"
+            style={{ height: "auto", minHeight: "52px" }}
           />
         </div>
         <button
           onClick={handleSend}
           disabled={!newMessage.trim() || sending}
-          className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex-shrink-0"
+          className="w-[52px] h-[52px] bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-500/25 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 disabled:shadow-none flex-shrink-0 mb-[1px]"
         >
           {sending ? (
-            <Loader2 size={20} className="animate-spin" />
+            <Loader2 size={22} className="animate-spin" />
           ) : (
             <Send size={20} className="ml-0.5" />
           )}

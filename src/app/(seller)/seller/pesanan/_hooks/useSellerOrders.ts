@@ -146,7 +146,7 @@ export const useSellerOrders = () => {
           // Skip heartbeat pings — they are just keep-alive signals, not real updates
           if (payload?.type === "heartbeat") return;
           console.log("[SSE] Seller Order Update received:", payload);
-          fetchOrders(false);
+          fetchOrders(undefined, undefined, undefined, false);
         } catch {
           // Ignore parse errors on non-JSON frames
         }

@@ -54,8 +54,10 @@ interface BatchItem {
   tanggalMasuk: string;
   tanggalKadaluarsa: string | null;
   pengajuanStok?: {
-    id: string;
+    id?: string;
+    id_pengajuanStok?: string;
   };
+  pengajuanStokId?: string;
 }
 
 export default function SellerProductStockDetailPage() {
@@ -899,7 +901,7 @@ export default function SellerProductStockDetailPage() {
                           <p className="text-[12px] font-semibold text-slate-700">
                             {batch.pengajuanStok?.id_pengajuanStok ||
                             batch.pengajuanStokId
-                              ? `#${(batch.pengajuanStok?.id_pengajuanStok || batch.pengajuanStokId).substring(0, 8).toUpperCase()}`
+                              ? `#${(batch.pengajuanStok?.id_pengajuanStok || batch.pengajuanStokId)?.substring(0, 8).toUpperCase()}`
                               : "N/A"}
                           </p>
                         </div>
