@@ -38,7 +38,8 @@ interface PengajuanItem {
 }
 
 interface PengajuanDetail {
-  id: string;
+  id?: string;
+  id_pengajuanStok?: string;
   tokoId: string;
   gudangId: string;
   status: string;
@@ -331,12 +332,12 @@ export default function DetailPengajuanPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {items.map((item) => {
+                {items.map((item, idx) => {
                   const qty = item.jumlahDisetujui ?? item.jumlahPermintaan;
                   const subtotal =
                     item.totalHargaBeli ?? item.hargaGudang * qty;
                   return (
-                    <tr key={item.id}>
+                    <tr key={item.id || item.produkGudangId || `item-${idx}`}>
                       <td className="py-4 pr-4">
                         <p className="font-medium text-gray-900">
                           {item.namaProduk}

@@ -181,28 +181,18 @@ export default function ManajemenProdukPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
-            <Package size={24} className="text-emerald-600" /> Manajemen Produk
+          <h1 className="text-2xl font-display font-medium text-gray-900 flex items-center gap-2">
+            <Package size={24} className="text-primary-600" /> Manajemen Produk
           </h1>
-          <p className="text-sm text-gray-500">
-            Kelola produk sayuran & umbi secara global
-          </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => fetchProducts()}
-            className="p-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all"
-            title="Refresh"
-          >
-            <RefreshCw size={18} />
-          </button>
           <button
             onClick={() => {
               setShowModal(true);
               setForm(EMPTY_FORM);
               setFormError("");
             }}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-xl font-medium text-sm hover:bg-emerald-700 transition-all flex items-center gap-2"
+            className="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium text-sm hover:bg-primary-700 transition-all flex items-center gap-2"
           >
             <Plus size={16} /> Tambah Produk
           </button>
@@ -228,7 +218,7 @@ export default function ManajemenProdukPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari produk berdasarkan nama atau nama toko..."
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
             />
           </div>
           <div className="flex gap-2">
@@ -236,7 +226,7 @@ export default function ManajemenProdukPage() {
               <button
                 key={s}
                 onClick={() => setFilterStatus(s)}
-                className={`px-3 py-2 rounded-xl text-xs font-medium capitalize ${filterStatus === s ? "bg-emerald-600 text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                className={`px-3 py-2 rounded-xl text-xs font-medium capitalize ${filterStatus === s ? "bg-primary-600 text-white " : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
               >
                 {s}
               </button>
@@ -245,7 +235,7 @@ export default function ManajemenProdukPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden ">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
@@ -280,7 +270,7 @@ export default function ManajemenProdukPage() {
                   <td colSpan={10} className="py-12 text-center">
                     <Loader2
                       size={32}
-                      className="animate-spin text-emerald-600 mx-auto"
+                      className="animate-spin text-primary-600 mx-auto"
                     />
                   </td>
                 </tr>
@@ -306,7 +296,7 @@ export default function ManajemenProdukPage() {
                     <span className="text-2xl">{p.gambar || "📦"}</span>
                   );
                   let displayStatus = "Aktif";
-                  let statusClass = "bg-emerald-100 text-emerald-700";
+                  let statusClass = "bg-primary-100 text-primary-700";
                   if (p.stok === 0 || p.status === "OUT_OF_STOCK") {
                     displayStatus = "Habis";
                     statusClass = "bg-red-100 text-red-700";
@@ -320,7 +310,7 @@ export default function ManajemenProdukPage() {
                         onClick={() =>
                           setExpandedId(expandedId === p.id ? null : p.id)
                         }
-                        className="hover:bg-emerald-50/30 transition-colors cursor-pointer"
+                        className="hover:bg-primary-50/30 transition-colors cursor-pointer"
                       >
                         <td className="py-4 px-6 text-gray-400">
                           {expandedId === p.id ? (
@@ -335,11 +325,11 @@ export default function ManajemenProdukPage() {
                               {imageContent}
                             </div>
                             <div>
-                              <p className="font-bold text-gray-900">
+                              <p className="font-medium text-gray-900">
                                 {p.nama?.replace(" - ", " ")}
                               </p>
                               {p.masterProduk?.nama ? (
-                                <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100">
+                                <span className="inline-flex items-center gap-1 mt-0.5 text-[10px] font-medium uppercase tracking-wider bg-primary-50 text-primary-700 px-2 py-0.5 rounded border border-primary-100">
                                   {p.masterProduk.nama}
                                 </span>
                               ) : (
@@ -360,39 +350,39 @@ export default function ManajemenProdukPage() {
                         </td>
                         <td className="py-4 px-6 text-center">
                           {p.stok > 0 ? (
-                            <span className="font-bold">
+                            <span className="font-medium">
                               {p.stok}{" "}
                               <span className="text-xs text-gray-500 font-normal">
                                 {p.satuan || "kg"}
                               </span>
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 bg-red-50 text-red-600 text-xs font-bold rounded">
+                            <span className="px-2 py-0.5 bg-red-50 text-red-600 text-xs font-medium rounded">
                               Habis
                             </span>
                           )}
                         </td>
                         <td className="py-4 px-6 text-center">
                           {p.varian && p.varian.length > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50 text-gray-700 text-xs font-medium rounded-md">
                               <Box size={12} /> {p.varian.length} jenis
                             </span>
                           ) : (
                             <span className="text-xs text-gray-400">-</span>
                           )}
                         </td>
-                        <td className="py-4 px-6 font-bold text-gray-900 text-center">
+                        <td className="py-4 px-6 font-medium text-gray-900 text-center">
                           {p.terjual || 0}
                         </td>
                         <td className="py-4 px-6">
                           <span className="flex items-center justify-center gap-1 font-semibold text-gray-700">
-                            <Star size={14} className="text-amber-500" />
+                            <Star size={14} className="text-gray-500" />
                             {p.rating || "0.0"}
                           </span>
                         </td>
                         <td className="py-4 px-6 text-center">
                           <span
-                            className={`px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${statusClass}`}
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-medium tracking-wide uppercase ${statusClass}`}
                           >
                             {displayStatus}
                           </span>
@@ -418,7 +408,7 @@ export default function ManajemenProdukPage() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               {/* Detail Produk */}
                               <div className="space-y-2">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                                <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500">
                                   Detail Produk
                                 </h4>
                                 <div className="text-sm space-y-1.5">
@@ -449,7 +439,7 @@ export default function ManajemenProdukPage() {
 
                               {/* Deskripsi */}
                               <div className="space-y-2">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                                <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500">
                                   Deskripsi
                                 </h4>
                                 <p className="text-sm text-gray-600 leading-relaxed">
@@ -459,10 +449,10 @@ export default function ManajemenProdukPage() {
 
                               {/* Jenis Kemasan */}
                               <div className="space-y-2">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                                <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
                                   <Box size={14} /> Jenis Kemasan
                                   {p.varian && p.varian.length > 0 && (
-                                    <span className="text-indigo-600">
+                                    <span className="text-gray-600">
                                       ({p.varian.length})
                                     </span>
                                   )}
@@ -478,7 +468,7 @@ export default function ManajemenProdukPage() {
                                           Kemasan {v.ukuranKg} kg Biaya
                                           Tambahan:{" "}
                                         </span>
-                                        <span className="text-emerald-700 font-bold">
+                                        <span className="text-primary-700 font-medium">
                                           {formatRupiah(v.biayaTambahan)}
                                         </span>
                                       </div>
@@ -507,10 +497,10 @@ export default function ManajemenProdukPage() {
       {/* Modal Tambah Produk */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between bg-gray-50/50">
               <div>
-                <h3 className="font-bold text-gray-900 text-lg">
+                <h3 className="font-medium text-gray-900 text-lg">
                   Tambah Produk Baru
                 </h3>
                 <p className="text-xs text-gray-500">
@@ -541,7 +531,7 @@ export default function ManajemenProdukPage() {
                   id="tokoId"
                   value={form.tokoId}
                   onChange={(e) => setForm({ ...form, tokoId: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white"
                   required
                 >
                   <option value="">-- Pilih Toko --</option>
@@ -564,7 +554,7 @@ export default function ManajemenProdukPage() {
                   type="text"
                   value={form.nama}
                   onChange={(e) => setForm({ ...form, nama: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                   placeholder="Contoh: Bayam Segar"
                   required
                 />
@@ -585,7 +575,7 @@ export default function ManajemenProdukPage() {
                     onChange={(e) =>
                       setForm({ ...form, harga: Number(e.target.value) })
                     }
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                     placeholder="10000"
                   />
                 </div>
@@ -604,7 +594,7 @@ export default function ManajemenProdukPage() {
                     onChange={(e) =>
                       setForm({ ...form, stok: Number(e.target.value) })
                     }
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                     placeholder="100"
                   />
                 </div>
@@ -623,7 +613,7 @@ export default function ManajemenProdukPage() {
                     onChange={(e) =>
                       setForm({ ...form, satuan: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white"
                   >
                     {["kg", "gram", "ikat", "buah", "pack", "karton"].map(
                       (s) => (
@@ -647,7 +637,7 @@ export default function ManajemenProdukPage() {
                     onChange={(e) =>
                       setForm({ ...form, kategoriId: e.target.value })
                     }
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white"
                   >
                     <option value="">-- Pilih Kategori --</option>
                     {categories.map((c) => (
@@ -671,7 +661,7 @@ export default function ManajemenProdukPage() {
                   onChange={(e) =>
                     setForm({ ...form, deskripsi: e.target.value })
                   }
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 outline-none resize-none"
                   rows={3}
                   placeholder="Deskripsi singkat tentang produk..."
                 />
@@ -692,7 +682,7 @@ export default function ManajemenProdukPage() {
                           images: [...form.images, { type: "link", value: "" }],
                         })
                       }
-                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-md"
+                      className="text-xs font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1 bg-primary-50 px-2 py-1 rounded-md"
                     >
                       <Plus size={12} /> Tambah Foto
                     </button>
@@ -712,7 +702,7 @@ export default function ManajemenProdukPage() {
                             images: form.images.filter((_, i) => i !== idx),
                           })
                         }
-                        className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-sm border border-gray-100 hover:bg-red-50"
+                        className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 border border-gray-100 hover:bg-red-50"
                       >
                         <X size={12} />
                       </button>
@@ -729,7 +719,7 @@ export default function ManajemenProdukPage() {
                               ),
                             }))
                           }
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${img.type === "link" ? "bg-emerald-600 text-white shadow-sm" : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"}`}
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${img.type === "link" ? "bg-primary-600 text-white " : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"}`}
                         >
                           Link URL
                         </button>
@@ -743,7 +733,7 @@ export default function ManajemenProdukPage() {
                               ),
                             }))
                           }
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${img.type === "file" ? "bg-emerald-600 text-white shadow-sm" : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"}`}
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${img.type === "file" ? "bg-primary-600 text-white " : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-200"}`}
                         >
                           Upload File
                         </button>
@@ -762,7 +752,7 @@ export default function ManajemenProdukPage() {
                             }));
                           }}
                           placeholder="https://example.com/image.png"
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                         />
                       ) : (
                         <div className="relative">
@@ -776,7 +766,7 @@ export default function ManajemenProdukPage() {
                                 className="w-10 h-10 object-cover rounded-md border border-gray-200"
                                 unoptimized
                               />
-                              <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded">
+                              <span className="text-xs text-primary-600 font-medium bg-primary-50 px-2 py-1 rounded">
                                 ✔️ File Terpilih
                               </span>
                               <button
@@ -789,7 +779,7 @@ export default function ManajemenProdukPage() {
                                     ),
                                   }))
                                 }
-                                className="text-[10px] text-red-500 font-bold ml-auto hover:underline"
+                                className="text-[10px] text-red-500 font-medium ml-auto hover:underline"
                               >
                                 Ganti File
                               </button>
@@ -814,7 +804,7 @@ export default function ManajemenProdukPage() {
                                   reader.readAsDataURL(file);
                                 }
                               }}
-                              className="text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer w-full"
+                              className="text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 transition-all cursor-pointer w-full"
                             />
                           )}
                         </div>
@@ -834,7 +824,7 @@ export default function ManajemenProdukPage() {
                 <button
                   type="submit"
                   disabled={submitLoading}
-                  className="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                 >
                   {submitLoading ? (
                     <Loader2 size={16} className="animate-spin" />

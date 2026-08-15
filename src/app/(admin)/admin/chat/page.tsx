@@ -11,7 +11,7 @@ export default function ChatEmptyState() {
       </h2>
       <p className="text-sm text-gray-500 max-w-sm text-center">
         Pilih percakapan dari daftar di sebelah kiri untuk mulai membaca dan
-        membalas pesan dari pelanggan.
+        membalas pesan dari kontak operasional.
       </p>
     </div>
   );

@@ -82,21 +82,15 @@ export default function NotifikasiPage() {
   };
 
   const getColor = (tipe: string) => {
-    switch (tipe) {
-      case "PESANAN_BARU":
-        return "bg-amber-100 text-amber-600";
-      case "TUGAS_BARU":
-        return "bg-indigo-100 text-indigo-600";
-      case "BROADCAST":
-        return "bg-orange-100 text-orange-600";
-      case "ESKALASI":
-        return "bg-red-100 text-red-600";
-      default:
-        return "bg-blue-100 text-blue-600";
-    }
+    return "bg-primary-50 text-primary-600";
   };
 
-  const notifs: ApiNotification[] = data?.data?.data || [];
+  const payload = data?.data?.data;
+  const notifs: ApiNotification[] = Array.isArray(payload?.data)
+    ? payload.data
+    : Array.isArray(payload)
+      ? payload
+      : [];
 
   const filteredNotifs = notifs.filter((n: ApiNotification) => {
     if (activeTab === "Semua") return true;
@@ -112,7 +106,7 @@ export default function NotifikasiPage() {
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-white sticky top-0 z-30 shadow-sm border-b border-gray-100">
         <div className="px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Bell className="text-primary-600" size={20} />
             Notifikasi
           </h1>
@@ -167,7 +161,7 @@ export default function NotifikasiPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start gap-2 mb-1">
                   <h3
-                    className={`text-sm truncate pr-4 ${!notif.isRead ? "font-bold text-gray-900" : "font-semibold text-gray-700"}`}
+                    className={`text-sm truncate pr-4 ${!notif.isRead ? "font-semibold text-gray-900" : "font-semibold text-gray-700"}`}
                   >
                     {notif.judul}
                   </h3>

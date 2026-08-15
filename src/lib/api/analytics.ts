@@ -223,7 +223,7 @@ export const analyticsApi = {
   },
 
   getTrenProdukBulanan: async (
-    tokoId: string,
+    tokoId?: string,
     month?: number,
     year?: number,
     limit = 10,

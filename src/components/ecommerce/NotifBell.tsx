@@ -12,7 +12,10 @@ import {
   PackageCheck,
   AlertTriangle,
   X,
+  ArrowLeft,
 } from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
+import { id as localeId } from "date-fns/locale/id";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useNotifStore } from "@/store/notifikasi-store";
@@ -25,6 +28,7 @@ export default function NotifBell() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedNotifId, setSelectedNotifId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -36,6 +40,15 @@ export default function NotifBell() {
   } = useNotifStore();
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  const selectedNotif = selectedNotifId
+    ? notifications.find((n) => n.id === selectedNotifId)
+    : null;
+
+  // Reset selected when closed
+  useEffect(() => {
+    if (!isOpen) setSelectedNotifId(null);
+  }, [isOpen]);
 
   // Enable SSE
   useNotifSSE();
@@ -50,27 +63,18 @@ export default function NotifBell() {
   });
 
   useEffect(() => {
-    if (data?.data) {
-      setNotifications(data.data.data, data.data.unreadCount);
+    if (data?.data?.data) {
+      const payload = data.data.data;
+      const notifs = Array.isArray(payload.data) ? payload.data : [];
+      const unread = payload.unreadCount || 0;
+      setNotifications(notifs, unread);
     }
   }, [data, setNotifications]);
 
-  // Click outside to close
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // The backdrop overlay handles outside clicks.
 
   const handleNotifClick = async (id: string, isRead: boolean) => {
-    setIsOpen(false);
+    setSelectedNotifId(id);
     if (!isRead) {
       markAsRead(id);
       try {
@@ -82,7 +86,6 @@ export default function NotifBell() {
         console.error("Failed to mark as read", err);
       }
     }
-    router.push("/notifikasi");
   };
 
   const handleMarkAllRead = async (e: React.MouseEvent) => {
@@ -114,18 +117,7 @@ export default function NotifBell() {
   };
 
   const getColor = (tipe: string) => {
-    switch (tipe) {
-      case "PESANAN_BARU":
-        return "bg-amber-100 text-amber-600";
-      case "TUGAS_BARU":
-        return "bg-indigo-100 text-indigo-600";
-      case "BROADCAST":
-        return "bg-orange-100 text-orange-600";
-      case "ESKALASI":
-        return "bg-red-100 text-red-600";
-      default:
-        return "bg-blue-100 text-blue-600";
-    }
+    return "bg-primary-50 text-primary-600";
   };
 
   return (
@@ -133,14 +125,14 @@ export default function NotifBell() {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:bg-primary-600 hover:border-primary-600 transition-colors flex items-center justify-center relative group shadow-sm"
+          className="w-10 h-10 rounded-full bg-white border border-slate-200 hover:bg-primary-600 hover:border-primary-600 transition-colors flex items-center justify-center relative group"
         >
           <Bell
             size={18}
             className="text-slate-700 group-hover:text-white transition-colors"
           />
           {unreadCount > 0 && (
-            <div className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white shadow-sm">
+            <div className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-semibold flex items-center justify-center border-2 border-white shadow-sm">
               {unreadCount > 99 ? "99+" : unreadCount}
             </div>
           )}
@@ -163,11 +155,22 @@ export default function NotifBell() {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100">
-          <h3 className="font-bold text-[15px] text-slate-800 tracking-tight">
-            Notifikasi
-          </h3>
+          <div className="flex items-center gap-3">
+            {selectedNotifId && (
+              <button
+                onClick={() => setSelectedNotifId(null)}
+                className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 hover:text-slate-700 transition-colors"
+                aria-label="Kembali"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <h3 className="font-semibold text-[15px] text-slate-800 tracking-tight flex items-center gap-2">
+              {selectedNotifId ? "Detail Notifikasi" : "Notifikasi"}
+            </h3>
+          </div>
           <div className="flex items-center gap-1.5">
-            {unreadCount > 0 && (
+            {!selectedNotifId && unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
                 className="text-[11px] font-semibold text-emerald-600 hover:bg-emerald-50 px-2.5 py-1.5 rounded-lg transition-colors"
@@ -187,10 +190,31 @@ export default function NotifBell() {
 
         {/* Notification List */}
         <div className="flex-1 overflow-y-auto bg-slate-50/30">
-          {notifications.length > 0 ? (
-            notifications.map((notif) => (
+          {selectedNotif ? (
+            <div className="p-5 flex flex-col gap-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div
+                  className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${getColor(selectedNotif.tipe)}`}
+                >
+                  {getIcon(selectedNotif.tipe)}
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 leading-snug">
+                    {selectedNotif.judul}
+                  </h4>
+                  <p className="text-[12px] text-slate-500 mt-1">
+                    {format(new Date(selectedNotif.createdAt), "HH.mm")}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-slate-200 text-slate-800 font-medium text-sm leading-relaxed">
+                {selectedNotif.pesan}
+              </div>
+            </div>
+          ) : notifications.length > 0 ? (
+            notifications.map((notif, idx) => (
               <div
-                key={notif.id}
+                key={notif.id ? `${notif.id}-${idx}` : `notif-${idx}`}
                 onClick={() => handleNotifClick(notif.id, notif.isRead)}
                 className={`p-4 sm:p-5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer flex gap-3.5 transition-colors ${
                   !notif.isRead ? "bg-emerald-50/30" : ""
@@ -202,11 +226,16 @@ export default function NotifBell() {
                   {getIcon(notif.tipe)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-[13px] truncate ${!notif.isRead ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}
-                  >
-                    {notif.judul}
-                  </p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p
+                      className={`text-[13px] truncate ${!notif.isRead ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}
+                    >
+                      {notif.judul}
+                    </p>
+                    <span className="text-[10px] text-slate-400 flex-shrink-0 mt-0.5">
+                      {format(new Date(notif.createdAt), "HH.mm")}
+                    </span>
+                  </div>
                   <p className="text-[12px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
                     {notif.pesan}
                   </p>
@@ -232,14 +261,14 @@ export default function NotifBell() {
         </div>
 
         {/* Footer Action */}
-        {notifications.length > 0 && (
+        {!selectedNotif && notifications.length > 0 && (
           <div className="p-4 border-t border-slate-100 bg-white">
             <button
               onClick={() => {
                 setIsOpen(false);
                 router.push("/notifikasi");
               }}
-              className="w-full py-2.5 text-center text-[12px] font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200/60"
+              className="w-full py-2.5 text-center text-[12px] font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200/60"
             >
               Lihat Semua Notifikasi
             </button>

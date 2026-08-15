@@ -24,6 +24,7 @@ import {
   storesApi,
   productsApi,
   ordersApi,
+  gudangApi,
   formatTanggal,
   formatRupiah,
 } from "@/lib/ecommerce-api";
@@ -71,40 +72,34 @@ interface OrderItem {
   items?: { product?: { tokoId: string } }[];
 }
 
-const stockHistoryMock = [
-  {
-    id: 1,
-    tgl: new Date().toISOString(),
-    produk: "Beras Premium Cianjur",
-    tipe: "MASUK",
-    qty: 500,
-    note: "Restock dari Gudang Pusat",
-  },
-  {
-    id: 2,
-    tgl: new Date(Date.now() - 86400000).toISOString(),
-    produk: "Minyak Goreng Kita 1L",
-    tipe: "MASUK",
-    qty: 200,
-    note: "Pengiriman Rutin Mingguan",
-  },
-  {
-    id: 3,
-    tgl: new Date(Date.now() - 172800000).toISOString(),
-    produk: "Beras Premium Cianjur",
-    tipe: "KELUAR",
-    qty: 50,
-    note: "Koreksi Stok: Barang Rusak",
-  },
-  {
-    id: 4,
-    tgl: new Date(Date.now() - 259200000).toISOString(),
-    produk: "Gula Pasir Kristal",
-    tipe: "MASUK",
-    qty: 150,
-    note: "Restock Gudang",
-  },
-];
+interface StockRequestItem {
+  id: string;
+  nomorPengajuan?: string;
+  createdAt: string;
+  status: string;
+  catatan?: string;
+  tokoId?: string;
+  gudangId?: string;
+  gudang?: {
+    nama?: string;
+  };
+  toko?: {
+    id_toko?: string;
+    id?: string;
+    nama?: string;
+  };
+  items?: Array<{
+    id: string;
+    produkGudangId?: string;
+    produkGudang?: {
+      nama?: string;
+      satuan?: string;
+    };
+    namaProduk?: string;
+    jumlahPermintaan: number;
+    jumlahDisetujui?: number;
+  }>;
+}
 
 export default function DetailTokoPage() {
   const params = useParams();
@@ -118,6 +113,7 @@ export default function DetailTokoPage() {
   const [store, setStore] = useState<StoreItem | null>(null);
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [stockRequests, setStockRequests] = useState<StockRequestItem[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -129,12 +125,12 @@ export default function DetailTokoPage() {
         if (showLoading) setLoading(true);
         setError("");
 
-        // Fetch store
+        // 1. Fetch store
         const storeRes = await storesApi.getById(id);
         const storeData = storeRes?.data?.data || storeRes?.data;
         setStore(storeData);
 
-        // Fetch products
+        // 2. Fetch products
         try {
           const productsRes = await productsApi.getByStore(id);
           const productsData =
@@ -147,34 +143,39 @@ export default function DetailTokoPage() {
           console.warn("Failed to fetch products", err);
         }
 
-        // Fetch orders
+        // 3. Fetch orders directly via admin API
         try {
-          const ordersRes = await ordersApi.sellerGetOrders(id);
-          const ordersData = ordersRes?.data?.data || ordersRes?.data || [];
-          const ordList = Array.isArray(ordersData)
-            ? ordersData
-            : ordersData.data || [];
-          setOrders(ordList);
+          const adminOrdersRes = await ordersApi.adminGetAll({ limit: 1000 });
+          const adminOrdersData =
+            adminOrdersRes?.data?.data || adminOrdersRes?.data || [];
+          const adminOrdList = Array.isArray(adminOrdersData)
+            ? adminOrdersData
+            : adminOrdersData.data || [];
+          const filteredOrders = adminOrdList.filter((o: OrderItem) => {
+            const ordtokoId = o.orders?.[0]?.tokoId;
+            const itemtokoId = o.items?.[0]?.product?.tokoId;
+            return ordtokoId === id || o.tokoId === id || itemtokoId === id;
+          });
+          setOrders(filteredOrders);
         } catch (err) {
-          console.warn("Could not fetch seller orders, trying admin", err);
-          try {
-            const adminOrdersRes = await ordersApi.adminGetAll({ tokoId: id });
-            const adminOrdersData =
-              adminOrdersRes?.data?.data || adminOrdersRes?.data || [];
-            const adminOrdList = Array.isArray(adminOrdersData)
-              ? adminOrdersData
-              : adminOrdersData.data || [];
-            const filteredOrders = adminOrdList.filter((o: OrderItem) => {
-              const ordtokoId = o.orders?.[0]?.tokoId;
-              const itemtokoId = o.items?.[0]?.product?.tokoId;
-              return ordtokoId === id || o.tokoId === id || itemtokoId === id;
-            });
-            setOrders(
-              filteredOrders.length > 0 ? filteredOrders : adminOrdList,
-            );
-          } catch {
-            /* ignore */
-          }
+          console.warn("Could not fetch orders for store", err);
+        }
+
+        // 4. Fetch real stock requests for this store
+        try {
+          const stockRes = await gudangApi.getAdminAllStockRequests();
+          const rawStock = stockRes?.data?.data || stockRes?.data || [];
+          const stockArr = Array.isArray(rawStock)
+            ? rawStock
+            : (rawStock.data ?? []);
+          const filteredStock = stockArr.filter((s: StockRequestItem) => {
+            const reqTokoId = s.tokoId || s.toko?.id_toko || s.toko?.id;
+            return reqTokoId === id;
+          });
+          setStockRequests(filteredStock);
+        } catch (err) {
+          console.warn("Failed to fetch stock requests", err);
+          setStockRequests([]);
         }
       } catch {
         setError("Gagal memuat detail toko.");
@@ -186,30 +187,38 @@ export default function DetailTokoPage() {
   );
 
   useEffect(() => {
-    Promise.resolve().then(() => fetchData(false)); // Already loading by default
+    Promise.resolve().then(() => fetchData(false));
   }, [fetchData]);
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <Loader2 size={40} className="animate-spin text-emerald-600" />
-        <p className="text-gray-400 font-medium">Memuat detail toko...</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-3 min-h-[400px]">
+        <Loader2 size={36} className="animate-spin text-emerald-600" />
+        <p className="text-slate-400 font-normal text-xs">
+          Memuat detail toko...
+        </p>
       </div>
     );
   }
 
   if (error || !store) {
     return (
-      <div className="bg-red-50 text-red-600 p-6 rounded-2xl border border-red-100 flex flex-col items-center gap-2 text-center">
-        <AlertCircle size={32} className="mb-2" />
-        <h2 className="text-lg font-bold">Data Tidak Ditemukan</h2>
-        <p className="text-sm">{error || "Toko tidak ditemukan"}</p>
-        <button
-          onClick={() => router.back()}
-          className="mt-4 px-4 py-1.5 bg-white rounded-lg shadow-sm text-red-600 font-semibold text-sm hover:bg-red-50 transition-colors"
-        >
-          Kembali
-        </button>
+      <div className="max-w-md mx-auto py-20 px-4">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col items-center gap-2 text-center">
+          <AlertCircle size={28} className="text-rose-500 mb-1" />
+          <h2 className="text-base font-normal text-slate-800">
+            Data Tidak Ditemukan
+          </h2>
+          <p className="text-xs text-slate-400 font-normal">
+            {error || "Toko tidak ditemukan"}
+          </p>
+          <button
+            onClick={() => router.back()}
+            className="mt-3 px-4 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-700 text-xs font-normal hover:bg-slate-50 transition-colors"
+          >
+            Kembali
+          </button>
+        </div>
       </div>
     );
   }
@@ -220,38 +229,38 @@ export default function DetailTokoPage() {
       : "";
 
   return (
-    <div className="space-y-4 w-full pb-8">
-      {/* Header Info */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-500 p-6 text-white relative">
+    <div className="w-full max-w-[1600px] mx-auto space-y-5 animate-fade-in font-sans pb-8">
+      {/* Header Info Banner */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="p-6 border-b border-slate-100">
           <button
             onClick={() => router.back()}
-            className="mb-6 flex items-center gap-1.5 text-emerald-50 hover:text-white transition-colors text-xs font-semibold bg-white/10 w-fit px-3 py-1.5 rounded-lg hover:bg-white/20"
+            className="mb-4 flex items-center gap-1.5 text-slate-500 hover:text-slate-800 transition-colors text-xs font-normal bg-slate-50 border border-slate-200 w-fit px-3 py-1.5 rounded-xl hover:bg-slate-100"
           >
-            <ArrowLeft size={14} /> Kembali ke Daftar
+            <ArrowLeft size={13} /> Kembali ke Daftar
           </button>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl shadow-inner backdrop-blur-sm border border-white/20 flex-shrink-0">
+              <div className="w-14 h-14 bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl flex items-center justify-center text-2xl font-normal flex-shrink-0">
                 {store.nama?.charAt(0) || "🏪"}
               </div>
               <div>
-                <h1 className="text-2xl font-display font-semibold mb-1">
+                <h1 className="text-lg font-normal text-slate-900 leading-tight">
                   {store.nama}
                 </h1>
-                <p className="text-emerald-100 text-xs flex items-center gap-1.5 opacity-90 mb-2">
-                  <MapPin size={14} /> {store.kabupaten}{" "}
-                  {store.wilayah ? `• ${store.wilayah}` : ""}
+                <p className="text-slate-400 text-xs flex items-center gap-1.5 mt-1 font-normal">
+                  <MapPin size={13} className="text-slate-400" />{" "}
+                  {store.kabupaten} {store.wilayah ? `• ${store.wilayah}` : ""}
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-2">
                   <span
-                    className={`flex items-center gap-1 text-[10px] font-semibold px-2.5 py-0.5 rounded-md uppercase tracking-wider ${
+                    className={`inline-flex items-center gap-1 text-[10px] font-normal px-2 py-0.5 rounded-md uppercase tracking-wider border ${
                       store.status === "ACTIVE"
-                        ? "bg-emerald-400/20 text-emerald-50 border border-emerald-400/30"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : store.status === "PENDING"
-                          ? "bg-amber-400/20 text-amber-50 border border-amber-400/30"
-                          : "bg-red-400/20 text-red-50 border border-red-400/30"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-rose-50 text-rose-700 border-rose-200"
                     }`}
                   >
                     {store.status === "ACTIVE"
@@ -265,29 +274,30 @@ export default function DetailTokoPage() {
             </div>
 
             {/* Affiliations Cards in Header */}
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 flex items-center gap-3 min-w-[160px]">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Truck size={16} className="text-white" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="bg-slate-50/60 rounded-xl p-3 border border-slate-200 flex items-center gap-3 min-w-[170px]">
+                <div className="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
+                  <Truck size={14} />
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-semibold text-emerald-100/80 tracking-wider mb-0.5">
+                  <p className="text-[10px] uppercase font-normal text-slate-400 tracking-wider">
                     Kurir Afiliasi
                   </p>
-                  <p className="font-semibold text-xs">
+                  <p className="font-normal text-xs text-slate-800 mt-0.5">
                     {store.courierStaff?.name || "Belum Ada Kurir"}
                   </p>
                 </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 flex items-center gap-3 min-w-[160px]">
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Building2 size={16} className="text-white" />
+
+              <div className="bg-slate-50/60 rounded-xl p-3 border border-slate-200 flex items-center gap-3 min-w-[170px]">
+                <div className="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
+                  <Building2 size={14} />
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-semibold text-emerald-100/80 tracking-wider mb-0.5">
+                  <p className="text-[10px] uppercase font-normal text-slate-400 tracking-wider">
                     Gudang Penyimpanan
                   </p>
-                  <p className="font-semibold text-xs">
+                  <p className="font-normal text-xs text-slate-800 mt-0.5">
                     {store.warehouseAdmin?.name || "Belum Ada Gudang"}
                   </p>
                 </div>
@@ -296,8 +306,8 @@ export default function DetailTokoPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-6 px-6 border-b border-gray-200 overflow-x-auto">
+        {/* Tabs Navigation */}
+        <div className="flex items-center gap-8 px-6 border-b border-slate-100 overflow-x-auto no-scrollbar">
           {[
             { id: "info", label: "Info & Lokasi", icon: Info },
             { id: "produk", label: "Produk Dijual", icon: Package },
@@ -309,137 +319,131 @@ export default function DetailTokoPage() {
               onClick={() =>
                 setActiveTab(tab.id as "info" | "produk" | "riwayat" | "stok")
               }
-              className={`flex items-center gap-2 py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 py-3 text-xs font-normal relative whitespace-nowrap transition-colors ${
                 activeTab === tab.id
-                  ? "border-emerald-500 text-emerald-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "text-slate-900"
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
-              <tab.icon size={16} />
+              <tab.icon size={14} className="stroke-[1.5]" />
               {tab.label}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-slate-900" />
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Tab Contents */}
-      <div className="animate-in fade-in duration-300">
+      {/* Tab Panels */}
+      <div className="space-y-4">
         {/* INFO TAB */}
         {activeTab === "info" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Map Card */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm flex flex-col group hover:border-emerald-200 transition-colors">
-              <h3 className="font-semibold text-base mb-3 flex items-center gap-2">
-                <MapPin size={18} className="text-emerald-500" /> Peta Lokasi
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-5">
+              <h3 className="font-normal text-sm text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100">
+                <Info size={15} className="text-emerald-600" /> Detail Informasi
               </h3>
-              {mapUrl ? (
-                <div className="flex-1 min-h-[250px] relative rounded-xl overflow-hidden border border-gray-200 shadow-inner group-hover:shadow-sm transition-shadow">
-                  <iframe
-                    title="store-detail-map"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0, filter: "grayscale(0.1)" }}
-                    src={mapUrl}
-                  />
-                  <div className="absolute inset-x-0 bottom-3 px-3">
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full bg-white text-[11px] font-semibold text-emerald-700 px-3 py-2 rounded-lg shadow-md border border-emerald-50 text-center hover:bg-emerald-50 transition-colors"
-                    >
-                      Buka di Google Maps
-                    </a>
-                  </div>
+              <div className="space-y-4 text-xs">
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-normal">
+                    Nama Toko
+                  </span>
+                  <span className="text-slate-800 font-normal mt-0.5 block">
+                    {store.nama}
+                  </span>
                 </div>
-              ) : (
-                <div className="flex-1 min-h-[250px] bg-gray-50 rounded-xl flex flex-col items-center justify-center p-5 text-center border border-gray-200">
-                  <MapPin className="text-gray-300 w-10 h-10 mb-2" />
-                  <p className="text-xs text-gray-500 font-medium">
-                    Titik koordinat belum ditentukan oleh seller
-                  </p>
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-normal">
+                    Telepon
+                  </span>
+                  <span className="text-slate-800 font-normal mt-0.5 block">
+                    {store.telepon || "—"}
+                  </span>
                 </div>
-              )}
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-normal">
+                    Jam Operasional
+                  </span>
+                  <span className="text-slate-800 font-normal mt-0.5 block">
+                    {store.jamOperasional || "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-normal">
+                    Alamat
+                  </span>
+                  <span className="text-slate-800 font-normal mt-0.5 block">
+                    {store.alamat || "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-normal">
+                    Bergabung Sejak
+                  </span>
+                  <span className="text-slate-800 font-normal mt-0.5 block">
+                    {store.createdAt ? formatTanggal(store.createdAt) : "—"}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Detail Card */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm group hover:border-emerald-200 transition-colors">
-              <h3 className="font-semibold text-base mb-3 flex items-center gap-2">
-                <Info size={18} className="text-emerald-500" /> Detail Kontak
+            <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
+              <h3 className="font-normal text-sm text-slate-800 flex items-center gap-2 pb-3 border-b border-slate-100">
+                <MapPin size={15} className="text-emerald-600" /> Lokasi Fisik
+                Toko
               </h3>
-              <div className="space-y-2">
-                {[
-                  { label: "Telepon", val: store.telepon || "-", icon: Phone },
-                  {
-                    label: "Jam Buka",
-                    val: store.jamOperasional || "-",
-                    icon: Clock,
-                  },
-                  {
-                    label: "Alamat Lengkap",
-                    val: store.alamat || "-",
-                    icon: MapPin,
-                  },
-                  {
-                    label: "Tanggal Bergabung",
-                    val: store.createdAt ? formatTanggal(store.createdAt) : "-",
-                    icon: CalendarDays,
-                  },
-                ].map((r, i) => (
-                  <div
-                    key={i}
-                    className="bg-gray-50 rounded-xl p-3 border border-transparent shadow-sm flex items-start gap-3"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-500 flex-shrink-0 shadow-sm border border-gray-100">
-                      <r.icon size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-widest mb-0.5">
-                        {r.label}
-                      </p>
-                      <p className="text-xs text-gray-800 font-medium leading-relaxed">
-                        {r.val}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {mapUrl ? (
+                <div className="h-[280px] rounded-xl overflow-hidden border border-slate-200">
+                  <iframe
+                    title="Peta Lokasi Toko"
+                    width="100%"
+                    height="100%"
+                    src={mapUrl}
+                    style={{ border: 0 }}
+                  />
+                </div>
+              ) : (
+                <div className="h-[200px] bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center text-xs text-slate-400 font-normal">
+                  Koordinat lokasi peta belum ditentukan.
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* PRODUK TAB */}
         {activeTab === "produk" && (
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold text-base flex items-center gap-2">
-                <Package size={18} className="text-emerald-500" /> Katalog
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-normal text-sm text-slate-800 flex items-center gap-2">
+                <Package size={15} className="text-emerald-600" /> Katalog
                 Produk Toko
               </h3>
-              <span className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2.5 py-1 rounded-md border border-emerald-100 tracking-widest uppercase">
+              <span className="text-xs text-slate-400 font-normal">
                 {products.length} Produk
               </span>
             </div>
 
             {products.length === 0 ? (
-              <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200">
-                <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <h4 className="font-semibold text-gray-900 text-base">
+              <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-slate-100">
+                <Package className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="font-normal text-slate-800 text-xs">
                   Belum ada produk
-                </h4>
-                <p className="text-xs text-gray-500 mt-1">
-                  Toko ini belum menambahkan produk ke katalog merekam.
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Toko ini belum menambahkan produk ke katalog.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {products.map((prod) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {products.map((prod, idx) => (
                   <Link
                     href={`/admin/produk/${prod.id}`}
-                    key={prod.id}
-                    className="block cursor-pointer bg-white rounded-xl overflow-hidden border border-gray-200 group shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+                    key={prod.id || (prod as any).id_produk || `prod-${idx}`}
+                    className="block bg-white rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors"
                   >
-                    <div className="aspect-square bg-gray-50 relative overflow-hidden border-b border-gray-100 p-3 shrink-0">
+                    <div className="aspect-square bg-slate-50 relative overflow-hidden border-b border-slate-100 p-2">
                       {prod.gambarUrl ||
                       prod.gambarBase64 ||
                       prod.gambarUtama ? (
@@ -451,68 +455,32 @@ export default function DetailTokoPage() {
                             ""
                           }
                           alt={prod.nama}
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="object-cover"
                           fill
                           unoptimized
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package size={32} className="text-gray-300" />
+                        <div className="w-full h-full flex items-center justify-center text-slate-300">
+                          <Package size={24} />
                         </div>
                       )}
-                      {prod.status === "ACTIVE" ? (
-                        <span className="absolute top-2 left-2 bg-emerald-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider">
-                          Aktif
-                        </span>
-                      ) : (
-                        <span className="absolute top-2 left-2 bg-gray-500 text-white text-[9px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider">
-                          Nonaktif
-                        </span>
-                      )}
                     </div>
-                    <div className="p-4">
-                      <h4 className="font-medium text-xs text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-2 min-h-[32px] mb-1.5">
+                    <div className="p-3 space-y-1">
+                      <h4 className="font-normal text-xs text-slate-800 truncate">
                         {prod.nama}
                       </h4>
-                      <p className="text-emerald-600 font-semibold text-sm mb-3">
+                      <p className="text-emerald-600 font-normal text-xs">
                         {formatRupiah(prod.harga || 0)}
                       </p>
-                      <div className="flex items-center justify-between text-[10px] text-gray-500 font-medium mb-2.5">
-                        <span className="flex items-center gap-1">
-                          <Package size={12} className="text-gray-400" /> Stok:{" "}
-                          {prod.grades
-                            ? prod.grades.reduce(
-                                (acc, g) => acc + (g.stok || 0),
-                                0,
-                              )
-                            : prod.stok || 0}
-                        </span>
-                        <span className="flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded text-amber-700 font-semibold">
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                        <span>Stok: {prod.stok || 0}</span>
+                        <span className="flex items-center gap-0.5 text-amber-500">
                           <Star
-                            size={10}
-                            className="fill-amber-500 text-amber-500"
-                          />{" "}
+                            size={9}
+                            className="fill-amber-400 text-amber-400"
+                          />
                           {Number(prod.rating || 0).toFixed(1)}
                         </span>
-                      </div>
-
-                      <div className="border-t border-gray-100 pt-2.5 flex gap-1 flex-wrap">
-                        {prod.grades && prod.grades.length > 0 ? (
-                          prod.grades.map(
-                            (g: { grade: string; stok: number }) => (
-                              <span
-                                key={g.grade}
-                                className={`text-[9px] font-medium px-1.5 py-0.5 rounded border ${g.stok > 0 ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}`}
-                              >
-                                {g.grade}: {g.stok}
-                              </span>
-                            ),
-                          )
-                        ) : (
-                          <span className="text-[9px] font-medium px-1.5 py-0.5 bg-gray-50 text-gray-600 rounded border border-gray-100">
-                            Stok: {prod.stok || 0}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </Link>
@@ -524,77 +492,71 @@ export default function DetailTokoPage() {
 
         {/* RIWAYAT PENJUALAN TAB */}
         {activeTab === "riwayat" && (
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold text-base flex items-center gap-2">
-                <ShoppingBag size={18} className="text-emerald-500" /> Riwayat
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-normal text-sm text-slate-800 flex items-center gap-2">
+                <ShoppingBag size={15} className="text-emerald-600" /> Riwayat
                 Pesanan
               </h3>
-              <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2.5 py-1 rounded-md border border-blue-100 uppercase tracking-widest">
+              <span className="text-xs text-slate-400 font-normal">
                 {orders.length} Pesanan
               </span>
             </div>
 
             {orders.length === 0 ? (
-              <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200">
-                <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <h4 className="font-semibold text-gray-900 text-base">
+              <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-slate-100">
+                <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="font-normal text-slate-800 text-xs">
                   Belum ada pesanan
-                </h4>
-                <p className="text-xs text-gray-500 mt-1">
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
                   Belum ada riwayat transaksi yang tercatat untuk toko ini.
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-                <table className="w-full text-left text-xs whitespace-nowrap">
+              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white text-xs">
+                <table className="w-full text-left whitespace-nowrap">
                   <thead>
-                    <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
-                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                        Order ID
-                      </th>
-                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                        Tanggal
-                      </th>
-                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                        Pembeli
-                      </th>
-                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                        Total
-                      </th>
-                      <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                        Status
-                      </th>
+                    <tr className="bg-slate-50/80 text-slate-400 border-b border-slate-200 text-[11px] font-normal uppercase tracking-wider">
+                      <th className="px-5 py-3 font-normal">Order ID</th>
+                      <th className="px-5 py-3 font-normal">Tanggal</th>
+                      <th className="px-5 py-3 font-normal">Pembeli</th>
+                      <th className="px-5 py-3 font-normal">Total</th>
+                      <th className="px-5 py-3 font-normal">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {orders.map((order) => (
+                  <tbody className="divide-y divide-slate-100">
+                    {orders.map((order, idx) => (
                       <tr
-                        key={order.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        key={
+                          order.id ||
+                          (order as any).id_pesanan ||
+                          `order-${idx}`
+                        }
+                        className="hover:bg-slate-50/60 transition-colors"
                       >
-                        <td className="px-4 py-3 font-mono font-medium text-emerald-600">
+                        <td className="px-5 py-3 font-mono text-emerald-600 font-normal">
                           #{order?.id?.slice(-8).toUpperCase() ?? "-"}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">
+                        <td className="px-5 py-3 text-slate-500 font-normal">
                           {formatTanggal(order.createdAt)}
                         </td>
-                        <td className="px-4 py-3 font-medium text-gray-800">
+                        <td className="px-5 py-3 text-slate-800 font-normal">
                           {order.customer?.name || order.user?.name || "-"}
                         </td>
-                        <td className="px-4 py-3 font-medium text-gray-900">
+                        <td className="px-5 py-3 text-slate-800 font-normal">
                           {formatRupiah(
                             order.totalAmount || order.totalHarga || 0,
                           )}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3">
                           <span
-                            className={`px-2 py-0.5 text-[9px] font-semibold rounded uppercase tracking-wider ${
+                            className={`px-2 py-0.5 text-[10px] font-normal rounded-md uppercase tracking-wider border ${
                               ["DELIVERED", "COMPLETED"].includes(order.status)
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : order.status === "CANCELLED"
-                                  ? "bg-red-50 text-red-700 border border-red-200"
-                                  : "bg-amber-50 text-amber-700 border border-amber-200"
+                                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
                             }`}
                           >
                             {order.status}
@@ -608,81 +570,114 @@ export default function DetailTokoPage() {
             )}
           </div>
         )}
-        {/* RIWAYAT STOK GUDANG TAB */}
+
+        {/* RIWAYAT STOK GUDANG TAB (DATA RIIL DARI DATABASE) */}
         {activeTab === "stok" && (
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-semibold text-base flex items-center gap-2">
-                <Truck size={18} className="text-emerald-500" /> Riwayat Mutasi
-                Stok Gudang
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-normal text-sm text-slate-800 flex items-center gap-2">
+                <Truck size={15} className="text-emerald-600" /> Riwayat
+                Pengajuan & Mutasi Stok Gudang
               </h3>
-              <div className="flex items-center gap-2">
-                <span className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2.5 py-1 rounded-md border border-emerald-100 uppercase tracking-widest">
-                  Gudang: {store.warehouseAdmin?.name || "Utama"}
-                </span>
-              </div>
+              <span className="text-xs text-slate-400 font-normal">
+                {stockRequests.length} Pengajuan
+              </span>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead>
-                  <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                      Tanggal
-                    </th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                      Produk
-                    </th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                      Tipe
-                    </th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                      Jumlah
-                    </th>
-                    <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
-                      Keterangan
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {stockHistoryMock.map((item: any) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-gray-500">
-                        {formatTanggal(item.tgl)}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-800">
-                        {item.produk}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-0.5 text-[9px] font-semibold rounded uppercase tracking-wider ${
-                            item.tipe === "MASUK"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-amber-50 text-amber-700 border border-amber-200"
-                          }`}
-                        >
-                          {item.tipe}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">
-                        {item.tipe === "MASUK" ? "+" : "-"}
-                        {item.qty}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 italic">
-                        {item.note}
-                      </td>
+            {stockRequests.length === 0 ? (
+              <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-slate-100">
+                <Truck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="font-normal text-slate-800 text-xs">
+                  Belum Ada Riwayat Pengajuan Stok
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm mx-auto">
+                  Toko ini belum pernah mengajukan permintaan pengadaan atau
+                  mutasi stok ke gudang penyimpanan.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white text-xs">
+                <table className="w-full text-left whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-slate-50/80 text-slate-400 border-b border-slate-200 text-[11px] font-normal uppercase tracking-wider">
+                      <th className="px-5 py-3 font-normal">Tanggal</th>
+                      <th className="px-5 py-3 font-normal">No. Pengajuan</th>
+                      <th className="px-5 py-3 font-normal">Gudang</th>
+                      <th className="px-5 py-3 font-normal">Item Produk</th>
+                      <th className="px-5 py-3 font-normal">
+                        Total Permintaan
+                      </th>
+                      <th className="px-5 py-3 font-normal">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-4 text-[10px] text-gray-400 italic">
-              * Data di atas adalah riwayat mutasi stok dari gudang yang
-              terafiliasi dengan toko ini.
-            </p>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {stockRequests.map((item, idx) => {
+                      const totalQty = (item.items || []).reduce(
+                        (acc, it) => acc + (it.jumlahPermintaan || 0),
+                        0,
+                      );
+                      const itemsPreview = (item.items || [])
+                        .map(
+                          (it) =>
+                            it.produkGudang?.nama || it.namaProduk || "Produk",
+                        )
+                        .slice(0, 2)
+                        .join(", ");
+
+                      return (
+                        <tr
+                          key={
+                            item.id ||
+                            (item as any).id_pengajuan ||
+                            `stock-${idx}`
+                          }
+                          className="hover:bg-slate-50/60 transition-colors"
+                        >
+                          <td className="px-5 py-3 text-slate-500 font-normal">
+                            {formatTanggal(item.createdAt)}
+                          </td>
+                          <td className="px-5 py-3 font-mono text-emerald-600 font-normal">
+                            {item.nomorPengajuan ||
+                              `#${item.id.slice(-8).toUpperCase()}`}
+                          </td>
+                          <td className="px-5 py-3 text-slate-700 font-normal">
+                            {item.gudang?.nama ||
+                              store.warehouseAdmin?.name ||
+                              "Gudang Utama"}
+                          </td>
+                          <td className="px-5 py-3 text-slate-800 font-normal max-w-xs truncate">
+                            {itemsPreview || "—"}
+                            {(item.items?.length || 0) > 2
+                              ? ` (+${item.items!.length - 2} lainnya)`
+                              : ""}
+                          </td>
+                          <td className="px-5 py-3 text-slate-800 font-normal">
+                            {totalQty} unit / kg
+                          </td>
+                          <td className="px-5 py-3">
+                            <span
+                              className={`px-2 py-0.5 text-[10px] font-normal rounded-md uppercase tracking-wider border ${
+                                ["COMPLETED", "APPROVED", "DISETUJUI"].includes(
+                                  item.status,
+                                )
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : ["REJECTED", "DITOLAK"].includes(
+                                        item.status,
+                                      )
+                                    ? "bg-rose-50 text-rose-700 border-rose-200"
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

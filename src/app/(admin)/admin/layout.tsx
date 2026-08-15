@@ -61,7 +61,9 @@ export default function AdminLayout({
   return (
     <div className="h-screen bg-white flex flex-col items-center justify-center p-5 gap-3 overflow-hidden">
       {/* Top Bar — di luar contain */}
-      <AdminTopbar />
+      <div className="w-full py-1">
+        <AdminTopbar />
+      </div>
 
       {/* Desktop App Container */}
       <div className="w-full flex-1 bg-white rounded-2xl overflow-hidden flex border border-gray-200 min-h-0 relative">

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 import type { TrenBulananItem } from "@/lib/api/analytics";
 
@@ -49,8 +48,8 @@ export default function TrenBarChart({
               className="flex-1 flex flex-col items-center gap-1 group relative"
             >
               {/* Tooltip */}
-              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-lg">
-                <div className="font-semibold">{item.labelBulan}</div>
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs rounded-lg px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                <div className="font-normal">{item.labelBulan}</div>
                 <div>
                   {mode === "revenue"
                     ? `Rp ${formatRupiah(val)}`
@@ -60,10 +59,10 @@ export default function TrenBarChart({
                   <div
                     className={
                       isPositive
-                        ? "text-green-400"
+                        ? "text-primary-300"
                         : isNegative
                           ? "text-red-400"
-                          : "text-gray-400"
+                          : "text-slate-400"
                     }
                   >
                     {isPositive ? "+" : ""}
@@ -74,20 +73,19 @@ export default function TrenBarChart({
 
               {/* Bar */}
               <div
-                className={`w-full rounded-t-lg transition-all duration-500 relative overflow-hidden ${
+                className={`w-full rounded-t-md transition-all duration-500 relative overflow-hidden ${
                   isLast
-                    ? "bg-emerald-500"
+                    ? "bg-primary-600"
                     : isPositive
-                      ? "bg-emerald-300"
+                      ? "bg-primary-400"
                       : isNegative
                         ? "bg-red-300"
-                        : "bg-gray-300"
+                        : "bg-slate-200"
                 }`}
                 style={{ height: `${heightPct}%` }}
               >
-                {/* Shimmer on last bar */}
                 {isLast && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/10" />
                 )}
               </div>
             </div>
@@ -102,30 +100,30 @@ export default function TrenBarChart({
           const parts = label.split(" ");
           return (
             <div key={item.bulan ?? idx} className="flex-1 text-center">
-              <p className="text-[10px] text-gray-400 truncate leading-tight">
+              <p className="text-[10px] text-slate-400 truncate leading-tight">
                 {parts[0] ?? ""}
               </p>
-              <p className="text-[10px] text-gray-300">{parts[1] ?? ""}</p>
+              <p className="text-[10px] text-slate-300">{parts[1] ?? ""}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Legend: growth indicators */}
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50 text-xs text-gray-400">
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400 font-normal">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm bg-emerald-500 inline-block" />{" "}
+          <span className="w-3 h-3 rounded-sm bg-primary-600 inline-block" />{" "}
           Bulan ini
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm bg-emerald-300 inline-block" />{" "}
+          <span className="w-3 h-3 rounded-sm bg-primary-400 inline-block" />{" "}
           Naik
         </span>
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded-sm bg-red-300 inline-block" /> Turun
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-sm bg-gray-300 inline-block" />{" "}
+          <span className="w-3 h-3 rounded-sm bg-slate-200 inline-block" />{" "}
           Stabil
         </span>
       </div>

@@ -104,8 +104,8 @@ export default function ManajemenTokoPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
-            <Store size={26} className="text-emerald-600" /> Manajemen Toko
+          <h1 className="text-2xl font-display font-medium text-gray-900 flex items-center gap-2">
+            <Store size={26} className="text-primary-600" /> Manajemen Toko
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Pantau performa, status, dan lokasi Agro Daerah di seluruh wilayah
@@ -114,7 +114,7 @@ export default function ManajemenTokoPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-            className="p-2.5 bg-white border border-gray-100 rounded-2xl text-gray-500 hover:text-emerald-600 transition-all shadow-sm"
+            className="p-2.5 bg-white border border-gray-200 rounded-2xl text-gray-500 hover:text-primary-600 transition-all"
             title={viewMode === "grid" ? "Switch to List" : "Switch to Grid"}
           >
             {viewMode === "grid" ? (
@@ -125,7 +125,7 @@ export default function ManajemenTokoPage() {
           </button>
           <button
             onClick={() => (window.location.href = "/admin/toko/seller")}
-            className="bg-emerald-600 text-white px-5 py-2.5 rounded-2xl font-bold text-sm hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-md shadow-emerald-100 active:scale-95"
+            className="bg-primary-600 text-white px-5 py-2.5 rounded-2xl font-medium text-sm hover:bg-primary-700 transition-all flex items-center gap-2 active:scale-95"
           >
             <Users size={18} /> Data Seller & Kurir
           </button>
@@ -140,7 +140,7 @@ export default function ManajemenTokoPage() {
       )}
 
       {/* Control Bar */}
-      <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-2">
+      <div className="bg-white p-2 rounded-2xl border border-gray-200 flex flex-col md:flex-row gap-2">
         <div className="relative flex-1">
           <Search
             size={18}
@@ -151,11 +151,11 @@ export default function ManajemenTokoPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari toko berdasarkan nama, kota, atau daerah..."
-            className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+            className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:bg-white outline-none transition-all"
           />
         </div>
         <div className="flex gap-2">
-          <button className="px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors">
+          <button className="px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-gray-100 transition-colors border border-gray-200">
             <Filter size={16} /> Filter Wilayah
           </button>
         </div>
@@ -163,24 +163,26 @@ export default function ManajemenTokoPage() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 size={40} className="animate-spin text-emerald-600" />
+          <Loader2 size={40} className="animate-spin text-primary-600" />
           <p className="text-gray-400 font-medium">
             Menyinkronkan data toko...
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Store className="text-gray-300 w-8 h-8" />
           </div>
-          <h3 className="text-gray-900 text-lg font-bold">Data Toko Kosong</h3>
+          <h3 className="text-gray-900 text-lg font-medium">
+            Data Toko Kosong
+          </h3>
           <p className="text-sm text-gray-500 mt-1.5 max-w-xs mx-auto">
             Tidak ada data toko yang cocok dengan kriteria pencarian Anda saat
             ini.
           </p>
           <button
             onClick={() => setSearch("")}
-            className="mt-4 text-emerald-600 text-sm font-bold hover:underline"
+            className="mt-4 text-primary-600 text-sm font-medium hover:underline"
           >
             Bersihkan Pencarian
           </button>
@@ -199,7 +201,7 @@ export default function ManajemenTokoPage() {
               }}
               role="button"
               tabIndex={0}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-emerald-200 transition-all duration-300 group cursor-pointer"
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-primary-300 transition-all duration-300 group cursor-pointer"
             >
               {/* Card Content */}
               <div className="p-4">
@@ -209,13 +211,13 @@ export default function ManajemenTokoPage() {
                 </div>
 
                 {/* Nama Toko */}
-                <h3 className="font-semibold text-gray-900 text-base group-hover:text-emerald-700 transition-colors truncate mb-1">
+                <h3 className="font-medium text-gray-900 text-base group-hover:text-primary-700 transition-colors truncate mb-1">
                   {toko.nama}
                 </h3>
 
                 {/* Lokasi */}
                 <p className="text-xs text-gray-500 flex items-center gap-1 font-medium mb-4">
-                  <MapPin size={12} className="text-emerald-500 shrink-0" />
+                  <MapPin size={12} className="text-primary-500 shrink-0" />
                   <span className="truncate">
                     {toko.kabupaten || "Wilayah Belum Diset"}
                     {toko.wilayah ? ` • ${toko.wilayah}` : ""}
@@ -223,11 +225,11 @@ export default function ManajemenTokoPage() {
                 </p>
 
                 {/* Divider */}
-                <div className="border-t border-gray-100 pt-3">
+                <div className="border-t border-gray-200 pt-3">
                   {/* Action Button */}
                   <Link
                     href={`/admin/toko/${toko.id}`}
-                    className="w-full text-center py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1"
+                    className="w-full text-center py-2 bg-primary-50 text-primary-700 rounded-lg text-xs font-medium hover:bg-primary-100 transition-colors flex items-center justify-center gap-1"
                   >
                     Kelola Toko
                     <ChevronRight size={14} />
@@ -239,25 +241,25 @@ export default function ManajemenTokoPage() {
         </div>
       ) : (
         /* List Mode View */
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-600">
-                <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
+                <th className="px-4 py-3 font-medium uppercase tracking-wider text-[10px]">
                   Toko / Lokasi
                 </th>
-                <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
+                <th className="px-4 py-3 font-medium uppercase tracking-wider text-[10px]">
                   Metriks
                 </th>
-                <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px]">
+                <th className="px-4 py-3 font-medium uppercase tracking-wider text-[10px]">
                   Status
                 </th>
-                <th className="px-4 py-3 font-semibold uppercase tracking-wider text-[10px] text-right">
+                <th className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-right">
                   Aksi
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-200">
               {filtered.map((toko) => (
                 <tr
                   key={toko.id}
@@ -266,9 +268,7 @@ export default function ManajemenTokoPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div>
-                        <p className="font-semibold text-gray-900">
-                          {toko.nama}
-                        </p>
+                        <p className="font-medium text-gray-900">{toko.nama}</p>
                         <p className="text-[10px] text-gray-500 mt-0.5">
                           {toko.kabupaten} • {toko.wilayah}
                         </p>
@@ -279,13 +279,13 @@ export default function ManajemenTokoPage() {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1">
                         <Package size={14} className="text-gray-400" />
-                        <span className="font-semibold text-gray-700">
+                        <span className="font-medium text-gray-700">
                           {toko.totalProduk || 0}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <ShoppingBag size={14} className="text-gray-400" />
-                        <span className="font-semibold text-gray-700">
+                        <span className="font-medium text-gray-700">
                           {toko.totalPesanan || 0}
                         </span>
                       </div>
@@ -295,7 +295,7 @@ export default function ManajemenTokoPage() {
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/admin/toko/${toko.id}`}
-                      className="font-semibold text-emerald-600 hover:underline"
+                      className="font-medium text-primary-600 hover:underline"
                     >
                       Kelola
                     </Link>

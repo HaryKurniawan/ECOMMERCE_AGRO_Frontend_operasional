@@ -35,7 +35,6 @@ export default function TrenPerSellerPage() {
   const [error, setError] = useState("");
   const [chartMode, setChartMode] = useState<"revenue" | "qty">("revenue");
 
-  // Ambil daftar toko untuk dropdown
   useEffect(() => {
     const fetchStores = async () => {
       try {
@@ -85,44 +84,43 @@ export default function TrenPerSellerPage() {
   const chartData = data?.data ?? [];
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
+    <div className="w-full max-w-[1400px] mx-auto space-y-6 font-sans pb-10">
+      {/* ── Page Header ─────────────────── */}
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Store size={22} className="text-emerald-600" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              Tren Per Seller
-            </h1>
-          </div>
-          <p className="text-gray-500 text-sm">
+          <h1 className="text-xl font-normal text-slate-900 tracking-tight flex items-center gap-2">
+            <Store size={18} className="text-primary-600" />
+            Tren Per Seller
+          </h1>
+          <p className="text-xs text-slate-400 mt-1 font-normal">
             Analisis tren penjualan bulanan untuk setiap toko / seller
           </p>
         </div>
         <button
           onClick={() => fetchTren()}
           disabled={loading || !selectedToko}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors border border-gray-200"
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-normal text-slate-600 hover:text-slate-800 hover:border-slate-300 transition-all active:scale-95"
         >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          Refresh
+          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          Segarkan
         </button>
       </div>
 
-      {/* Store Selector */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <label className="text-xs text-gray-400 font-medium block mb-2">
-          Pilih Toko
+      {/* ── Store Selector ─────────────────── */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4">
+        <label className="text-[10px] font-normal text-slate-400 block mb-2 uppercase tracking-wider flex items-center gap-1.5">
+          <Store size={11} /> Pilih Toko
         </label>
         {loadingStores ? (
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Loader2 size={16} className="animate-spin" /> Memuat daftar toko...
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <Loader2 size={14} className="animate-spin text-primary-600" />{" "}
+            Memuat daftar toko...
           </div>
         ) : (
           <select
             value={selectedToko}
             onChange={(e) => setSelectedToko(e.target.value)}
-            className="w-full md:w-96 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+            className="w-full md:w-96 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
           >
             {stores.length === 0 && <option value="">Tidak ada toko</option>}
             {stores.map((s) => (
@@ -134,79 +132,83 @@ export default function TrenPerSellerPage() {
         )}
       </div>
 
-      {/* Loading */}
+      {/* ── Loading ─────────────────── */}
       {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 size={32} className="animate-spin text-emerald-500" />
+        <div className="flex items-center justify-center py-16">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 size={26} className="animate-spin text-primary-600" />
+            <p className="text-xs text-slate-400 font-normal">
+              Memuat tren penjualan...
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Error */}
+      {/* ── Error ─────────────────── */}
       {error && !loading && (
-        <div className="text-center py-12 bg-red-50 rounded-2xl border border-red-100">
-          <p className="text-red-500 font-medium">Gagal memuat data</p>
-          <p className="text-red-400 text-xs mt-1">{error}</p>
+        <div className="bg-red-50 border border-red-100 text-red-600 p-3.5 rounded-xl flex items-center gap-2.5">
+          <p className="text-xs font-normal">{error}</p>
         </div>
       )}
 
-      {/* Summary */}
+      {/* ── Summary Cards ─────────────────── */}
       {!loading && !error && displayMonth && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <p className="text-xs font-medium text-gray-400 mb-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+            <p className="text-[10px] font-normal text-slate-400 uppercase tracking-wider mb-2">
               Revenue Bulan Ini
             </p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-xl font-normal text-slate-900">
               {fmt(displayMonth.totalRevenue)}
             </p>
             {growth !== null && (
               <div
-                className={`flex items-center gap-1 mt-1.5 text-sm font-medium ${isUp ? "text-green-600" : isDown ? "text-red-500" : "text-gray-400"}`}
+                className={`flex items-center gap-1 mt-1.5 text-xs font-normal ${isUp ? "text-primary-600" : isDown ? "text-red-500" : "text-slate-400"}`}
               >
                 {isUp ? (
-                  <TrendingUp size={14} />
+                  <TrendingUp size={12} />
                 ) : isDown ? (
-                  <TrendingDown size={14} />
+                  <TrendingDown size={12} />
                 ) : null}
                 {isUp ? "+" : ""}
                 {growth}% vs bulan lalu
               </div>
             )}
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <p className="text-xs font-medium text-gray-400 mb-1">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+            <p className="text-[10px] font-normal text-slate-400 uppercase tracking-wider mb-2">
               Qty Terjual
             </p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-xl font-normal text-slate-900">
               {displayMonth.totalQty.toFixed(1)}{" "}
-              <span className="text-base text-gray-400">kg</span>
+              <span className="text-sm text-slate-400">kg</span>
             </p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <p className="text-xs font-medium text-gray-400 mb-1">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4">
+            <p className="text-[10px] font-normal text-slate-400 uppercase tracking-wider mb-2">
               Jumlah Transaksi
             </p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-xl font-normal text-slate-900">
               {displayMonth.jumlahTransaksi}{" "}
-              <span className="text-base text-gray-400">pesanan</span>
+              <span className="text-sm text-slate-400">pesanan</span>
             </p>
           </div>
         </div>
       )}
 
-      {/* Chart */}
+      {/* ── Chart ─────────────────── */}
       {!loading && !error && chartData.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-gray-800">
+            <h2 className="text-xs font-normal text-slate-500 uppercase tracking-wider">
               6 Bulan Terakhir
             </h2>
-            <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 border border-gray-100">
+            <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1 border border-slate-100">
               {(["revenue", "qty"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setChartMode(m)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${chartMode === m ? "bg-white shadow-sm text-emerald-700" : "text-gray-400"}`}
+                  className={`px-3 py-1 rounded-lg text-xs font-normal transition-all ${chartMode === m ? "bg-white border border-slate-200 text-primary-700" : "text-slate-400"}`}
                 >
                   {m === "revenue" ? "Revenue" : "Qty (kg)"}
                 </button>
@@ -217,12 +219,15 @@ export default function TrenPerSellerPage() {
         </div>
       )}
 
-      {/* Empty */}
+      {/* ── Empty ─────────────────── */}
       {!loading && !error && data && chartData.length === 0 && (
-        <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-100">
-          <BarChart3 size={40} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 font-medium">
+        <div className="text-center py-16 bg-slate-50 border border-slate-100 rounded-2xl">
+          <BarChart3 size={32} className="text-slate-300 mx-auto mb-3" />
+          <p className="text-sm font-normal text-slate-500">
             Belum ada data tren untuk toko ini
+          </p>
+          <p className="text-xs text-slate-400 mt-1 font-normal">
+            Pastikan ada transaksi SELESAI pada periode ini
           </p>
         </div>
       )}

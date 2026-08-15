@@ -6,7 +6,10 @@ import {
   Users,
   User,
   Shield,
-  Briefcase,
+  Store,
+  Truck,
+  Headset,
+  Package,
   ChevronRight,
 } from "lucide-react";
 
@@ -66,65 +69,50 @@ export default function ContactListModal({
 
   const getRoleBadge = (role: string) => {
     const r = role?.toUpperCase();
+    let label = role;
     switch (r) {
       case "KURIR":
-        return (
-          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-md">
-            KURIR
-          </span>
-        );
+        label = "KURIR";
+        break;
       case "ADMIN_CS":
-        return (
-          <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-md">
-            CS
-          </span>
-        );
+        label = "CS";
+        break;
       case "PENJUAL":
-        return (
-          <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-bold rounded-md">
-            SELLER
-          </span>
-        );
+        label = "SELLER";
+        break;
       case "SUPER_ADMIN":
-        return (
-          <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-bold rounded-md">
-            ADMIN
-          </span>
-        );
+        label = "ADMIN";
+        break;
       case "GUDANG":
       case "STAF_GUDANG":
       case "ADMIN_GUDANG":
-        return (
-          <span className="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-md">
-            GUDANG
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded-md">
-            {role}
-          </span>
-        );
+        label = "GUDANG";
+        break;
     }
+    return (
+      <span className="px-2 py-0.5 bg-primary-50 text-primary-600 border border-primary-100 text-[10px] font-bold rounded-md">
+        {label}
+      </span>
+    );
   };
 
   const getRoleIcon = (role: string) => {
     const r = role?.toUpperCase();
     switch (r) {
       case "KURIR":
-        return <Briefcase size={16} className="text-blue-500" />;
+        return <Truck size={16} className="text-primary-500" />;
       case "ADMIN_CS":
-        return <Shield size={16} className="text-indigo-500" />;
+        return <Headset size={16} className="text-primary-500" />;
       case "PENJUAL":
-        return <Briefcase size={16} className="text-green-500" />;
+        return <Store size={16} className="text-primary-500" />;
       case "SUPER_ADMIN":
-        return <Shield size={16} className="text-purple-500" />;
+        return <Shield size={16} className="text-primary-500" />;
       case "GUDANG":
       case "STAF_GUDANG":
       case "ADMIN_GUDANG":
-        return <Briefcase size={16} className="text-amber-500" />;
+        return <Package size={16} className="text-primary-500" />;
       default:
-        return <User size={16} className="text-gray-500" />;
+        return <User size={16} className="text-primary-500" />;
     }
   };
 
@@ -211,10 +199,10 @@ export default function ContactListModal({
             </div>
           ) : (
             <div className="space-y-1">
-              {filteredUsers.map((user) => (
+              {filteredUsers.map((user, idx) => (
                 <button
-                  key={user.id}
-                  onClick={() => onSelectContact(user.id)}
+                  key={user.id || user.id_pengguna || idx}
+                  onClick={() => onSelectContact(user.id || user.id_pengguna)}
                   className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left group"
                 >
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex flex-shrink-0 items-center justify-center border border-gray-200">

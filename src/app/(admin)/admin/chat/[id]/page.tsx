@@ -219,12 +219,32 @@ const AdminChatRoomPage: React.FC = () => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // Load draft from localStorage when conversation changes
+  useEffect(() => {
+    if (!conversationId) return;
+    const draft = localStorage.getItem(`chat_draft_${conversationId}`);
+    if (draft) setNewMessage(draft);
+    else setNewMessage("");
+  }, [conversationId]);
+
+  const handleMessageChange = (val: string) => {
+    setNewMessage(val);
+    if (val.trim()) {
+      localStorage.setItem(`chat_draft_${conversationId}`, val);
+    } else {
+      localStorage.removeItem(`chat_draft_${conversationId}`);
+    }
+    window.dispatchEvent(new Event("chat_draft_changed"));
+  };
+
   const handleSend = async () => {
     const content = newMessage.trim();
     if (!content || sending) return;
 
     setSending(true);
     setNewMessage("");
+    localStorage.removeItem(`chat_draft_${conversationId}`);
+    window.dispatchEvent(new Event("chat_draft_changed"));
 
     const optimisticMsg: MessageData = {
       id: `temp-${Date.now()}`,
@@ -280,19 +300,22 @@ const AdminChatRoomPage: React.FC = () => {
         phone={conversation?.otherUser?.phone}
         email={conversation?.otherUser?.email}
       />
-
       <ChatMessageList
         messages={messages}
         currentUserId={currentUserId}
         messagesEndRef={messagesEndRef}
       />
-
       <ChatInput
         newMessage={newMessage}
-        setNewMessage={setNewMessage}
+        setNewMessage={handleMessageChange}
         sending={sending}
         handleSend={handleSend}
-        handleKeyDown={handleKeyDown}
+        handleKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
         inputRef={inputRef}
       />
     </div>

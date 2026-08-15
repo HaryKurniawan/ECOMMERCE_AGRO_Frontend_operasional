@@ -31,7 +31,8 @@ interface StockRequestItem {
 }
 
 interface StockRequest {
-  id: string;
+  id?: string;
+  id_pengajuanStok?: string;
   tokoId: string;
   gudangId: string;
   status: string;
@@ -255,9 +256,11 @@ export default function PengajuanAktifPage() {
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((req) => (
                   <tr
-                    key={req.id}
+                    key={req.id || req.id_pengajuanStok}
                     onClick={() =>
-                      router.push(`/admin/gudang/pengajuan/${req.id}`)
+                      router.push(
+                        `/admin/gudang/pengajuan/${req.id || req.id_pengajuanStok}`,
+                      )
                     }
                     className="hover:bg-emerald-50/30 transition-colors cursor-pointer"
                   >

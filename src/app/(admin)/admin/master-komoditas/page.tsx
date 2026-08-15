@@ -37,6 +37,32 @@ function formatRupiah(val: number) {
   }).format(val);
 }
 
+function KomoditasImage({ src, alt }: { src?: string; alt: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    return (
+      <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+        <Wheat size={15} className="text-slate-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden relative">
+      <Image
+        src={src}
+        alt={alt}
+        width={36}
+        height={36}
+        className="object-cover w-full h-full"
+        unoptimized
+        onError={() => setHasError(true)}
+      />
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MasterKomoditasPage() {
   const [list, setList] = useState<MasterKomoditas[]>([]);
@@ -53,14 +79,15 @@ export default function MasterKomoditasPage() {
     setError("");
     try {
       const res = await gudangApi.getMasterKomoditas();
-      // TransformInterceptor wraps: { success, data: { statusCode, data: [...] } }
+      // Unwrap standard NestJS TransformInterceptor response
       const raw = res.data?.data?.data ?? res.data?.data ?? res.data ?? [];
-      setList(Array.isArray(raw) ? raw : []);
+      const dataArr = Array.isArray(raw) ? raw : (raw.data ?? []);
+      setList(dataArr);
     } catch (err: any) {
       setError(
         err?.response?.data?.message ??
           err?.message ??
-          "Gagal memuat data komoditas.",
+          "Gagal memuat data komoditas dari gudang.",
       );
     } finally {
       setLoading(false);
@@ -102,95 +129,95 @@ export default function MasterKomoditasPage() {
   };
 
   return (
-    <div className="p-4 lg:p-8 max-w-[1400px] mx-auto min-h-screen bg-gray-50/30">
+    <div className="w-full max-w-[1600px] mx-auto space-y-5 animate-fade-in font-sans pb-8">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <PageHeader
-        title="Komoditas"
-        description={`${list.length} komoditas dari Gudang service · read-only`}
-        icon={Wheat}
-        iconColor="text-amber-500"
-        actions={
-          <button
-            onClick={loadData}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-2xl text-sm hover:bg-gray-50 active:scale-95 transition-all shadow-sm disabled:opacity-40"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
-        }
-      />
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-lg font-normal text-slate-900 leading-tight">
+            Master Komoditas
+          </h1>
+          <p className="text-slate-400 text-xs mt-1 font-normal">
+            {list.length} data komoditas terhubung dari Service Gudang
+            (Read-Only)
+          </p>
+        </div>
 
-      {/* ── Stats row ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <button
+          onClick={loadData}
+          disabled={loading}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-normal hover:bg-slate-100 active:scale-95 transition-all shadow-sm disabled:opacity-40"
+        >
+          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          Perbarui Data
+        </button>
+      </div>
+
+      {/* ── Stats Bento Cards ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           {
-            label: "Total",
+            label: "Total Komoditas",
             value: list.length,
-            color: "text-gray-700",
-            bg: "bg-white",
+            textColor: "text-slate-800",
           },
           {
-            label: "Aktif",
+            label: "Komoditas Aktif",
             value: list.filter((k) => k.isActive).length,
-            color: "text-emerald-600",
-            bg: "bg-white",
+            textColor: "text-emerald-600",
           },
           {
             label: "Nonaktif",
             value: list.filter((k) => !k.isActive).length,
-            color: "text-rose-500",
-            bg: "bg-white",
+            textColor: "text-slate-500",
           },
           {
-            label: "Kategori",
+            label: "Total Kategori",
             value: categories.length,
-            color: "text-indigo-500",
-            bg: "bg-white",
+            textColor: "text-slate-800",
           },
         ].map((s) => (
           <div
             key={s.label}
-            className={`${s.bg} border border-gray-100 rounded-2xl px-5 py-4 shadow-sm`}
+            className="bg-white border border-slate-200 rounded-2xl p-5"
           >
-            <p className="text-xs text-gray-400 uppercase tracking-wider">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-normal">
               {s.label}
             </p>
-            <p className={`text-2xl font-semibold mt-1 ${s.color}`}>
+            <p className={`text-2xl font-normal mt-1.5 ${s.textColor}`}>
               {s.value}
             </p>
           </div>
         ))}
       </div>
 
-      {/* ── Error ──────────────────────────────────────────────────────────── */}
+      {/* ── Error Banner ────────────────────────────────────────────────────── */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-100 rounded-2xl p-4 flex gap-3 items-start text-sm text-red-600">
-          <AlertCircle size={16} className="shrink-0 mt-0.5" />
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex gap-3 items-center text-xs text-rose-600 font-normal">
+          <AlertCircle size={16} className="shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* ── Toolbar ────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm mb-4 flex flex-col sm:flex-row gap-3">
+      {/* ── Toolbar & Filter ─────────────────────────────────────────────────── */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-3">
         {/* search */}
         <div className="relative flex-1">
           <Search
-            size={15}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            size={14}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
           />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama, kategori, deskripsi…"
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-amber-400/50 outline-none transition-all"
+            placeholder="Cari nama, kategori, deskripsi..."
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-400 outline-none transition-all"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
             >
-              <FilterX size={14} />
+              <FilterX size={13} />
             </button>
           )}
         </div>
@@ -199,7 +226,7 @@ export default function MasterKomoditasPage() {
         <select
           value={filterKat}
           onChange={(e) => setFilterKat(e.target.value)}
-          className="px-3 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-white focus:ring-2 focus:ring-amber-400/50 outline-none"
+          className="px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-700 bg-white focus:border-slate-400 outline-none"
         >
           <option value="semua">Semua Kategori</option>
           {categories.map((c) => (
@@ -210,15 +237,15 @@ export default function MasterKomoditasPage() {
         </select>
 
         {/* status tabs */}
-        <div className="flex rounded-xl border border-gray-200 overflow-hidden text-sm shrink-0">
+        <div className="flex rounded-xl border border-slate-200 overflow-hidden text-xs shrink-0">
           {(["semua", "aktif", "nonaktif"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              className={`px-4 py-2.5 capitalize transition-colors ${
+              className={`px-3 py-2 capitalize transition-colors font-normal ${
                 filterStatus === s
-                  ? "bg-amber-500 text-white"
-                  : "bg-white text-gray-500 hover:bg-gray-50"
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-500 hover:bg-slate-50"
               }`}
             >
               {s}
@@ -227,40 +254,25 @@ export default function MasterKomoditasPage() {
         </div>
       </div>
 
-      {/* ── Result count ───────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <p className="text-xs text-gray-400">
-          {loading
-            ? "Memuat…"
-            : `${filtered.length} dari ${list.length} komoditas`}
-        </p>
-        {isFiltered && !loading && (
-          <button
-            onClick={clearFilters}
-            className="text-xs text-amber-600 hover:underline flex items-center gap-1"
-          >
-            <FilterX size={12} /> Reset filter
-          </button>
-        )}
-      </div>
-
       {/* ── Table ──────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden text-xs">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <Loader2 size={28} className="animate-spin text-amber-400" />
-            <p className="text-sm text-gray-400">Mengambil data dari Gudang…</p>
+            <Loader2 size={24} className="animate-spin text-emerald-600" />
+            <p className="text-xs text-slate-400 font-normal">
+              Mengambil data dari Service Gudang...
+            </p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Wheat size={36} className="text-gray-200" />
-            <p className="text-sm text-gray-400">
+          <div className="flex flex-col items-center justify-center py-20 gap-2">
+            <Wheat size={32} className="text-slate-300" />
+            <p className="text-xs text-slate-600 font-normal">
               Tidak ada komoditas ditemukan
             </p>
             {isFiltered && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-amber-600 hover:underline"
+                className="text-xs text-emerald-600 hover:underline mt-1 font-normal"
               >
                 Reset filter
               </button>
@@ -268,60 +280,40 @@ export default function MasterKomoditasPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-left whitespace-nowrap">
               <thead>
-                <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wider">
-                  <th className="px-5 py-3.5 text-left w-10 font-medium">#</th>
-                  <th className="px-5 py-3.5 text-left font-medium">
-                    Komoditas
+                <tr className="bg-slate-50/80 text-slate-400 border-b border-slate-200 text-[11px] font-normal uppercase tracking-wider">
+                  <th className="px-5 py-3.5 w-10 font-normal">#</th>
+                  <th className="px-5 py-3.5 font-normal">Komoditas</th>
+                  <th className="px-5 py-3.5 font-normal">Kategori</th>
+                  <th className="px-5 py-3.5 font-normal">Satuan</th>
+                  <th className="px-5 py-3.5 text-right font-normal">
+                    Harga Acuan
                   </th>
-                  <th className="px-5 py-3.5 text-left font-medium">
-                    Kategori
-                  </th>
-                  <th className="px-5 py-3.5 text-left font-medium">Satuan</th>
-                  <th className="px-5 py-3.5 text-right font-medium">
-                    Harga Dasar
-                  </th>
-                  <th className="px-5 py-3.5 text-center font-medium">
-                    Produk
-                  </th>
-                  <th className="px-5 py-3.5 text-center font-medium">
+                  <th className="px-5 py-3.5 text-center font-normal">
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {filtered.map((k, i) => (
                   <tr
-                    key={k.id}
-                    className="border-b border-gray-50 hover:bg-amber-50/20 transition-colors"
+                    key={k.id || `komoditas-${i}`}
+                    className="hover:bg-slate-50/60 transition-colors"
                   >
                     {/* no */}
-                    <td className="px-5 py-3.5 text-gray-300 text-xs">
+                    <td className="px-5 py-3.5 text-slate-400 text-xs font-normal">
                       {i + 1}
                     </td>
 
                     {/* nama */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 overflow-hidden">
-                          {k.gambarUrl ? (
-                            <Image
-                              src={k.gambarUrl}
-                              alt={k.nama}
-                              width={36}
-                              height={36}
-                              className="object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <Wheat size={15} className="text-amber-300" />
-                          )}
-                        </div>
+                        <KomoditasImage src={k.gambarUrl} alt={k.nama} />
                         <div>
-                          <p className="text-gray-800 font-medium">{k.nama}</p>
+                          <p className="text-slate-800 font-normal">{k.nama}</p>
                           {k.deskripsi && (
-                            <p className="text-xs text-gray-400 line-clamp-1 max-w-[260px]">
+                            <p className="text-[11px] text-slate-400 line-clamp-1 max-w-[260px] font-normal">
                               {k.deskripsi}
                             </p>
                           )}
@@ -331,46 +323,33 @@ export default function MasterKomoditasPage() {
 
                     {/* kategori */}
                     <td className="px-5 py-3.5">
-                      <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-normal border border-slate-200">
                         {k.kategori || "—"}
                       </span>
                     </td>
 
                     {/* satuan */}
-                    <td className="px-5 py-3.5 text-gray-500 text-xs">
+                    <td className="px-5 py-3.5 text-slate-500 font-normal">
                       {k.satuan}
                     </td>
 
                     {/* harga */}
-                    <td className="px-5 py-3.5 text-right text-gray-700 font-medium text-xs">
+                    <td className="px-5 py-3.5 text-right text-slate-800 font-normal">
                       {k.harga ? (
                         formatRupiah(k.harga)
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-slate-400">—</span>
                       )}
-                    </td>
-
-                    {/* produk */}
-                    <td className="px-5 py-3.5 text-center">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-xs ${
-                          (k._count?.produkGudang ?? 0) > 0
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-gray-50 text-gray-400"
-                        }`}
-                      >
-                        {k._count?.produkGudang ?? 0}
-                      </span>
                     </td>
 
                     {/* status */}
                     <td className="px-5 py-3.5 text-center">
                       {k.isActive ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-[10px] font-normal">
                           <CheckCircle2 size={10} /> Aktif
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-400 rounded-full text-xs">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 text-slate-500 border border-slate-200 rounded-md text-[10px] font-normal">
                           <XCircle size={10} /> Nonaktif
                         </span>
                       )}
@@ -382,12 +361,6 @@ export default function MasterKomoditasPage() {
           </div>
         )}
       </div>
-
-      {/* ── Footer note ────────────────────────────────────────────────────── */}
-      <p className="mt-4 text-xs text-gray-400 text-center">
-        Data dikelola di aplikasi Gudang ·{" "}
-        <code className="bg-gray-100 px-1 rounded">localhost:5173</code>
-      </p>
     </div>
   );
 }

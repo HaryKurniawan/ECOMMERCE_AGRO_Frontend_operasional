@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 // ── Mini Bar Chart ─────────────────────────────────────────────────────
@@ -13,7 +13,7 @@ interface MiniBarChartProps {
 export function MiniBarChart({
   data,
   color = "#10b981",
-  height = 40,
+  height = 36,
 }: MiniBarChartProps) {
   const max = Math.max(...data, 1);
   return (
@@ -23,8 +23,8 @@ export function MiniBarChart({
           key={i}
           className="flex-1 rounded-sm transition-all duration-300"
           style={{
-            height: `${Math.max((val / max) * 100, 4)}%`,
-            backgroundColor: i === data.length - 1 ? color : `${color}55`,
+            height: `${Math.max((val / max) * 100, 6)}%`,
+            backgroundColor: i === data.length - 1 ? color : `${color}35`,
           }}
         />
       ))}
@@ -41,7 +41,7 @@ interface TrendBadgeProps {
 export function TrendBadge({ value, suffix = "%" }: TrendBadgeProps) {
   if (value === 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
+      <span className="inline-flex items-center gap-0.5 text-[10px] font-normal px-2 py-0.5 rounded-md bg-slate-50 text-slate-500 border border-slate-200">
         <Minus className="w-2.5 h-2.5" />
         Stabil
       </span>
@@ -50,8 +50,10 @@ export function TrendBadge({ value, suffix = "%" }: TrendBadgeProps) {
   const isUp = value > 0;
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-        isUp ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-600"
+      className={`inline-flex items-center gap-0.5 text-[10px] font-normal px-2 py-0.5 rounded-md border ${
+        isUp
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+          : "bg-rose-50 text-rose-600 border-rose-200"
       }`}
     >
       {isUp ? (
@@ -89,30 +91,29 @@ export function AnalyticsCard({
   chartData,
   chartColor = "#10b981",
   icon,
-  accentColor = "border-l-emerald-400",
   onClick,
 }: AnalyticsCardProps) {
   return (
     <button
       onClick={onClick}
-      className={`bg-white border border-gray-100 border-l-2 ${accentColor} rounded-2xl p-4 text-left w-full hover:shadow-md transition-all duration-200 active:scale-[0.98] group`}
+      className="bg-white border border-slate-200 rounded-2xl p-4 text-left w-full hover:border-slate-300 transition-colors active:scale-[0.99] group"
     >
-      <div className="flex items-start justify-between gap-2 mb-3">
+      <div className="flex items-start justify-between gap-2 mb-2.5">
         <div className="flex-1 min-w-0">
-          <p className="text-[10.5px] text-gray-400 uppercase tracking-wider font-bold truncate">
+          <p className="text-[11px] text-slate-400 font-normal uppercase tracking-wider truncate">
             {label}
           </p>
-          <p className="text-[20px] font-extrabold text-gray-900 leading-tight mt-0.5 tracking-tight truncate">
+          <p className="text-[19px] font-normal text-slate-900 leading-tight mt-1 tracking-tight truncate">
             {value}
           </p>
           {subtitle && (
-            <p className="text-[10px] text-gray-400 mt-0.5 truncate">
+            <p className="text-[10.5px] text-slate-400 mt-0.5 truncate font-normal">
               {subtitle}
             </p>
           )}
         </div>
         {icon && (
-          <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0 group-hover:bg-gray-100 transition-colors">
+          <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 text-slate-500">
             {icon}
           </div>
         )}
@@ -120,7 +121,7 @@ export function AnalyticsCard({
 
       {chartData && chartData.length > 0 && (
         <div className="mb-2">
-          <MiniBarChart data={chartData} color={chartColor} height={36} />
+          <MiniBarChart data={chartData} color={chartColor} height={32} />
         </div>
       )}
 
@@ -128,7 +129,9 @@ export function AnalyticsCard({
         <div className="flex items-center gap-1.5 mt-1">
           <TrendBadge value={trend} />
           {trendLabel && (
-            <span className="text-[10px] text-gray-400">{trendLabel}</span>
+            <span className="text-[10px] text-slate-400 font-normal">
+              {trendLabel}
+            </span>
           )}
         </div>
       )}
@@ -148,7 +151,7 @@ export function StatusDistributionBar({ items }: { items: StatusDistItem[] }) {
   if (total === 0) return null;
   return (
     <div className="space-y-2">
-      <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
+      <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden bg-slate-100">
         {items.map((item, i) => (
           <div
             key={i}
@@ -157,13 +160,12 @@ export function StatusDistributionBar({ items }: { items: StatusDistItem[] }) {
           />
         ))}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1">
         {items.map((item, i) => (
-          <div key={i} className="flex items-center gap-1">
+          <div key={i} className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${item.color}`} />
-            <span className="text-[10px] text-gray-500 font-medium">
-              {item.label}{" "}
-              <span className="font-bold text-gray-700">{item.count}</span>
+            <span className="text-[11px] text-slate-500 font-normal">
+              {item.label} <span className="text-slate-800">{item.count}</span>
             </span>
           </div>
         ))}

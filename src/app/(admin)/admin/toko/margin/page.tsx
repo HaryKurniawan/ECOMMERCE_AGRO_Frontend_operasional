@@ -239,7 +239,7 @@ export default function AdminStoresMarginPage() {
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center py-20 gap-3">
-        <Loader2 className="w-10 h-10 text-emerald-600 animate-spin" />
+        <Loader2 className="w-10 h-10 text-primary-600 animate-spin" />
         <p className="text-gray-400 font-medium animate-pulse">
           Memuat dashboard monitoring margin...
         </p>
@@ -249,40 +249,25 @@ export default function AdminStoresMarginPage() {
 
   // Margin color helper
   const marginColor = (m: number) => {
-    if (m >= 25) return "text-emerald-600 bg-emerald-50 border-emerald-200";
-    if (m >= 15) return "text-blue-600 bg-blue-50 border-blue-200";
-    if (m >= 8) return "text-amber-600 bg-amber-50 border-amber-200";
-    return "text-rose-600 bg-rose-50 border-rose-200";
+    if (m >= 25) return "text-primary-600 bg-primary-50 border-primary-200";
+    if (m >= 15) return "text-gray-600 bg-gray-50 border-gray-200";
+    if (m >= 8) return "text-gray-600 bg-gray-50 border-gray-200";
+    return "text-red-600 bg-red-50 border-red-200";
   };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Title */}
-      <div>
-        <span className="text-xs text-emerald-600 font-bold uppercase tracking-wider">
-          Manajemen Keuntungan
-        </span>
-        <h2 className="text-2xl font-bold text-gray-900 mt-1 flex items-center gap-2">
-          <Percent className="text-emerald-600" size={26} /> Monitor Margin &
-          Profit B2B
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Pantau margin default, ketersediaan produk, dan estimasi profit setiap
-          Agro Daerah.
-        </p>
-      </div>
-
       {/* Global Margin Settings Banner */}
-      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="absolute -right-10 -top-10 text-emerald-500/20 rotate-12 pointer-events-none">
+      <div className="bg-primary-600 rounded-2xl p-6 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="absolute -right-10 -top-10 text-primary-500/20 rotate-12 pointer-events-none">
           <Percent size={140} />
         </div>
         <div className="relative z-10 flex-1">
-          <span className="bg-emerald-800/40 text-emerald-100 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider mb-3 inline-block border border-emerald-500/30">
+          <span className="bg-primary-800/40 text-primary-100 text-[10px] font-medium px-2.5 py-1 rounded-full uppercase tracking-wider mb-3 inline-block border border-primary-200">
             Regulasi Nasional
           </span>
-          <h3 className="text-xl font-bold">Standar Keuntungan B2B</h3>
-          <p className="text-emerald-100 text-[13px] mt-1 max-w-xl">
+          <h3 className="text-xl font-medium">Standar Keuntungan B2B</h3>
+          <p className="text-primary-100 text-[13px] mt-1 max-w-xl">
             Sesuai dengan Surat Keputusan (SK) Direksi terbaru, Anda dapat
             menetapkan standar margin (persentase) secara global untuk seluruh
             toko.
@@ -293,21 +278,21 @@ export default function AdminStoresMarginPage() {
             onClick={() =>
               alert("Download SK PDF masih dalam tahap pengembangan (Dummy).")
             }
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-bold transition-all w-full sm:w-auto backdrop-blur-sm"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-all w-full sm:w-auto backdrop-blur-sm"
           >
             <FileText size={16} />
             Lihat SK
           </button>
           <button
             onClick={handleOpenHistory}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-bold transition-all w-full sm:w-auto backdrop-blur-sm"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-all w-full sm:w-auto backdrop-blur-sm"
           >
             <History size={16} />
             Riwayat
           </button>
           <button
             onClick={() => setGlobalMarginModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-emerald-700 hover:bg-emerald-50 rounded-xl text-sm font-bold transition-all w-full sm:w-auto shadow-md"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-primary-700 hover:bg-primary-50 rounded-xl text-sm font-medium transition-all w-full sm:w-auto "
           >
             <Settings size={16} />
             Atur Standar
@@ -316,7 +301,7 @@ export default function AdminStoresMarginPage() {
       </div>
 
       {error && (
-        <div className="bg-rose-50 border border-rose-100 text-rose-700 p-4 rounded-2xl flex items-center gap-3">
+        <div className="bg-red-50 border border-red-100 text-red-700 p-4 rounded-2xl flex items-center gap-3">
           <AlertCircle size={20} />
           <span className="text-sm font-medium">{error}</span>
         </div>
@@ -324,16 +309,16 @@ export default function AdminStoresMarginPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
+        <div className="bg-white rounded-2xl p-5 border border-gray-200 ">
           <div className="flex justify-between items-start mb-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+            <div className="p-2.5 bg-primary-50 text-primary-600 rounded-xl">
               <Store size={18} />
             </div>
-            <span className="text-[10px] bg-emerald-500/10 text-emerald-700 font-bold px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-primary-500/10 text-primary-700 font-medium px-2 py-0.5 rounded-full">
               Kemitraan
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-gray-900">{totalStores}</p>
+          <p className="text-2xl font-medium text-gray-900">{totalStores}</p>
           <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-0.5">
             Total Toko Aktif
           </p>
@@ -342,16 +327,16 @@ export default function AdminStoresMarginPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
+        <div className="bg-white rounded-2xl p-5 border border-gray-200 ">
           <div className="flex justify-between items-start mb-3">
-            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+            <div className="p-2.5 bg-gray-50 text-gray-600 rounded-xl">
               <Package size={18} />
             </div>
-            <span className="text-[10px] bg-indigo-500/10 text-indigo-700 font-bold px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-gray-500/10 text-gray-700 font-medium px-2 py-0.5 rounded-full">
               Logistik
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-gray-900">
+          <p className="text-2xl font-medium text-gray-900">
             {totalStockKg.toLocaleString("id-ID")}
           </p>
           <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-0.5">
@@ -362,16 +347,16 @@ export default function AdminStoresMarginPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm">
+        <div className="bg-white rounded-2xl p-5 border border-gray-200 ">
           <div className="flex justify-between items-start mb-3">
-            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+            <div className="p-2.5 bg-gray-50 text-gray-600 rounded-xl">
               <TrendingUp size={18} />
             </div>
-            <span className="text-[10px] bg-amber-500/10 text-amber-700 font-bold px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-gray-500/10 text-gray-700 font-medium px-2 py-0.5 rounded-full">
               Proyeksi
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-emerald-600">
+          <p className="text-2xl font-medium text-primary-600">
             {formatRp(totalProjectedProfit)}
           </p>
           <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-0.5">
@@ -384,7 +369,7 @@ export default function AdminStoresMarginPage() {
       </div>
 
       {/* Control Bar */}
-      <div className="bg-white p-2 rounded-2xl border border-gray-200/80 shadow-sm flex flex-col sm:flex-row gap-2">
+      <div className="bg-white p-2 rounded-2xl border border-gray-200 flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search
             size={16}
@@ -395,12 +380,12 @@ export default function AdminStoresMarginPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari toko berdasarkan nama atau kota..."
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent rounded-xl text-sm focus:ring-2 focus:ring-primary-500 focus:bg-white outline-none transition-all"
           />
         </div>
         <button
           onClick={fetchStoresMargin}
-          className="px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border border-gray-100 transition-colors"
+          className="px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-xl text-sm font-medium flex items-center justify-center gap-2 border border-gray-100 transition-colors"
         >
           <RefreshCw className="w-4 h-4" /> Segarkan
         </button>
@@ -409,8 +394,8 @@ export default function AdminStoresMarginPage() {
       {/* Cards Grid */}
       <div>
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 bg-emerald-50 rounded-lg flex items-center justify-center">
-            <Sliders size={12} className="text-emerald-600" />
+          <div className="w-6 h-6 bg-primary-50 rounded-lg flex items-center justify-center">
+            <Sliders size={12} className="text-primary-600" />
           </div>
           <h3 className="text-[13px] font-semibold text-gray-700">
             Daftar Toko ({filteredStores.length})
@@ -430,7 +415,7 @@ export default function AdminStoresMarginPage() {
             {filteredStores.map((s) => (
               <div
                 key={s.id}
-                className="bg-white rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all group overflow-hidden"
+                className="bg-white rounded-2xl border border-gray-200 hover: transition-all group overflow-hidden"
               >
                 {/* Card Header */}
                 <div
@@ -439,11 +424,11 @@ export default function AdminStoresMarginPage() {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-100 transition-colors">
-                        <Store size={16} className="text-emerald-600" />
+                      <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary-100 transition-colors">
+                        <Store size={16} className="text-primary-600" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-gray-900 text-sm leading-tight group-hover:text-emerald-700 transition-colors truncate">
+                        <p className="font-medium text-gray-900 text-sm leading-tight group-hover:text-primary-700 transition-colors truncate">
                           {s.nama}
                         </p>
                         <div className="flex items-center gap-1 mt-0.5">
@@ -460,18 +445,18 @@ export default function AdminStoresMarginPage() {
                     </div>
                     <ChevronRight
                       size={16}
-                      className="text-gray-300 group-hover:text-emerald-500 transition-colors flex-shrink-0 mt-1"
+                      className="text-gray-300 group-hover:text-primary-500 transition-colors flex-shrink-0 mt-1"
                     />
                   </div>
 
                   {/* Margin badge + stats */}
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     <span
-                      className={`text-xs font-bold px-2.5 py-1 rounded-full border ${marginColor(s.defaultMargin)}`}
+                      className={`text-xs font-medium px-2.5 py-1 rounded-full border ${marginColor(s.defaultMargin)}`}
                     >
                       {s.defaultMargin}% margin
                     </span>
-                    <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 font-bold">
+                    <span className="text-[11px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full border border-slate-200 font-medium">
                       Max: {s.marginMaxPersen || 30}%
                     </span>
                     <span className="text-[10px] text-gray-400 font-medium">
@@ -488,7 +473,7 @@ export default function AdminStoresMarginPage() {
                   {/* Metrics row */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="bg-gray-50 rounded-xl p-2 text-center">
-                      <p className="text-[13px] font-bold text-gray-800">
+                      <p className="text-[13px] font-medium text-gray-800">
                         {s.totalProduk}
                       </p>
                       <p className="text-[9px] text-gray-400 uppercase tracking-wider mt-0.5">
@@ -496,7 +481,7 @@ export default function AdminStoresMarginPage() {
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-2 text-center">
-                      <p className="text-[13px] font-bold text-gray-800">
+                      <p className="text-[13px] font-medium text-gray-800">
                         {s.totalStock >= 1000
                           ? `${(s.totalStock / 1000).toFixed(1)}t`
                           : s.totalStock}
@@ -506,7 +491,7 @@ export default function AdminStoresMarginPage() {
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-xl p-2 text-center">
-                      <p className="text-[13px] font-bold text-emerald-600">
+                      <p className="text-[13px] font-medium text-primary-600">
                         {formatRp(s.totalEstimatedProfit)}
                       </p>
                       <p className="text-[9px] text-gray-400 uppercase tracking-wider mt-0.5">
@@ -523,13 +508,13 @@ export default function AdminStoresMarginPage() {
                       e.stopPropagation();
                       handleOpenEditDefault(s);
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] font-bold transition-all"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] font-medium transition-all"
                   >
                     <Settings size={12} /> Ubah Default
                   </button>
                   <button
                     onClick={() => router.push(`/admin/toko/margin/${s.id}`)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] font-bold transition-all"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] font-medium transition-all"
                   >
                     <BarChart2 size={12} /> Kelola Produk
                   </button>
@@ -543,7 +528,7 @@ export default function AdminStoresMarginPage() {
       {/* Edit Default Margin Modal */}
       {editingStore && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white border border-gray-200 rounded-3xl p-6 relative space-y-4 shadow-2xl">
+          <div className="w-full max-w-md bg-white border border-gray-200 rounded-3xl p-6 relative space-y-4 ">
             <button
               onClick={() => setEditingStore(null)}
               className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
@@ -552,7 +537,7 @@ export default function AdminStoresMarginPage() {
             </button>
 
             <div>
-              <h3 className="text-base font-bold text-gray-900">
+              <h3 className="text-base font-medium text-gray-900">
                 Ubah Margin Default Toko
               </h3>
               <p className="text-[11px] text-gray-400 mt-0.5">
@@ -567,8 +552,8 @@ export default function AdminStoresMarginPage() {
               <div
                 className={`p-3 rounded-2xl text-[11px] font-semibold border ${
                   message.type === "success"
-                    ? "bg-emerald-50 border-emerald-100 text-emerald-700"
-                    : "bg-rose-50 border-rose-100 text-rose-700"
+                    ? "bg-primary-50 border-primary-100 text-primary-700"
+                    : "bg-red-50 border-red-100 text-red-700"
                 }`}
               >
                 {message.text}
@@ -589,7 +574,7 @@ export default function AdminStoresMarginPage() {
                     onChange={(e) =>
                       setNewMarginInput(parseFloat(e.target.value) || 0)
                     }
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-primary-500"
                   />
                   <span className="text-sm font-semibold text-gray-400">%</span>
                 </div>
@@ -612,11 +597,11 @@ export default function AdminStoresMarginPage() {
                     onChange={(e) =>
                       setNewMaxMarginInput(parseFloat(e.target.value) || 0)
                     }
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-primary-500"
                   />
                   <span className="text-sm font-semibold text-gray-400">%</span>
                 </div>
-                <p className="text-[10px] text-amber-600 leading-relaxed mt-1">
+                <p className="text-[10px] text-gray-600 leading-relaxed mt-1">
                   * Batas maksimum margin yang diperbolehkan bagi Seller untuk
                   dikonfigurasi.
                 </p>
@@ -626,7 +611,7 @@ export default function AdminStoresMarginPage() {
                 <button
                   type="submit"
                   disabled={savingConfig}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all shadow-md active:scale-98"
+                  className="w-full py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition-all active:scale-98"
                 >
                   {savingConfig ? "Menyimpan..." : "Simpan Konfigurasi Margin"}
                 </button>
@@ -639,10 +624,10 @@ export default function AdminStoresMarginPage() {
       {/* Global Margin Modal */}
       {globalMarginModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[24px] w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-[24px] w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                <Settings className="text-emerald-600" size={20} />
+              <h3 className="font-medium text-gray-900 text-lg flex items-center gap-2">
+                <Settings className="text-primary-600" size={20} />
                 Standar Margin Global
               </h3>
               <button
@@ -658,8 +643,8 @@ export default function AdminStoresMarginPage() {
                 <div
                   className={`p-3 rounded-xl mb-4 text-[13px] font-medium flex items-center gap-2 ${
                     globalMessage.type === "success"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                      : "bg-rose-50 text-rose-700 border border-rose-100"
+                      ? "bg-primary-50 text-primary-700 border border-primary-100"
+                      : "bg-red-50 text-red-700 border border-red-100"
                   }`}
                 >
                   {globalMessage.type === "success" ? (
@@ -673,14 +658,14 @@ export default function AdminStoresMarginPage() {
 
               <p className="text-sm text-gray-600 mb-4 font-medium leading-relaxed">
                 Pengaturan ini akan mengubah margin B2B secara otomatis untuk{" "}
-                <strong className="text-emerald-600">
+                <strong className="text-primary-600">
                   {storesList.length} toko
                 </strong>{" "}
                 yang terdaftar. Apakah Anda yakin?
               </p>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                   Persentase Keuntungan Nasional
                 </label>
                 <div className="relative">
@@ -692,7 +677,7 @@ export default function AdminStoresMarginPage() {
                     onChange={(e) =>
                       setGlobalMarginInput(Number(e.target.value))
                     }
-                    className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-gray-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+                    className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-medium text-gray-900 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all"
                   />
                   <Percent
                     size={18}
@@ -705,7 +690,7 @@ export default function AdminStoresMarginPage() {
               </div>
 
               <div className="space-y-2 mt-4">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                   Batas Maksimum Margin Nasional
                 </label>
                 <div className="relative">
@@ -717,7 +702,7 @@ export default function AdminStoresMarginPage() {
                     onChange={(e) =>
                       setGlobalMaxMarginInput(Number(e.target.value))
                     }
-                    className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-gray-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+                    className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-medium text-gray-900 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all"
                   />
                   <Percent
                     size={18}
@@ -734,14 +719,14 @@ export default function AdminStoresMarginPage() {
                   type="button"
                   onClick={() => setGlobalMarginModalOpen(false)}
                   disabled={savingGlobal}
-                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold text-sm transition-colors"
+                  className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium text-sm transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={savingGlobal}
-                  className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
                 >
                   {savingGlobal ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -758,10 +743,10 @@ export default function AdminStoresMarginPage() {
       {/* Margin History Modal */}
       {historyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[24px] w-full max-w-4xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-[24px] w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                <History className="text-emerald-600" size={20} />
+              <h3 className="font-medium text-gray-900 text-lg flex items-center gap-2">
+                <History className="text-primary-600" size={20} />
                 Riwayat Penggantian Margin
               </h3>
               <button
@@ -775,7 +760,7 @@ export default function AdminStoresMarginPage() {
             <div className="p-6 flex-1 overflow-y-auto bg-white">
               {loadingHistory ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
-                  <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
                   <p className="text-gray-400 font-medium text-sm animate-pulse">
                     Memuat riwayat perubahan...
                   </p>
@@ -804,7 +789,7 @@ export default function AdminStoresMarginPage() {
                       {historyData.map((item, idx) => (
                         <tr
                           key={item.id || idx}
-                          className="border-b last:border-0 hover:bg-emerald-50/30 transition-colors"
+                          className="border-b last:border-0 hover:bg-primary-50/30 transition-colors"
                         >
                           <td className="px-4 py-3 whitespace-nowrap text-[12px] font-medium text-gray-900">
                             {dayjs(item.createdAt).format("DD MMM YYYY, HH:mm")}
@@ -814,12 +799,12 @@ export default function AdminStoresMarginPage() {
                           </td>
                           <td className="px-4 py-3">
                             {item.produkId ? (
-                              <span className="text-indigo-600 font-medium bg-indigo-50 px-2 py-1 rounded-md text-[11px] truncate max-w-[150px] inline-block">
+                              <span className="text-gray-600 font-medium bg-gray-50 px-2 py-1 rounded-md text-[11px] truncate max-w-[150px] inline-block">
                                 {item.produk?.nama?.replace(" - ", " ") ||
                                   "Produk"}
                               </span>
                             ) : (
-                              <span className="text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md text-[11px]">
+                              <span className="text-primary-600 font-medium bg-primary-50 border border-primary-200 px-2 py-1 rounded-md text-[11px]">
                                 Default Toko
                               </span>
                             )}
@@ -839,16 +824,16 @@ export default function AdminStoresMarginPage() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <span className="text-emerald-600 font-mono font-bold text-xs bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+                            <span className="text-primary-600 font-mono font-medium text-xs bg-primary-50 px-2 py-1 rounded-md border border-primary-100">
                               {item.marginBaru}%
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span
-                              className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              className={`px-2 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider ${
                                 item.diubahOlehPeran === "ADMIN"
-                                  ? "bg-amber-100 text-amber-700"
-                                  : "bg-blue-100 text-blue-700"
+                                  ? "bg-gray-100 text-gray-700"
+                                  : "bg-gray-100 text-gray-700"
                               }`}
                             >
                               {item.diubahOlehPeran}

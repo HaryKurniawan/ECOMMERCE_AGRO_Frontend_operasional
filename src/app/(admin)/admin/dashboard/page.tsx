@@ -20,10 +20,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Wifi,
   WifiOff,
   Percent,
-  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,6 +45,8 @@ import {
 
 interface OrderData {
   id: string;
+  id_pesanan?: string;
+  id_pesananEcom?: string;
   customer?: { name?: string };
   pembeli?: string;
   tanggalDibuat?: string;
@@ -72,19 +72,19 @@ interface ProductData {
 function StatusBadge({ status }: { status?: string }) {
   const s = status?.toLowerCase() ?? "";
   const map: Record<string, string> = {
-    selesai: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    delivered: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    dikirim: "bg-sky-50 text-sky-600 border-sky-100",
-    shipped: "bg-sky-50 text-sky-600 border-sky-100",
-    dibatalkan: "bg-red-50 text-red-500 border-red-100",
-    cancelled: "bg-red-50 text-red-500 border-red-100",
-    diproses: "bg-violet-50 text-violet-600 border-violet-100",
-    processing: "bg-violet-50 text-violet-600 border-violet-100",
+    selesai: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dikirim: "bg-slate-100 text-slate-700 border-slate-200",
+    shipped: "bg-slate-100 text-slate-700 border-slate-200",
+    dibatalkan: "bg-rose-50 text-rose-700 border-rose-200",
+    cancelled: "bg-rose-50 text-rose-700 border-rose-200",
+    diproses: "bg-amber-50 text-amber-700 border-amber-200",
+    processing: "bg-amber-50 text-amber-700 border-amber-200",
   };
-  const cls = map[s] ?? "bg-amber-50 text-amber-600 border-amber-100";
+  const cls = map[s] ?? "bg-slate-50 text-slate-600 border-slate-200";
   return (
     <span
-      className={`text-[10px] px-1.5 py-[2px] rounded-md border font-medium capitalize ${cls}`}
+      className={`text-[10px] px-2 py-0.5 rounded-md border font-normal uppercase tracking-wide ${cls}`}
     >
       {status}
     </span>
@@ -192,10 +192,12 @@ const DashboardAdminPage: React.FC = () => {
 
   if (!_hasHydrated || loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-primary-500" size={28} />
-          <p className="text-xs text-gray-400">Memuat data…</p>
+          <Loader2 className="animate-spin text-emerald-600" size={26} />
+          <p className="text-xs text-slate-400 font-normal">
+            Memuat data dashboard…
+          </p>
         </div>
       </div>
     );
@@ -242,51 +244,36 @@ const DashboardAdminPage: React.FC = () => {
           label: adminStats[2]?.label || "Total Toko",
           value: adminStats[2]?.value || storesCount,
           icon: Store,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Active",
           path: "/admin/toko",
-          border: "border-gray-200",
         },
         {
           label: "Total Produk",
           value: productsCount,
           icon: Package,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Aktif",
           path: "/admin/produk",
-          border: "border-gray-200",
         },
         {
           label: adminStats[3]?.label || "Total Pesanan",
           value: adminStats[3]?.value || 0,
           icon: ShoppingCart,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "All Time",
           path: "/admin/pesanan",
-          border: "border-gray-200",
         },
         {
-          label: adminStats[4]?.label || "Pengajuan Stok Baru",
+          label: adminStats[4]?.label || "Pengajuan Stok",
           value: adminStats[4]?.value || 0,
           icon: Warehouse,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Pending Gudang",
           path: "/admin/gudang",
-          border: "border-gray-200",
         },
         {
           label: "Total GMV",
           value: formatRupiah(adminStats[5]?.value || totalPenjualan),
           icon: DollarSign,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Rupiah",
           path: "/admin/pesanan",
-          border: "border-gray-200",
         },
       ]
     : [
@@ -294,203 +281,178 @@ const DashboardAdminPage: React.FC = () => {
           label: "Total Toko",
           value: storesCount,
           icon: Store,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "+2 bulan ini",
           path: "/admin/toko",
-          border: "border-gray-200",
         },
         {
           label: "Total Produk",
           value: productsCount,
           icon: Package,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Aktif",
           path: "/admin/produk",
-          border: "border-gray-200",
         },
         {
           label: "Pesanan Hari Ini",
           value: pesananHariIni,
           icon: ShoppingCart,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Masuk hari ini",
           path: "/admin/pesanan",
-          border: "border-gray-200",
         },
         {
           label: "Gudang Tersedia",
           value: affiliationsCount,
           icon: Warehouse,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Gudang aktif",
           path: "/admin/gudang",
-          border: "border-gray-200",
         },
         {
           label: "Total Penjualan",
           value: formatRupiah(totalPenjualan),
           icon: DollarSign,
-          iconBg: "bg-primary-50",
-          iconColor: "text-primary-600",
           trend: "Pesanan selesai",
           path: "/admin/pesanan",
-          border: "border-gray-200",
         },
       ];
 
   const statusItems = [
+    { label: "Selesai", count: selesaiCount, color: "bg-emerald-500" },
+    { label: "Dikirim", count: dikirimCount, color: "bg-slate-400" },
     { label: "Pending", count: pendingCount, color: "bg-amber-400" },
-    { label: "Dikirim", count: dikirimCount, color: "bg-sky-400" },
-    { label: "Selesai", count: selesaiCount, color: "bg-emerald-400" },
     { label: "Batal", count: batalCount, color: "bg-rose-400" },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="w-full max-w-[1600px] mx-auto space-y-6 animate-fade-in font-sans">
       {/* ── Page Header ─────────────────── */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between pb-3 border-b border-slate-100">
         <div>
-          <h1 className="text-[18px] font-semibold text-gray-900 leading-tight">
+          <h1 className="text-xl font-normal text-slate-900 tracking-tight">
             Dashboard Overview
           </h1>
-          <p className="text-[13px] text-gray-400 mt-0.5">{now}</p>
+          <p className="text-xs text-slate-400 mt-1 font-normal">{now}</p>
         </div>
-        <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5">
-          <Activity size={12} className="text-primary-500" />
-          <span className="text-[11px] text-gray-500 font-medium">Live</span>
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5">
+          <Activity size={13} className="text-emerald-600" />
+          <span className="text-xs text-slate-600 font-normal">
+            Sistem Online
+          </span>
         </div>
       </div>
 
       {/* ── Stat Cards ─────────────────── */}
-      <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-3.5">
         {stats.map((s, i) => (
           <button
             key={i}
             onClick={() => router.push(s.path)}
-            className={`bg-white border ${s.border} rounded-2xl p-4 text-left group hover:shadow-sm transition-all duration-200 active:scale-[0.98]`}
+            className="relative overflow-hidden bg-primary-600 rounded-2xl p-4 text-left group hover:bg-primary-700 shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div
-                className={`w-10 h-10 ${s.iconBg} rounded-xl flex items-center justify-center`}
-              >
-                <s.icon size={18} className={s.iconColor} />
+            {/* Dekorasi Siluet */}
+            <div className="absolute -right-4 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500 pointer-events-none" />
+            <div className="absolute -bottom-6 right-2 w-20 h-20 bg-white/5 rounded-full blur-lg group-hover:translate-x-2 transition-transform duration-500 pointer-events-none" />
+
+            <div className="relative z-10 flex items-center justify-between mb-3">
+              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white shadow-sm backdrop-blur-sm">
+                <s.icon size={16} />
               </div>
               <ArrowUpRight
                 size={13}
-                className="text-gray-200 group-hover:text-gray-400 transition-colors"
+                className="text-primary-200 group-hover:text-white transition-colors"
               />
             </div>
-            <p className="text-[18px] font-bold text-gray-900 leading-none tracking-tight">
-              {s.value}
-            </p>
-            <p className="text-[10.5px] text-gray-400 mt-1 uppercase tracking-wider">
-              {s.label}
-            </p>
-            <p className="text-[10px] text-gray-300 mt-1">{s.trend}</p>
+            <div className="relative z-10">
+              <p className="text-[19px] font-bold text-white leading-none tracking-tight">
+                {s.value}
+              </p>
+              <p className="text-[10.5px] text-primary-100 mt-1.5 uppercase tracking-wider font-semibold">
+                {s.label}
+              </p>
+              <p className="text-[10px] text-primary-200/80 mt-0.5 font-medium">
+                {s.trend}
+              </p>
+            </div>
           </button>
         ))}
       </div>
 
-      {/* ── Margin & Warehouse Status ───────────── */}
+      {/* ── Margin & Warehouse Status Bento ───────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Margin Monitor Quick Link */}
         <div
           onClick={() => router.push("/admin/toko/margin")}
-          className="cursor-pointer bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-2xl p-5 flex flex-col justify-center hover:from-emerald-500 hover:to-emerald-400 transition-all shadow-sm min-h-[110px]"
+          className="cursor-pointer bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between hover:border-slate-300 transition-colors"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shadow-inner">
-                <Percent size={20} />
-              </div>
-              <div>
-                <p className="text-sm font-bold tracking-wide">
-                  Monitor Margin & Profit B2B
-                </p>
-                <p className="text-xs text-emerald-100 mt-0.5 max-w-[200px]">
-                  Pantau margin & estimasi profit seluruh toko aktif
-                </p>
-              </div>
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-emerald-600">
+              <Percent size={18} />
             </div>
-            <ChevronRight size={20} className="text-emerald-200" />
+            <div>
+              <p className="text-sm font-normal text-slate-900">
+                Monitor Margin & Profit B2B
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5 font-normal">
+                Pantau margin & estimasi profit seluruh toko aktif
+              </p>
+            </div>
           </div>
+          <ArrowRight size={16} className="text-slate-400" />
         </div>
 
         {/* Gudang API Status Section */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm min-h-[110px] flex flex-col justify-center relative overflow-hidden group">
-          <div
-            className={`absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.06] ${
-              isGudangOnline ? "bg-emerald-500" : "bg-rose-500"
-            }`}
-          />
-
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${
-                  isGudangOnline
-                    ? "bg-emerald-50 text-emerald-600"
-                    : "bg-rose-50 text-rose-600"
-                }`}
-              >
-                {isGudangOnline ? (
-                  <Warehouse size={20} />
-                ) : (
-                  <WifiOff size={20} />
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-bold tracking-wide text-gray-900">
-                  Koneksi API Gudang
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      isGudangOnline
-                        ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                        : "bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]"
-                    }`}
-                  />
-                  <span
-                    className={`text-[11px] font-bold uppercase tracking-wider ${
-                      isGudangOnline ? "text-emerald-600" : "text-rose-600"
-                    }`}
-                  >
-                    {isGudangOnline ? "Sistem Terhubung" : "Terputus / Offline"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/admin/gudang"
-              className={`p-2 rounded-xl transition-colors ${
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <div
+              className={`w-10 h-10 rounded-xl border flex items-center justify-center ${
                 isGudangOnline
-                  ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-600"
-                  : "bg-rose-50 hover:bg-rose-100 text-rose-600"
+                  ? "bg-slate-50 text-slate-700 border-slate-100"
+                  : "bg-rose-50 text-rose-600 border-rose-200"
               }`}
             >
-              <ArrowRight size={16} />
-            </Link>
+              {isGudangOnline ? <Warehouse size={18} /> : <WifiOff size={18} />}
+            </div>
+            <div>
+              <p className="text-sm font-normal text-slate-900">
+                Koneksi API Gudang
+              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isGudangOnline
+                      ? "bg-emerald-500"
+                      : "bg-rose-500 animate-pulse"
+                  }`}
+                />
+                <span
+                  className={`text-xs font-normal ${
+                    isGudangOnline ? "text-emerald-700" : "text-rose-600"
+                  }`}
+                >
+                  {isGudangOnline ? "Sistem Terhubung" : "Terputus / Offline"}
+                </span>
+              </div>
+            </div>
           </div>
+          <Link
+            href="/admin/gudang"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
+          >
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
 
       {/* ── Analytics Section ─────────────────────────────────── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 bg-indigo-50 rounded-lg flex items-center justify-center">
-            <BarChart2 size={12} className="text-indigo-500" />
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center">
+            <BarChart2 size={12} className="text-slate-500" />
           </div>
-          <h2 className="text-[13px] font-semibold text-gray-700">
+          <h2 className="text-xs font-normal text-slate-500 uppercase tracking-wider">
             Analitik Platform
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3.5">
           {/* Total Pesanan + Trend chart */}
           <AnalyticsCard
             label="Total Pesanan (7 Hari)"
@@ -499,15 +461,14 @@ const DashboardAdminPage: React.FC = () => {
             trend={trendPesanan}
             trendLabel="vs. kemarin"
             chartData={chart7Day}
-            chartColor="#6366f1"
-            accentColor="border-l-indigo-400"
-            icon={<ShoppingCart size={15} className="text-indigo-500" />}
+            chartColor="#10b981"
+            icon={<ShoppingCart size={15} />}
             onClick={() => router.push("/admin/pesanan")}
           />
 
           {/* Pending pesanan */}
           <AnalyticsCard
-            label="Pesanan Menunggu Proses"
+            label="Pesanan Menunggu"
             value={pendingCount}
             subtitle="Butuh tindakan segera"
             trend={pendingCount > 0 ? undefined : 0}
@@ -528,23 +489,21 @@ const DashboardAdminPage: React.FC = () => {
                         6 - i,
                   ).length,
               )}
-            chartColor="#f59e0b"
-            accentColor="border-l-amber-400"
-            icon={<Clock size={15} className="text-amber-500" />}
+            chartColor="#64748b"
+            icon={<Clock size={15} />}
             onClick={() => router.push("/admin/pesanan")}
           />
 
           {/* Avg Order Value */}
           <AnalyticsCard
-            label="Rata-Rata Nilai Pesanan"
+            label="Rata-Rata Pesanan"
             value={formatRupiah(avgOrderValue)}
             subtitle={`Dari ${allOrders.length} total pesanan`}
             chartData={chart7Day.map(
               (c) => c * Math.round(avgOrderValue / 1000),
             )}
             chartColor="#10b981"
-            accentColor="border-l-emerald-400"
-            icon={<TrendingUp size={15} className="text-emerald-500" />}
+            icon={<TrendingUp size={15} />}
             onClick={() => router.push("/admin/pesanan")}
           />
 
@@ -561,65 +520,64 @@ const DashboardAdminPage: React.FC = () => {
               pendingCount,
               dikirimCount,
             ].map((v) => v || 0)}
-            chartColor="#8b5cf6"
-            accentColor="border-l-violet-400"
-            icon={<CheckCircle2 size={15} className="text-violet-500" />}
+            chartColor="#64748b"
+            icon={<CheckCircle2 size={15} />}
             onClick={() => router.push("/admin/laporan")}
           />
         </div>
       </div>
 
       {/* ── Status Distribution ────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center">
-              <BarChart2 size={13} className="text-slate-400" />
+            <div className="w-6 h-6 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center">
+              <BarChart2 size={12} className="text-slate-500" />
             </div>
-            <h2 className="text-[13px] font-semibold text-gray-800">
+            <h2 className="text-xs font-normal text-slate-500 uppercase tracking-wider">
               Distribusi Status Pesanan
             </h2>
           </div>
-          <span className="text-[10px] text-gray-400 font-medium">
-            {allOrders.length} total
+          <span className="text-xs text-slate-400 font-normal">
+            {allOrders.length} Total
           </span>
         </div>
         <StatusDistributionBar items={statusItems} />
 
         {/* Quick count row */}
-        <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t border-gray-50">
+        <div className="grid grid-cols-4 gap-2 pt-3 border-t border-slate-100">
           {[
             {
               label: "Selesai",
               count: selesaiCount,
               icon: CheckCircle2,
-              color: "text-emerald-500",
+              color: "text-emerald-600",
             },
             {
               label: "Dikirim",
               count: dikirimCount,
               icon: TrendingUp,
-              color: "text-sky-500",
+              color: "text-slate-600",
             },
             {
               label: "Pending",
               count: pendingCount,
               icon: Clock,
-              color: "text-amber-500",
+              color: "text-amber-600",
             },
             {
               label: "Batal",
               count: batalCount,
               icon: XCircle,
-              color: "text-rose-500",
+              color: "text-rose-600",
             },
           ].map((item) => (
             <div key={item.label} className="text-center">
-              <item.icon size={14} className={`${item.color} mx-auto mb-1`} />
-              <p className="text-[16px] font-bold text-gray-800">
+              <item.icon size={13} className={`${item.color} mx-auto mb-1`} />
+              <p className="text-[17px] font-normal text-slate-900">
                 {item.count}
               </p>
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-normal">
                 {item.label}
               </p>
             </div>
@@ -627,55 +585,55 @@ const DashboardAdminPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Two columns ─────────────────────────────────────── */}
+      {/* ── Two columns: Pesanan Terbaru & Top Produk ───────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Pesanan Terbaru */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center">
-                <ClipboardList size={13} className="text-amber-500" />
+              <div className="w-6 h-6 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center">
+                <ClipboardList size={12} className="text-slate-500" />
               </div>
-              <h2 className="text-[13px] font-semibold text-gray-800">
+              <h2 className="text-xs font-normal text-slate-500 uppercase tracking-wider">
                 Pesanan Terbaru
               </h2>
             </div>
             <button
               onClick={() => router.push("/admin/pesanan")}
-              className="flex items-center gap-1 text-[11px] text-primary-600 hover:text-primary-700 font-medium transition-colors"
+              className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 font-normal transition-colors"
             >
               Lihat Semua <ArrowRight size={11} />
             </button>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-slate-100">
             {orders.length === 0 && (
-              <div className="text-center py-8 text-gray-300 text-xs">
+              <div className="text-center py-8 text-slate-400 text-xs font-normal">
                 Belum ada pesanan masuk.
               </div>
             )}
             {orders.map((p, idx) => (
               <div
                 key={p?.id || p?.id_pesanan || p?.id_pesananEcom || idx}
-                className="flex items-center justify-between py-2.5 hover:bg-gray-50 -mx-1 px-1 rounded-xl transition-colors"
+                className="flex items-center justify-between py-3 hover:bg-slate-50/50 -mx-1 px-1 rounded-xl transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Users size={12} className="text-gray-300" />
+                  <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+                    <Users size={12} className="text-slate-400" />
                   </div>
                   <div>
-                    <p className="text-[12px] font-medium text-gray-800 leading-tight truncate max-w-[120px]">
+                    <p className="text-xs font-normal text-slate-800 leading-tight truncate max-w-[130px]">
                       {p.customer?.name || p.pembeli || "Customer"}
                     </p>
-                    <p className="text-[10.5px] text-gray-400 mt-0.5">
+                    <p className="text-[10.5px] text-slate-400 mt-0.5 font-normal">
                       {formatTanggal(p.tanggalDibuat || p.createdAt || "")}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[12px] font-semibold text-gray-800">
+                  <p className="text-xs font-normal text-slate-800">
                     {formatRupiah(p.totalHarga || p.totalAmount || 0)}
                   </p>
-                  <div className="mt-0.5 flex justify-end">
+                  <div className="mt-1 flex justify-end">
                     <StatusBadge status={p.status} />
                   </div>
                 </div>
@@ -685,40 +643,38 @@ const DashboardAdminPage: React.FC = () => {
         </div>
 
         {/* Top Produk */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-primary-50 rounded-lg flex items-center justify-center">
-                <TrendingUp size={13} className="text-primary-600" />
+              <div className="w-6 h-6 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center">
+                <TrendingUp size={12} className="text-slate-500" />
               </div>
-              <h2 className="text-[13px] font-semibold text-gray-800">
+              <h2 className="text-xs font-normal text-slate-500 uppercase tracking-wider">
                 Produk Terlaris
               </h2>
             </div>
             <button
               onClick={() => router.push("/admin/produk")}
-              className="flex items-center gap-1 text-[11px] text-primary-600 hover:text-primary-700 font-medium transition-colors"
+              className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 font-normal transition-colors"
             >
               Lihat Semua <ArrowRight size={11} />
             </button>
           </div>
           <div className="space-y-1">
             {topProduk.length === 0 && (
-              <div className="text-center py-8 text-gray-300 text-xs">
+              <div className="text-center py-8 text-slate-400 text-xs font-normal">
                 Belum ada data produk.
               </div>
             )}
             {topProduk.map((p, i) => (
               <div
                 key={p.id}
-                className="flex items-center gap-3 py-2 hover:bg-gray-50 -mx-1 px-1 rounded-xl transition-colors"
+                className="flex items-center gap-3 py-2.5 hover:bg-slate-50/50 -mx-1 px-1 rounded-xl transition-colors"
               >
-                <span
-                  className={`text-[11px] font-bold w-5 text-center flex-shrink-0 ${i === 0 ? "text-amber-400" : i === 1 ? "text-gray-400" : i === 2 ? "text-amber-700" : "text-gray-200"}`}
-                >
+                <span className="text-xs font-normal w-4 text-center flex-shrink-0 text-slate-400">
                   {i + 1}
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden flex-shrink-0 relative">
                   {p.gambarUrl || p.gambar ? (
                     <Image
                       src={(p.gambarUrl || p.gambar) as string}
@@ -728,87 +684,31 @@ const DashboardAdminPage: React.FC = () => {
                       unoptimized
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sm">
+                    <div className="w-full h-full flex items-center justify-center text-xs">
                       {p.emoji || "📦"}
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-medium text-gray-800 truncate leading-tight">
+                  <p className="text-xs font-normal text-slate-800 truncate leading-tight">
                     {p.nama?.replace(" - ", " ")}
                   </p>
-                  <p className="text-[10.5px] text-gray-400 truncate mt-0.5">
+                  <p className="text-[10.5px] text-slate-400 truncate mt-0.5 font-normal">
                     {p.store?.nama || p.tokoNama || "—"}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-[11.5px] font-semibold text-gray-700">
+                  <p className="text-xs font-normal text-slate-800">
                     {p.terjual || 0}
-                    <span className="font-normal text-gray-400"> terjual</span>
+                    <span className="text-slate-400"> terjual</span>
                   </p>
-                  <p className="text-[10.5px] text-gray-400 mt-0.5">
+                  <p className="text-[10.5px] text-slate-400 mt-0.5 font-normal">
                     {formatRupiah(p.harga || 0)}
                   </p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* ── Quick Actions ────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4">
-        <h2 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-3">
-          Aksi Cepat
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {[
-            {
-              label: "Tambah Toko",
-              icon: Store,
-              path: "/admin/toko",
-              color: "text-blue-600 bg-blue-50 border-blue-100",
-            },
-            {
-              label: "Tambah Produk",
-              icon: Package,
-              path: "/admin/produk",
-              color: "text-primary-600 bg-primary-50 border-primary-100",
-            },
-            {
-              label: "Lihat Pesanan",
-              icon: ClipboardList,
-              path: "/admin/pesanan",
-              color: "text-amber-600 bg-amber-50 border-amber-100",
-            },
-            {
-              label: "Approval Toko",
-              icon: CalendarCheck,
-              path: "/admin/approval-toko",
-              color: "text-violet-600 bg-violet-50 border-violet-100",
-            },
-            {
-              label: "Kemitraan Gudang",
-              icon: Warehouse,
-              path: "/admin/gudang",
-              color: "text-emerald-600 bg-emerald-50 border-emerald-100",
-            },
-            {
-              label: "Monitor Margin",
-              icon: Percent,
-              path: "/admin/toko/margin",
-              color: "text-indigo-600 bg-indigo-50 border-indigo-100",
-            },
-          ].map((a) => (
-            <button
-              key={a.path}
-              onClick={() => router.push(a.path)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-[11.5px] font-medium transition-all hover:shadow-sm active:scale-95 ${a.color}`}
-            >
-              <a.icon size={13} />
-              {a.label}
-            </button>
-          ))}
         </div>
       </div>
     </div>

@@ -152,9 +152,18 @@ export default function PenggunaDetailPage() {
             : userData.peran;
   }, [userData]);
 
+  // Guard against static sub-routes falling through to dynamic [id] route
+  useEffect(() => {
+    if (id === "logs") {
+      router.replace("/admin/pengguna/logs");
+    } else if (id === "tambah") {
+      router.replace("/admin/pengguna/tambah");
+    }
+  }, [id, router]);
+
   // Fetch complete details
   const fetchAllData = useCallback(async () => {
-    if (!id) return;
+    if (!id || id === "logs" || id === "tambah") return;
     try {
       setLoading(true);
       setError("");

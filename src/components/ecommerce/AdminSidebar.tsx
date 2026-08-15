@@ -67,7 +67,6 @@ const ADMIN_MENU: SidebarMenuItem[] = [
       { path: "/admin/laporan/produk-terlaris", label: "Produk Terlaris" },
       { path: "/admin/tren-komoditas", label: "Komoditas Global" },
       { path: "/admin/tren/per-seller", label: "Per Seller" },
-      { path: "/admin/tren/per-produk", label: "Per Produk" },
     ],
   },
   {
@@ -90,7 +89,6 @@ const ADMIN_MENU: SidebarMenuItem[] = [
       { path: "/admin/pengaturan/ppn", label: "Pajak (PPN)" },
       { path: "/admin/kelola-foto", label: "Kelola Foto" },
       { path: "/admin/banner", label: "Banner Promo" },
-      { path: "/admin/notifikasi", label: "Broadcast Notifikasi" },
     ],
   },
 ];

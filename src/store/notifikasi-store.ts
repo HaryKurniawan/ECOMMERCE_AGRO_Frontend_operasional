@@ -19,45 +19,57 @@ export const useNotifStore = create<NotifikasiState>((set) => ({
   isInitialized: false,
 
   setNotifications: (notifs, unread) =>
-    set({ notifications: notifs, unreadCount: unread, isInitialized: true }),
+    set({
+      notifications: Array.isArray(notifs) ? notifs : [],
+      unreadCount: unread || 0,
+      isInitialized: true,
+    }),
 
   addNotification: (notif) =>
     set((state) => ({
-      notifications: [notif, ...state.notifications],
-      unreadCount: state.unreadCount + 1,
+      notifications: [
+        notif,
+        ...(Array.isArray(state.notifications) ? state.notifications : []),
+      ],
+      unreadCount: (state.unreadCount || 0) + 1,
     })),
 
   markAsRead: (id) =>
     set((state) => {
-      const isUnread = state.notifications.find(
-        (n) => n.id === id && !n.isRead,
-      );
+      const safeNotifs = Array.isArray(state.notifications)
+        ? state.notifications
+        : [];
+      const isUnread = safeNotifs.find((n) => n.id === id && !n.isRead);
       if (!isUnread) return state;
 
       return {
-        notifications: state.notifications.map((n) =>
+        notifications: safeNotifs.map((n) =>
           n.id === id ? { ...n, isRead: true } : n,
         ),
-        unreadCount: Math.max(0, state.unreadCount - 1),
+        unreadCount: Math.max(0, (state.unreadCount || 0) - 1),
       };
     }),
 
   markAllAsRead: () =>
     set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
+      notifications: (Array.isArray(state.notifications)
+        ? state.notifications
+        : []
+      ).map((n) => ({ ...n, isRead: true })),
       unreadCount: 0,
     })),
 
   removeNotification: (id) =>
     set((state) => {
-      const isUnread = state.notifications.find(
-        (n) => n.id === id && !n.isRead,
-      );
+      const safeNotifs = Array.isArray(state.notifications)
+        ? state.notifications
+        : [];
+      const isUnread = safeNotifs.find((n) => n.id === id && !n.isRead);
       return {
-        notifications: state.notifications.filter((n) => n.id !== id),
+        notifications: safeNotifs.filter((n) => n.id !== id),
         unreadCount: isUnread
-          ? Math.max(0, state.unreadCount - 1)
-          : state.unreadCount,
+          ? Math.max(0, (state.unreadCount || 0) - 1)
+          : state.unreadCount || 0,
       };
     }),
 }));

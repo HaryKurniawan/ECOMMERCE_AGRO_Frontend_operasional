@@ -24,15 +24,15 @@ function TrendBadge({ persen, arah }: { persen?: number; arah?: string }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-full
-      ${isUp ? "bg-green-100 text-green-700" : isDown ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-500"}`}
+      className={`inline-flex items-center gap-0.5 text-[10px] font-normal px-1.5 py-0.5 rounded-md
+      ${isUp ? "bg-primary-50 text-primary-700 border border-primary-100" : isDown ? "bg-red-50 text-red-600 border border-red-100" : "bg-slate-50 text-slate-400 border border-slate-100"}`}
     >
       {isUp ? (
-        <TrendingUp size={10} />
+        <TrendingUp size={9} />
       ) : isDown ? (
-        <TrendingDown size={10} />
+        <TrendingDown size={9} />
       ) : (
-        <Minus size={10} />
+        <Minus size={9} />
       )}
       {Math.abs(persen)}%
     </span>
@@ -52,18 +52,20 @@ function ProdukRow({
     : 30;
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 rounded-lg px-2 transition-colors group">
+    <div className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 rounded-lg px-2 transition-colors group">
       {/* Rank */}
       <div className="w-7 text-center text-lg leading-none flex-shrink-0">
         {item.rank <= 3 ? (
           rankIcon
         ) : (
-          <span className="text-xs font-bold text-gray-400">#{item.rank}</span>
+          <span className="text-xs font-normal text-slate-400">
+            #{item.rank}
+          </span>
         )}
       </div>
 
       {/* Gambar produk */}
-      <div className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+      <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
         {item.produk.gambarUrl ? (
           <img
             src={item.produk.gambarUrl}
@@ -72,24 +74,26 @@ function ProdukRow({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Package size={14} className="text-gray-400" />
+            <Package size={13} className="text-slate-400" />
           </div>
         )}
       </div>
 
       {/* Info produk */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate">
+        <p className="text-xs font-normal text-slate-800 truncate">
           {item.produk.nama?.replace(" - ", " ")}
         </p>
         {item.toko && (
-          <p className="text-xs text-gray-400 truncate">{item.toko.nama}</p>
+          <p className="text-[10px] text-slate-400 truncate">
+            {item.toko.nama}
+          </p>
         )}
         {/* Progress bar */}
         {item.persenDariKategori !== undefined && (
-          <div className="mt-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+          <div className="mt-1 h-1 bg-slate-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-400 rounded-full transition-all"
+              className="h-full bg-primary-400 rounded-full transition-all"
               style={{ width: `${barWidth}%` }}
             />
           </div>
@@ -98,11 +102,11 @@ function ProdukRow({
 
       {/* Stats */}
       <div className="text-right flex-shrink-0">
-        <p className="text-sm font-bold text-gray-800">
+        <p className="text-xs font-normal text-slate-800">
           {item.jumlahTerjual.toFixed(1)}{" "}
-          <span className="text-xs font-normal text-gray-400">kg</span>
+          <span className="text-[10px] text-slate-400">kg</span>
         </p>
-        <p className="text-xs text-gray-400">
+        <p className="text-[10px] text-slate-400">
           {formatRupiah(item.totalRevenue)}
         </p>
         {showTrend && (
@@ -128,28 +132,28 @@ export default function KategoriTerlarisCard({
     data;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all group">
       {/* Header kategori */}
-      <div className="px-5 pt-4 pb-3 border-b border-gray-50">
+      <div className="px-4 pt-4 pb-3 border-b border-slate-50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {kategori.icon && (
-              <span className="text-2xl leading-none">{kategori.icon}</span>
+              <span className="text-xl leading-none">{kategori.icon}</span>
             )}
             <div>
-              <h3 className="text-base font-bold text-gray-900">
+              <h3 className="text-sm font-normal text-slate-800">
                 {kategori.nama}
               </h3>
-              <p className="text-xs text-gray-400">
+              <p className="text-[10px] text-slate-400">
                 {topProduk.length} produk teratas
               </p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-emerald-600">
+            <p className="text-xs font-normal text-primary-600">
               {totalKategoriTerjual.toFixed(0)} kg
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-[10px] text-slate-400">
               {formatRupiah(totalKategoriRevenue)}
             </p>
           </div>
@@ -159,7 +163,7 @@ export default function KategoriTerlarisCard({
       {/* Produk list */}
       <div className="px-3 pb-3">
         {topProduk.length === 0 ? (
-          <div className="py-8 text-center text-gray-400 text-sm">
+          <div className="py-8 text-center text-slate-400 text-xs font-normal">
             Belum ada data penjualan
           </div>
         ) : (

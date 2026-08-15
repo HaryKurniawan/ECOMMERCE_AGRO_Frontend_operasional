@@ -23,6 +23,7 @@ interface AdminConvData {
     id: string;
     name: string | null;
     email: string;
+    peran?: string;
   } | null;
   unreadCount: number;
 }
@@ -37,6 +38,7 @@ const ChatSidebar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [draftTrigger, setDraftTrigger] = useState(0);
 
   const fetchConversations = async () => {
     try {
@@ -44,11 +46,27 @@ const ChatSidebar: React.FC = () => {
       const data = res.data?.data?.data || res.data?.data || res.data || [];
       const convs = Array.isArray(data) ? data : [];
 
-      // Ensure uniqueness
-      const uniqueConvs = convs.filter(
-        (c: any, index: number, self: any[]) =>
-          index === self.findIndex((t) => t.id === c.id),
-      );
+      // Ensure uniqueness and filter by route
+      const basePath =
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/cs")
+          ? "/cs/chat"
+          : "/admin/chat";
+
+      const isCsPage = basePath === "/cs/chat";
+
+      const uniqueConvs = convs.filter((c: any, index: number, self: any[]) => {
+        const isUnique = index === self.findIndex((t) => t.id === c.id);
+        if (!isUnique) return false;
+
+        if (isCsPage) {
+          // CS handles everything or primarily consumers
+          return true;
+        } else {
+          // Admin handles operasional only, exclude consumers
+          return c.customer?.peran !== "KONSUMEN";
+        }
+      });
       setConversations(uniqueConvs);
     } catch (error) {
       console.error("Failed to fetch CS conversations:", error);
@@ -89,8 +107,12 @@ const ChatSidebar: React.FC = () => {
       console.error("SSE sidebar connection error:", err);
     };
 
+    const handleDraft = () => setDraftTrigger((t) => t + 1);
+    window.addEventListener("chat_draft_changed", handleDraft);
+
     return () => {
       eventSource.close();
+      window.removeEventListener("chat_draft_changed", handleDraft);
     };
   }, []);
 
@@ -121,10 +143,22 @@ const ChatSidebar: React.FC = () => {
   const totalUnread = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
 
   const filteredConversations = conversations.filter((conv) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    const name = conv.customer?.name || conv.customer?.email || "";
-    return name.toLowerCase().includes(q);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const name = conv.customer?.name || conv.customer?.email || "";
+      if (!name.toLowerCase().includes(q)) return false;
+    }
+
+    // Draft / Empty filter (exclude empty conversations without a draft)
+    const draft =
+      typeof window !== "undefined"
+        ? localStorage.getItem(`chat_draft_${conv.id}`)
+        : null;
+    if (!conv.lastMessage && conv.unreadCount === 0 && !draft) {
+      return false;
+    }
+
+    return true;
   });
 
   const formatTime = (dateStr: string | null) => {
@@ -184,6 +218,49 @@ const ChatSidebar: React.FC = () => {
             className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 focus:bg-white transition-all"
           />
         </div>
+
+        {/* Menu Khusus Admin: Kirim Broadcast */}
+        {typeof window !== "undefined" &&
+          window.location.pathname.startsWith("/admin/chat") && (
+            <div className="mt-4">
+              <button
+                onClick={() => router.push("/admin/chat/broadcast")}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left group
+                ${
+                  window.location.pathname === "/admin/chat/broadcast"
+                    ? "bg-primary-50/50 border-primary-200"
+                    : "bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-200"
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-50 text-primary-600 transition-colors">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m3 11 18-5v12L3 14v-3z" />
+                    <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`font-display text-sm font-medium ${window.location.pathname === "/admin/chat/broadcast" ? "text-primary-900" : "text-gray-800"}`}
+                  >
+                    Kirim Broadcast
+                  </p>
+                  <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                    Pesan massal ke pengguna
+                  </p>
+                </div>
+              </button>
+            </div>
+          )}
       </div>
 
       {/* Conversation List */}
@@ -237,11 +314,19 @@ const ChatSidebar: React.FC = () => {
                         {formatTime(conv.lastMessageAt)}
                       </span>
                     </div>
-                    <p
-                      className={`text-xs truncate mt-0.5 ${conv.unreadCount > 0 ? "text-gray-800 font-medium" : "text-gray-500"}`}
-                    >
-                      {conv.lastMessage || "Belum ada pesan"}
-                    </p>
+                    {typeof window !== "undefined" &&
+                    localStorage.getItem(`chat_draft_${conv.id}`) ? (
+                      <p className="text-xs truncate mt-0.5 text-primary-600">
+                        <span className="font-semibold italic">Draft: </span>
+                        {localStorage.getItem(`chat_draft_${conv.id}`)}
+                      </p>
+                    ) : (
+                      <p
+                        className={`text-xs truncate mt-0.5 ${conv.unreadCount > 0 ? "text-gray-800 font-medium" : "text-gray-500"}`}
+                      >
+                        {conv.lastMessage || "Belum ada pesan"}
+                      </p>
+                    )}
                   </div>
                 </button>
               );
