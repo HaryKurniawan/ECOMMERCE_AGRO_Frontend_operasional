@@ -197,10 +197,10 @@ const ChatSidebar: React.FC = () => {
           </h1>
           <button
             onClick={() => setIsContactModalOpen(true)}
-            className="w-8 h-8 flex items-center justify-center bg-primary-50 text-primary-600 rounded-full hover:bg-primary-100 hover:scale-105 transition-all shadow-sm"
+            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 hover:text-gray-800 hover:border-gray-300 transition-all shadow-xs"
             title="Daftar Kontak Operasional"
           >
-            <UsersIcon size={16} />
+            <UsersIcon size={15} />
           </button>
         </div>
 
@@ -316,8 +316,10 @@ const ChatSidebar: React.FC = () => {
                     </div>
                     {typeof window !== "undefined" &&
                     localStorage.getItem(`chat_draft_${conv.id}`) ? (
-                      <p className="text-xs truncate mt-0.5 text-primary-600">
-                        <span className="font-semibold italic">Draft: </span>
+                      <p className="text-xs truncate mt-0.5 text-gray-600">
+                        <span className="text-red-500 font-semibold">
+                          Draf:{" "}
+                        </span>
                         {localStorage.getItem(`chat_draft_${conv.id}`)}
                       </p>
                     ) : (

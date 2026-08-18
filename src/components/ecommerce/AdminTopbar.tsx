@@ -22,7 +22,7 @@ import NotifBell from "./NotifBell";
 import FullScreenButton from "./FullScreenButton";
 
 const NAV_TABS = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+  { label: "Beranda", icon: LayoutDashboard, path: "/admin/dashboard" },
   { label: "Management Account", icon: UserIcon, path: "/admin/pengguna" },
   { label: "Gudang", icon: Warehouse, path: "/admin/gudang" },
   { label: "Pusat Bantuan", icon: MessageCircle, path: "/admin/chat" },
@@ -67,10 +67,10 @@ export default function AdminTopbar() {
             let isActive =
               pathname === tab.path || pathname.startsWith(tab.path + "/");
 
-            if (tab.label === "Dashboard") {
+            if (tab.path === "/admin/dashboard") {
               const inOtherTab = NAV_TABS.some(
                 (t) =>
-                  t.label !== "Dashboard" &&
+                  t.path !== "/admin/dashboard" &&
                   (pathname === t.path || pathname.startsWith(t.path + "/")),
               );
               if (pathname.startsWith("/admin") && !inOtherTab) {
@@ -83,7 +83,7 @@ export default function AdminTopbar() {
               <button
                 key={tab.path}
                 onClick={() => router.push(tab.path)}
-                className={`relative flex items-center px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-colors duration-300 border ${
+                className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-colors duration-300 border ${
                   isActive
                     ? "text-white border-primary-600 shadow-sm bg-primary-600/10"
                     : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-800"

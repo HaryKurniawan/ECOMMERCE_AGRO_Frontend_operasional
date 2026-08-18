@@ -294,28 +294,24 @@ export default function SellerRatingPage() {
 
       {/* Tabs Switcher and Global Filters */}
       <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-20">
-        <SegmentedControl
-          value={activeTab}
-          onChange={(val) => setActiveTab(val as "products" | "reviews")}
-          options={[
-            {
-              value: "products",
-              label: (
-                <div className="flex items-center gap-2 text-sm">
-                  <ShoppingBag size={15} /> Daftar Rating Produk
-                </div>
-              ),
-            },
-            {
-              value: "reviews",
-              label: (
-                <div className="flex items-center gap-2 text-sm">
-                  <MessageSquare size={15} /> Semua Ulasan & Rating
-                </div>
-              ),
-            },
-          ]}
-        />
+        {activeTab === "reviews" ? (
+          <button
+            onClick={() => {
+              setActiveTab("products");
+              setSelectedProductId(null);
+              setStarFilter("all");
+              setSearchText("");
+            }}
+            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-emerald-600 transition-colors bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm"
+          >
+            <ChevronRight size={16} className="rotate-180" /> Kembali ke Daftar
+            Produk
+          </button>
+        ) : (
+          <div className="text-sm font-medium text-slate-700 flex items-center gap-2">
+            <ShoppingBag size={16} /> Daftar Rating Produk
+          </div>
+        )}
 
         {/* Global Review Filters (Visible only when in reviews tab) */}
         {activeTab === "reviews" && (
@@ -469,7 +465,10 @@ export default function SellerRatingPage() {
                   Fokus Produk
                 </span>
                 <button
-                  onClick={() => setSelectedProductId(null)}
+                  onClick={() => {
+                    setSelectedProductId(null);
+                    setActiveTab("products");
+                  }}
                   className="text-slate-400 hover:text-slate-650"
                 >
                   <X size={12} />
@@ -519,10 +518,13 @@ export default function SellerRatingPage() {
                   </span>
                 </div>
                 <button
-                  onClick={() => setSelectedProductId(null)}
+                  onClick={() => {
+                    setSelectedProductId(null);
+                    setActiveTab("products");
+                  }}
                   className="px-3 py-1.5 text-[10px] font-medium bg-slate-50 border border-slate-100 rounded-xl hover:bg-emerald-50 hover:text-emerald-650 transition-colors"
                 >
-                  Lihat Semua
+                  Kembali
                 </button>
               </div>
             )}
@@ -544,9 +546,9 @@ export default function SellerRatingPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredReviews.map((review) => (
+                {filteredReviews.map((review, index) => (
                   <div
-                    key={review.id}
+                    key={review?.id || `review-${index}`}
                     className="bg-white border border-slate-100 rounded-3xl p-5 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 space-y-4"
                   >
                     {/* User and Rating Row */}

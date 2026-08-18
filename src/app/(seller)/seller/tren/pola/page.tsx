@@ -118,9 +118,9 @@ function DailyOrdersPanel({
               ))}
             </>
           ) : pesananList.length > 0 ? (
-            pesananList.map((p: any) => (
+            pesananList.map((p: any, index: number) => (
               <div
-                key={p.id}
+                key={p?.id_pesanan || p?.id || `pesanan-${index}`}
                 className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-emerald-100 transition-colors"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
               >
@@ -130,7 +130,10 @@ function DailyOrdersPanel({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-[10px] font-bold text-gray-400 font-mono tracking-wide">
-                          #{p.id.split("-")[0].toUpperCase()}
+                          #
+                          {(p.id_pesanan || p.id)
+                            ?.split("-")[0]
+                            ?.toUpperCase() || ""}
                         </span>
                       </div>
                       <p className="text-sm font-semibold text-gray-800 truncate">
@@ -146,8 +149,11 @@ function DailyOrdersPanel({
                 {/* Items */}
                 {p.item && p.item.length > 0 && (
                   <div className="border-t border-gray-50 px-4 py-3 space-y-2.5">
-                    {p.item.map((it: any) => (
-                      <div key={it.id} className="flex items-center gap-3">
+                    {p.item.map((it: any, itemIndex: number) => (
+                      <div
+                        key={it?.id || `item-${itemIndex}`}
+                        className="flex items-center gap-3"
+                      >
                         {/* Product image */}
                         <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
                           {it.produk?.gambarUrl ? (
@@ -183,7 +189,7 @@ function DailyOrdersPanel({
                 {/* Footer CTA */}
                 <div className="border-t border-gray-50 px-4 py-2.5">
                   <Link
-                    href={`/seller/pesanan/${p.id}`}
+                    href={`/seller/pesanan/${p.id_pesanan || p.id}`}
                     className="flex items-center justify-center gap-1.5 w-full py-1.5 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
                     onClick={onClose}
                   >
@@ -337,7 +343,7 @@ export default function PolaPenjualanPage() {
                       </span>{" "}
                       pagi. Pastikan kurir & admin standby pada sesi{" "}
                       <span className="font-semibold text-gray-700">
-                        {peakTime.split(" ")[0]}
+                        {peakTime?.split(" ")[0] || ""}
                       </span>{" "}
                       karena volume pesanan tertinggi terjadi di waktu ini.
                     </p>

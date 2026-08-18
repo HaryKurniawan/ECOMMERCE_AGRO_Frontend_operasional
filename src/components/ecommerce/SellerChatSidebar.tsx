@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   MessageCircle,
   User,
@@ -15,6 +15,7 @@ import {
   ArrowUpDown,
   Check,
   X,
+  Headphones,
 } from "lucide-react";
 
 import { chatApi, storesApi } from "@/lib/ecommerce-api";
@@ -22,14 +23,23 @@ import { useAuthStore } from "@/store/auth-store";
 
 interface ConvData {
   id: string;
-  type: "CHAT_PENJUAL" | "ADMIN_CS";
-  tipe?: string; // Backend might use tipe or type
-  lastMessage: string | null;
-  lastMessageAt: string | null;
-  otherUser: {
+  // Backend returns 'tipe', normalise to both
+  type?: string;
+  tipe?: string;
+  // Backend fields
+  otherParticipantId?: string;
+  otherParticipantName?: string;
+  pesanTerakhir?: string | null;
+  waktuPesanTerakhir?: string | null;
+  // Normalised fields (populated after mapping)
+  lastMessage?: string | null;
+  lastMessageAt?: string | null;
+  otherUser?: {
     id: string;
     name: string | null;
-    email: string;
+    nama?: string | null;
+    email?: string;
+    role?: string;
   } | null;
   unreadCount: number;
 }
@@ -47,33 +57,104 @@ const SellerChatSidebar: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"user" | "operasional">("user");
+  // Track draft conv IDs so useMemo re-runs when drafts change
+  const [draftConvIds, setDraftConvIds] = useState<Set<string>>(new Set());
 
   // Courier Info
   const [courierStaff, setCourierStaff] = useState<any>(null);
+  const [courierList, setCourierList] = useState<any[]>([]);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+
+  const unreadUserCount = useMemo(() => {
+    return conversations
+      .filter((c) => (c.tipe || c.type) !== "ADMIN_CS")
+      .reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+  }, [conversations]);
+
+  const unreadOperasionalCount = useMemo(() => {
+    return conversations
+      .filter((c) => (c.tipe || c.type) === "ADMIN_CS")
+      .reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+  }, [conversations]);
+
+  const updateDrafts = useCallback(() => {
+    const keys = Object.keys(localStorage).filter((k) =>
+      k.startsWith("chat_draft_"),
+    );
+    const ids = new Set(keys.map((k) => k.replace("chat_draft_", "")));
+    setDraftConvIds(ids);
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    updateDrafts();
+
+    window.addEventListener("chat_draft_updated", updateDrafts);
+    window.addEventListener("chat_draft_changed", updateDrafts);
+    window.addEventListener("storage", updateDrafts);
+    return () => {
+      window.removeEventListener("chat_draft_updated", updateDrafts);
+      window.removeEventListener("chat_draft_changed", updateDrafts);
+      window.removeEventListener("storage", updateDrafts);
+    };
+  }, [updateDrafts]);
 
   const fetchConversations = async () => {
     try {
       const res = await chatApi.getConversations();
       const data = res.data?.data || res.data || [];
-      const convs = Array.isArray(data) ? data : [];
+      const rawConvs: any[] = Array.isArray(data) ? data : [];
 
-      // Ensure uniqueness
-      const uniqueConvs = convs.filter(
-        (c: any, index: number, self: any[]) =>
-          index === self.findIndex((t) => t.id === c.id),
-      );
+      // Normalise backend fields → uniform ConvData shape
+      const convs: ConvData[] = rawConvs
+        .filter((c, i, self) => self.findIndex((t) => t.id === c.id) === i) // unique
+        .map((c: any) => {
+          const rawName =
+            c.otherUser?.name ||
+            c.otherUser?.nama ||
+            c.pembeli?.name ||
+            c.pembeli?.nama ||
+            c.customer?.name ||
+            c.customer?.nama ||
+            c.user?.name ||
+            c.user?.nama ||
+            c.otherParticipantName ||
+            c.nama ||
+            c.name ||
+            (c.otherUser?.email ? c.otherUser.email.split("@")[0] : null) ||
+            (c.pembeli?.email ? c.pembeli.email.split("@")[0] : null) ||
+            (c.customer?.email ? c.customer.email.split("@")[0] : null);
 
-      const adminConv = uniqueConvs.find(
-        (c) => c.type === "ADMIN_CS" || c.tipe === "ADMIN_CS",
-      );
-      if (adminConv) setAdminConvId(adminConv.id);
+          const cleanName =
+            rawName && rawName !== "Unknown" && rawName !== "Unknown Pengguna"
+              ? rawName.trim()
+              : c.otherUser?.email
+                ? c.otherUser.email.split("@")[0]
+                : "Pelanggan";
 
-      setConversations(uniqueConvs);
+          const otherObj = c.otherUser || c.pembeli || c.customer || c.user;
+
+          return {
+            ...c,
+            tipe: c.tipe || c.type,
+            lastMessage: c.lastMessage ?? c.pesanTerakhir ?? null,
+            lastMessageAt: c.lastMessageAt ?? c.waktuPesanTerakhir ?? null,
+            otherUser: {
+              id: otherObj?.id || c.otherParticipantId || "",
+              name: cleanName,
+              nama: cleanName,
+              email: otherObj?.email || "",
+              role:
+                otherObj?.role ||
+                otherObj?.peran ||
+                c.otherParticipantRole ||
+                null,
+            },
+          };
+        });
+
+      setConversations(convs);
     } catch (error) {
       console.error("Failed to fetch seller conversations:", error);
     } finally {
@@ -85,8 +166,22 @@ const SellerChatSidebar: React.FC = () => {
     try {
       const res = await storesApi.getMyStore();
       const data = res.data?.data || res.data;
-      if (data?.courierStaff) {
-        setCourierStaff(data.courierStaff);
+      const rawList =
+        data?.kurirStaffs &&
+        Array.isArray(data.kurirStaffs) &&
+        data.kurirStaffs.length > 0
+          ? data.kurirStaffs
+          : data?.courierStaff
+            ? [data.courierStaff]
+            : [];
+      const normalizedList = rawList.map((k: any) => ({
+        ...k,
+        id: k.id_pengguna || k.id,
+        name: k.name || k.nama || null,
+      }));
+      setCourierList(normalizedList);
+      if (normalizedList.length > 0) {
+        setCourierStaff(normalizedList[0]);
       }
     } catch (err) {
       console.error("Failed to fetch store courier info", err);
@@ -126,16 +221,25 @@ const SellerChatSidebar: React.FC = () => {
   }, []);
 
   const handleContactAdmin = async () => {
-    if (adminConvId) {
-      router.push(`/seller/chat/${adminConvId}`);
+    const courierId = courierStaff?.id || courierStaff?.id_pengguna;
+    const existingAdminConv = conversations.find((c) => {
+      const isAdminType = c.tipe === "ADMIN_CS" || c.type === "ADMIN_CS";
+      const isCourier =
+        courierId &&
+        (c.otherParticipantId === courierId || c.otherUser?.id === courierId);
+      return isAdminType && !isCourier;
+    });
+
+    if (existingAdminConv) {
+      router.push(`/seller/chat/${existingAdminConv.id}`);
       return;
     }
+
     try {
       setLoading(true);
       const res = await chatApi.createConversation({ type: "ADMIN_CS" });
       const data = res.data?.data || res.data;
       if (data?.id) {
-        setAdminConvId(data.id);
         router.push(`/seller/chat/${data.id}`);
       }
     } catch (err) {
@@ -146,16 +250,35 @@ const SellerChatSidebar: React.FC = () => {
     }
   };
 
-  const handleContactCourier = async () => {
-    if (!courierStaff) {
+  const handleContactCourier = async (targetCourier?: any) => {
+    const kurir = targetCourier || courierStaff;
+    if (!kurir) {
       alert("Toko Anda belum memiliki kurir afiliasi.");
       return;
     }
+    const targetId = kurir.id || kurir.id_pengguna;
+    if (!targetId) {
+      alert("ID kurir tidak ditemukan.");
+      return;
+    }
+
+    const existingCourierConv = conversations.find(
+      (c) =>
+        (c.otherParticipantId === targetId || c.otherUser?.id === targetId) &&
+        (c.tipe === "ADMIN_CS" || c.type === "ADMIN_CS"),
+    );
+
+    if (existingCourierConv) {
+      router.push(`/seller/chat/${existingCourierConv.id}`);
+      setIsContactModalOpen(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const res = await chatApi.createConversation({
-        type: "ADMIN_CS", // Same backend endpoint handles CS/Staff chats
-        targetUserId: courierStaff.id,
+        type: "ADMIN_CS",
+        targetUserId: targetId,
       });
       const data = res.data?.data || res.data;
       if (data?.id) {
@@ -172,24 +295,37 @@ const SellerChatSidebar: React.FC = () => {
 
   const sortedAndFilteredConversations = useMemo(() => {
     const filtered = conversations.filter((conv) => {
-      const isChatPenjual =
-        conv.type === "CHAT_PENJUAL" || conv.tipe === "CHAT_PENJUAL";
-      const isAdminOrStaff =
-        conv.type === "ADMIN_CS" || conv.tipe === "ADMIN_CS";
-      if (!isChatPenjual && !isAdminOrStaff) return false;
+      const convType = conv.tipe || conv.type || "";
+      const isAdminOrStaff = convType === "ADMIN_CS";
+
+      if (activeTab === "user" && isAdminOrStaff) return false;
+      if (activeTab === "operasional" && !isAdminOrStaff) return false;
+
+      // Hide conversations with no messages AND no draft
+      const hasDraft = draftConvIds.has(conv.id);
+      const hasMessage = !!(conv.lastMessage || conv.pesanTerakhir);
+      if (!hasMessage && !hasDraft) return false;
 
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
-      const name = conv.otherUser?.name || conv.otherUser?.email || "";
+      const name =
+        conv.otherUser?.name ||
+        conv.otherParticipantName ||
+        conv.otherUser?.email ||
+        "";
       return name.toLowerCase().includes(q);
     });
 
     return filtered.sort((a, b) => {
-      const timeA = new Date(a.lastMessageAt || 0).getTime();
-      const timeB = new Date(b.lastMessageAt || 0).getTime();
+      const timeA = new Date(
+        a.lastMessageAt || a.waktuPesanTerakhir || 0,
+      ).getTime();
+      const timeB = new Date(
+        b.lastMessageAt || b.waktuPesanTerakhir || 0,
+      ).getTime();
       return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
     });
-  }, [conversations, searchQuery, sortOrder]);
+  }, [conversations, searchQuery, sortOrder, draftConvIds, activeTab]);
 
   const formatTime = (dateStr: string | null) => {
     if (!dateStr || !isMounted) return "";
@@ -218,21 +354,21 @@ const SellerChatSidebar: React.FC = () => {
       {/* Header */}
       <div className="p-4 border-b border-gray-100 flex-shrink-0 bg-white">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="font-display font-bold text-xl text-gray-900 flex items-center gap-2">
-            <MessageCircle size={24} className="text-primary-600" />
-            Chat
+          <h1 className="font-display font-semibold text-lg text-gray-900 flex items-center gap-2">
+            <MessageCircle size={22} className="text-primary-600" />
+            Percakapan
           </h1>
           <button
             onClick={() => setIsContactModalOpen(true)}
-            className="w-8 h-8 flex items-center justify-center bg-primary-50 text-primary-600 rounded-full hover:bg-primary-100 hover:scale-105 transition-all shadow-sm"
-            title="Daftar Kontak Kurir"
+            className="w-8 h-8 flex items-center justify-center bg-white border border-gray-200 text-gray-600 rounded-full hover:bg-gray-50 hover:text-gray-800 hover:border-gray-300 transition-all shadow-xs"
+            title="Daftar Kontak Operasional"
           >
-            <UsersIcon size={16} />
+            <UsersIcon size={15} />
           </button>
         </div>
 
         {/* Search & Sort Row */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <div className="relative flex-1">
             <Search
               size={14}
@@ -240,7 +376,11 @@ const SellerChatSidebar: React.FC = () => {
             />
             <input
               type="text"
-              placeholder="Cari pelanggan..."
+              placeholder={
+                activeTab === "user"
+                  ? "Cari pelanggan..."
+                  : "Cari operasional..."
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 transition-all"
@@ -287,40 +427,37 @@ const SellerChatSidebar: React.FC = () => {
           </div>
         </div>
 
-        {/* Priority Section */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Tab Switcher: Pelanggan vs Operasional */}
+        <div className="flex border border-gray-200/80 bg-gray-100/60 p-1 rounded-xl">
           <button
-            onClick={handleContactAdmin}
-            className="flex items-center gap-2 p-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 rounded-xl transition-all text-left"
+            onClick={() => setActiveTab("user")}
+            className={`flex-1 py-1.5 px-3 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === "user"
+                ? "bg-white text-primary-600 font-semibold shadow-sm"
+                : "text-gray-500 hover:text-gray-800 font-medium"
+            }`}
           >
-            <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
-              <Shield size={14} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-[11px] text-emerald-900 truncate">
-                Admin
-              </p>
-              <p className="text-[9px] text-emerald-600 truncate font-medium">
-                Bantuan
-              </p>
-            </div>
+            <span>Pelanggan</span>
+            {unreadUserCount > 0 && (
+              <span className="px-1.5 py-0.5 bg-primary-600 text-white text-[10px] rounded-full font-semibold">
+                {unreadUserCount > 9 ? "9+" : unreadUserCount}
+              </span>
+            )}
           </button>
-
           <button
-            onClick={handleContactCourier}
-            className="flex items-center gap-2 p-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 rounded-xl transition-all text-left"
+            onClick={() => setActiveTab("operasional")}
+            className={`flex-1 py-1.5 px-3 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === "operasional"
+                ? "bg-white text-primary-600 font-semibold shadow-sm"
+                : "text-gray-500 hover:text-gray-800 font-medium"
+            }`}
           >
-            <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
-              <Truck size={14} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-[11px] text-emerald-900 truncate">
-                Kurir
-              </p>
-              <p className="text-[9px] text-emerald-600 truncate font-medium">
-                Logistik
-              </p>
-            </div>
+            <span>Operasional</span>
+            {unreadOperasionalCount > 0 && (
+              <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-semibold">
+                {unreadOperasionalCount > 9 ? "9+" : unreadOperasionalCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -334,36 +471,76 @@ const SellerChatSidebar: React.FC = () => {
         ) : sortedAndFilteredConversations.length > 0 ? (
           <div className="divide-y divide-gray-200">
             {sortedAndFilteredConversations.map((conv) => {
-              const name =
-                conv.otherUser?.name || conv.otherUser?.email || "Pelanggan";
-              const isActive = activeId === conv.id;
-              const isAdminChat =
-                conv.type === "ADMIN_CS" || conv.tipe === "ADMIN_CS";
+              const convType = conv.tipe || conv.type || "";
+              const rawCustomerName =
+                conv.otherUser?.name ||
+                conv.otherUser?.nama ||
+                (conv as any).pembeli?.nama ||
+                (conv as any).pembeli?.name ||
+                (conv as any).customer?.nama ||
+                (conv as any).customer?.name ||
+                (conv as any).user?.nama ||
+                (conv as any).user?.name ||
+                conv.otherParticipantName ||
+                (conv.otherUser?.email
+                  ? conv.otherUser.email.split("@")[0]
+                  : null);
 
-              // Detect if it's the courier chat
+              const name =
+                rawCustomerName &&
+                rawCustomerName !== "Unknown" &&
+                rawCustomerName !== "Unknown Pengguna" &&
+                rawCustomerName !== "Pelanggan"
+                  ? rawCustomerName
+                  : "Pelanggan";
+
+              const formatCustomerName = (raw: string | null | undefined) => {
+                if (
+                  !raw ||
+                  raw === "Unknown" ||
+                  raw === "Unknown Pengguna" ||
+                  raw === "Pelanggan" ||
+                  raw === "Pengguna"
+                ) {
+                  return "Pelanggan";
+                }
+                const trimmed = raw.trim();
+                if (trimmed.startsWith("Pelanggan - ")) {
+                  return trimmed;
+                }
+                return `Pelanggan - ${trimmed}`;
+              };
+
+              const isActive = activeId === conv.id;
+              const isAdminChat = convType === "ADMIN_CS";
+
+              // Determine if courier: match against courierStaff ID
+              const courierId = courierStaff?.id || courierStaff?.id_pengguna;
               const isCourierChat =
-                isAdminChat && conv.otherUser?.id === courierStaff?.id;
+                isAdminChat &&
+                !!courierId &&
+                (conv.otherParticipantId === courierId ||
+                  conv.otherUser?.id === courierId);
+
+              // Draft support (WhatsApp-style)
+              const draft =
+                typeof window !== "undefined"
+                  ? localStorage.getItem(`chat_draft_${conv.id}`) || ""
+                  : "";
+
+              const lastMsg = conv.lastMessage ?? conv.pesanTerakhir;
+              const lastTime = conv.lastMessageAt ?? conv.waktuPesanTerakhir;
 
               return (
                 <button
                   key={conv.id}
                   onClick={() => router.push(`/seller/chat/${conv.id}`)}
                   className={`w-full flex items-center gap-3 p-4 transition-colors text-left ${
-                    isActive ? "bg-primary-50/50" : "hover:bg-gray-50"
+                    isActive ? "bg-gray-50" : "hover:bg-gray-50"
                   }`}
                 >
                   <div className="relative flex-shrink-0">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        isCourierChat
-                          ? "bg-emerald-100 text-emerald-600"
-                          : isAdminChat
-                            ? "bg-emerald-100 text-emerald-600"
-                            : isActive
-                              ? "bg-primary-200 text-primary-700"
-                              : "bg-primary-100 text-primary-600"
-                      }`}
-                    >
+                    <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center">
                       {isCourierChat ? (
                         <Truck size={18} />
                       ) : isAdminChat ? (
@@ -381,22 +558,48 @@ const SellerChatSidebar: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p
-                        className={`font-display text-sm truncate ${isActive ? "font-bold text-primary-900" : "font-semibold text-gray-900"}`}
+                        className={`text-sm truncate ${
+                          isActive
+                            ? "font-semibold text-gray-900"
+                            : "font-medium text-gray-700"
+                        }`}
                       >
                         {isCourierChat
-                          ? `Kurir (${name})`
+                          ? courierStaff?.name ||
+                            (name !== "Customer Support" &&
+                            name !== "Pengguna" &&
+                            name !== "Unknown Pengguna"
+                              ? name
+                              : "Kurir Afiliasi")
                           : isAdminChat
                             ? "Admin Operasional"
-                            : name}
+                            : formatCustomerName(rawCustomerName)}
                       </p>
-                      <span className="text-[10px] text-gray-400 flex-shrink-0">
-                        {formatTime(conv.lastMessageAt)}
-                      </span>
+                      {lastTime && (
+                        <span className="text-[10px] text-gray-400 flex-shrink-0">
+                          {formatTime(lastTime)}
+                        </span>
+                      )}
                     </div>
                     <p
-                      className={`text-xs truncate mt-0.5 ${conv.unreadCount > 0 ? "text-gray-800 font-medium" : "text-gray-500"}`}
+                      className={`text-xs truncate mt-0.5 ${
+                        conv.unreadCount > 0
+                          ? "text-gray-800 font-medium"
+                          : "text-gray-400"
+                      }`}
                     >
-                      {conv.lastMessage || "Belum ada pesan"}
+                      {draft ? (
+                        <span>
+                          <span className="text-red-500 font-semibold">
+                            Draf:{" "}
+                          </span>
+                          <span className="text-gray-600">{draft}</span>
+                        </span>
+                      ) : lastMsg ? (
+                        lastMsg
+                      ) : (
+                        "Belum ada pesan"
+                      )}
                     </p>
                   </div>
                 </button>
@@ -404,76 +607,156 @@ const SellerChatSidebar: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-center px-4 select-none">
+          <div className="flex flex-col items-center justify-center py-12 text-center px-4 select-none">
             <Image
               src="/images/chat.svg"
               alt="Mulai percakapan"
-              width={180}
-              height={180}
+              width={160}
+              height={160}
               className="mb-3 opacity-90 mix-blend-multiply"
             />
-            <p className="text-sm font-medium text-gray-600 mb-0.5">
-              Mulai Percakapan
+            <p className="text-sm font-bold text-gray-800 mb-1">
+              {activeTab === "user"
+                ? "Belum Ada Chat Pelanggan"
+                : "Belum Ada Chat Operasional"}
             </p>
-            <p className="text-[11px] text-gray-400 font-normal leading-relaxed max-w-[180px]">
-              Gunakan tombol Admin atau Kurir di atas untuk memulai.
+            <p className="text-xs text-gray-400 font-normal leading-relaxed max-w-[200px]">
+              {activeTab === "user"
+                ? "Pesan dari pembeli produk Anda akan tampil di sini."
+                : "Klik tombol kontak di kanan atas untuk menghubungi Admin Bantuan atau Kurir Afiliasi."}
             </p>
           </div>
         )}
       </div>
 
-      {/* Courier Contact Modal */}
+      {/* Operational Contact Modal */}
       {isContactModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-150">
+            {/* Header */}
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-bold text-gray-800">Daftar Kontak Kurir</h2>
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2 text-base">
+                <UsersIcon size={18} className="text-primary-600" />
+                Daftar Kontak Operasional
+              </h2>
               <button
                 onClick={() => setIsContactModalOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded-full"
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <X size={20} className="text-gray-400" />
+                <X size={18} />
               </button>
             </div>
-            <div className="p-4">
-              {courierStaff ? (
-                <button
-                  onClick={handleContactCourier}
-                  className="w-full flex items-center gap-4 p-4 bg-emerald-50 hover:bg-emerald-100 rounded-2xl transition-all border border-emerald-100 group"
-                >
-                  <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-md">
-                    <Truck size={24} />
+
+            {/* Content */}
+            <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Kurir Afiliasi Toko */}
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-2">
+                  Kurir Afiliasi Toko
+                </p>
+                {courierList.length > 0 ? (
+                  <div className="space-y-2">
+                    {courierList.map((kurir, index) => (
+                      <button
+                        key={kurir.id || index}
+                        onClick={() => {
+                          setIsContactModalOpen(false);
+                          handleContactCourier(kurir);
+                        }}
+                        className="w-full flex items-center gap-3 p-3 bg-gray-50/70 hover:bg-gray-100/80 rounded-xl transition-all border border-gray-100 group text-left"
+                      >
+                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Truck size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-semibold text-sm text-gray-900 truncate">
+                              {kurir.name ||
+                                kurir.nama ||
+                                kurir.email?.split("@")[0] ||
+                                "Kurir"}
+                            </p>
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-md text-[10px] font-medium">
+                              Kurir
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 font-normal mt-0.5 truncate">
+                            {kurir.email || "Kurir Afiliasi Toko"}
+                          </p>
+                        </div>
+                        <ChevronRight
+                          size={16}
+                          className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0"
+                        />
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-bold text-emerald-900">
-                      {courierStaff.name || courierStaff.email.split("@")[0]}
+                ) : (
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                    <p className="text-xs font-medium text-gray-500">
+                      Belum Ada Kurir Afiliasi
                     </p>
-                    <p className="text-xs text-emerald-600 font-medium">
-                      {courierStaff.email}
-                    </p>
-                    <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-200 text-emerald-800 text-[10px] font-bold rounded">
-                      KURIR AFILIASI
-                    </span>
                   </div>
-                  <ChevronRight
-                    size={20}
-                    className="text-emerald-300 group-hover:text-emerald-600 transition-colors"
-                  />
-                </button>
-              ) : (
-                <div className="py-10 text-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Truck size={32} className="text-gray-200" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-800">
-                    Tidak Ada Kurir
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1 max-w-[200px] mx-auto leading-relaxed">
-                    Toko Anda belum memiliki kurir yang terhubung secara
-                    permanen.
-                  </p>
+                )}
+              </div>
+
+              {/* Dukungan & Tim Sistem */}
+              <div>
+                <p className="text-xs font-medium text-gray-500 mb-2">
+                  Dukungan & Tim Sistem
+                </p>
+                <div className="space-y-2">
+                  {/* Admin Operasional */}
+                  <button
+                    onClick={() => {
+                      setIsContactModalOpen(false);
+                      handleContactAdmin();
+                    }}
+                    className="w-full flex items-center gap-3 p-3 bg-gray-50/70 hover:bg-gray-100/80 rounded-xl transition-all border border-gray-100 group text-left"
+                  >
+                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Shield size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-gray-900 truncate">
+                        Admin Operasional
+                      </p>
+                      <p className="text-xs text-gray-500 font-normal mt-0.5 truncate">
+                        Pengaturan akun, toko & sistem
+                      </p>
+                    </div>
+                    <ChevronRight
+                      size={16}
+                      className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0"
+                    />
+                  </button>
+
+                  {/* Customer Service (CS) */}
+                  <button
+                    onClick={() => {
+                      setIsContactModalOpen(false);
+                      handleContactAdmin();
+                    }}
+                    className="w-full flex items-center gap-3 p-3 bg-gray-50/70 hover:bg-gray-100/80 rounded-xl transition-all border border-gray-100 group text-left"
+                  >
+                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Headphones size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-gray-900 truncate">
+                        Customer Service (CS)
+                      </p>
+                      <p className="text-xs text-gray-500 font-normal mt-0.5 truncate">
+                        Bantuan transaksi & kendala pesanan
+                      </p>
+                    </div>
+                    <ChevronRight
+                      size={16}
+                      className="text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0"
+                    />
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

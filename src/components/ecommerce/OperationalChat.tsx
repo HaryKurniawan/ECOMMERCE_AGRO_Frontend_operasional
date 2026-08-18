@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 
-import { chatApi } from "@/lib/ecommerce-api";
+import { chatApi, storesApi } from "@/lib/ecommerce-api";
 
 import ChatHeader from "./chat/ChatHeader";
 import ChatMessageList from "./chat/ChatMessageList";
@@ -17,19 +17,21 @@ interface MessageData {
   createdAt: string;
 }
 
+interface OperationalChatProps {
+  currentUserId: string;
+  chatType?: "ADMIN_CS" | "SELLER_CHAT";
+  tokoId?: string;
+  initialConversationId?: string;
+  onBack?: () => void;
+}
+
 export default function OperationalChat({
   currentUserId,
   chatType = "ADMIN_CS",
   tokoId,
   initialConversationId,
   onBack,
-}: {
-  currentUserId: string;
-  chatType?: "ADMIN_CS" | "SELLER_CHAT";
-  tokoId?: string;
-  initialConversationId?: string;
-  onBack?: () => void;
-}) {
+}: OperationalChatProps) {
   const [conversationId, setConversationId] = useState<string | null>(
     initialConversationId || null,
   );
@@ -39,9 +41,12 @@ export default function OperationalChat({
   const [sending, setSending] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [otherPartyName, setOtherPartyName] = useState<string>("");
+  const [otherPartySubtitle, setOtherPartySubtitle] = useState<string>("");
+  const [isCourier, setIsCourier] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const draftKey = conversationId ? `chat_draft_${conversationId}` : null;
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -52,29 +57,106 @@ export default function OperationalChat({
       const res = await chatApi.getConversation(convId, { limit: 100 });
       const data = res.data?.data || res.data;
 
-      // Update other party name from conversation data
+      // Update other party name & courier status from conversation data
       if (data) {
-        const otherUser = data.otherUser || data.pembeli;
-        if (otherUser) {
-          setOtherPartyName(
-            otherUser.name || otherUser.nama || otherUser.email || "",
-          );
-        } else if (data.tipe === "ADMIN_CS" || data.type === "ADMIN_CS") {
-          setOtherPartyName("Admin Operasional");
-        } else if (data.store || data.toko) {
-          setOtherPartyName(data.store?.nama || data.toko?.nama || "Toko");
+        const otherUser = data.otherUser || data.pembeli || data.customer;
+        const role = (otherUser?.role || otherUser?.peran || "").toUpperCase();
+        let isKurir =
+          role === "KURIR" || data.tipe === "KURIR" || data.type === "KURIR";
+
+        try {
+          const storeRes = await storesApi.getMyStore();
+          const storeData = storeRes.data?.data || storeRes.data;
+          const kurir = storeData?.kurirStaffs?.[0] || storeData?.courierStaff;
+          const kurirId = kurir?.id_pengguna || kurir?.id;
+          const participantId = data.otherParticipantId || otherUser?.id;
+          if (
+            kurirId &&
+            participantId &&
+            String(kurirId) === String(participantId)
+          ) {
+            isKurir = true;
+          }
+        } catch {
+          // Ignore error fetching store info
+        }
+
+        setIsCourier(isKurir);
+
+        const userId =
+          otherUser?.id ||
+          otherUser?.id_pengguna ||
+          data.otherParticipantId ||
+          data.pembeliId ||
+          data.pembeli?.id ||
+          data.customerId ||
+          data.customer?.id;
+
+        const convType = data.tipe || data.type;
+        const isAdminOrKurir = convType === "ADMIN_CS" || isKurir;
+
+        if (!isAdminOrKurir) {
+          // User / Customer Chat - Show FULL name in chat room header (no 6-char truncation)
+          const rawName =
+            otherUser?.name ||
+            otherUser?.nama ||
+            (otherUser?.email ? otherUser.email.split("@")[0] : null);
+
+          const cleanName =
+            rawName && rawName !== "Unknown" && rawName !== "Unknown Pengguna"
+              ? rawName.trim()
+              : "";
+
+          const formattedTitle = cleanName
+            ? `Pelanggan - ${cleanName}`
+            : "Pelanggan";
+
+          setOtherPartyName(formattedTitle);
+
+          if (userId) {
+            setOtherPartySubtitle(`ID: #${userId}`);
+          } else {
+            setOtherPartySubtitle("");
+          }
+        } else {
+          if (otherUser) {
+            const uName =
+              otherUser.name || otherUser.nama || otherUser.email || "";
+            setOtherPartyName(
+              uName === "Customer Support"
+                ? isKurir
+                  ? "Kurir Afiliasi"
+                  : "Admin Operasional"
+                : uName,
+            );
+          } else if (data.tipe === "ADMIN_CS" || data.type === "ADMIN_CS") {
+            setOtherPartyName(isKurir ? "Kurir Afiliasi" : "Admin Operasional");
+          } else if (data.store || data.toko) {
+            setOtherPartyName(data.store?.nama || data.toko?.nama || "Toko");
+          }
+
+          if (userId) {
+            setOtherPartySubtitle(`ID: #${userId}`);
+          } else {
+            setOtherPartySubtitle(
+              isKurir ? "Kurir Afiliasi Toko" : "Tim Admin Operasional",
+            );
+          }
         }
       }
 
       // Map backend fields to frontend interface
       if (data?.pesan && Array.isArray(data.pesan)) {
-        const mappedMessages: MessageData[] = data.pesan.map((m: any) => ({
-          id: m.id,
-          senderId: m.pengirimId || m.senderId,
-          content: m.isiPesan || m.content || m.text || "",
-          isRead: m.sudahDibaca === true || m.status === "DIBACA",
-          createdAt: m.createdAt || m.tanggalDibuat || new Date().toISOString(),
-        }));
+        const mappedMessages: MessageData[] = data.pesan.map(
+          (m: Record<string, any>) => ({
+            id: m.id,
+            senderId: m.pengirimId || m.senderId,
+            content: m.isiPesan || m.content || m.text || "",
+            isRead: m.sudahDibaca === true || m.status === "DIBACA",
+            createdAt:
+              m.createdAt || m.tanggalDibuat || new Date().toISOString(),
+          }),
+        );
 
         // Ensure uniqueness by ID
         const uniqueMessages = mappedMessages.filter(
@@ -180,7 +262,7 @@ export default function OperationalChat({
                   );
                   if (tempIndex !== -1) {
                     const newArr = [...prev];
-                    newArr[tempIndex] = newMessage;
+                    newArr.splice(tempIndex, 1, newMessage);
                     return newArr;
                   }
                 }
@@ -223,6 +305,28 @@ export default function OperationalChat({
     };
   }, [fetchMessages, chatType, tokoId, initialConversationId, currentUserId]);
 
+  // Load draft from localStorage when conversationId is known
+  useEffect(() => {
+    if (draftKey) {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) setNewMessage(saved);
+    }
+  }, [draftKey]);
+
+  // Save draft to localStorage on every keystroke
+  const handleMessageChange = (msg: string) => {
+    setNewMessage(msg);
+    if (draftKey) {
+      if (msg.trim()) {
+        localStorage.setItem(draftKey, msg);
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+      window.dispatchEvent(new Event("chat_draft_updated"));
+      window.dispatchEvent(new Event("chat_draft_changed"));
+    }
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -242,6 +346,12 @@ export default function OperationalChat({
 
     const content = newMessage.trim();
     setNewMessage("");
+    // Clear draft on send
+    if (draftKey) {
+      localStorage.removeItem(draftKey);
+      window.dispatchEvent(new Event("chat_draft_updated"));
+      window.dispatchEvent(new Event("chat_draft_changed"));
+    }
     if (inputRef.current) inputRef.current.style.height = "32px";
     setSending(true);
 
@@ -309,9 +419,15 @@ export default function OperationalChat({
       <ChatHeader
         title={
           otherPartyName ||
-          (chatType === "ADMIN_CS" ? "Admin Operasional" : "Pelanggan")
+          (chatType === "ADMIN_CS"
+            ? isCourier
+              ? "Kurir Afiliasi"
+              : "Admin Operasional"
+            : "Pelanggan")
         }
+        subtitle={otherPartySubtitle}
         chatType={chatType}
+        isCourier={isCourier}
         onBack={onBack}
       />
 
@@ -323,7 +439,7 @@ export default function OperationalChat({
 
       <ChatInput
         newMessage={newMessage}
-        setNewMessage={setNewMessage}
+        setNewMessage={handleMessageChange}
         sending={sending}
         handleSend={handleSend}
         handleKeyDown={handleKeyDown}

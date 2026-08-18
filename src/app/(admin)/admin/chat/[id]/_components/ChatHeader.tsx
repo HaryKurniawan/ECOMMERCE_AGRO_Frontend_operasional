@@ -27,8 +27,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ conversation }) => {
 
   return (
     <div className="bg-white px-5 py-3.5 flex items-center gap-3 shadow-sm z-20 border-b border-gray-100 flex-shrink-0">
-      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-        <User size={20} className="text-primary-600" />
+      <div className="w-10 h-10 bg-gray-100 border border-gray-200/60 text-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+        <User size={20} className="text-gray-600" />
       </div>
       <div className="flex-1 min-w-0">
         <h1 className="font-semibold text-gray-800 text-[15px] truncate">

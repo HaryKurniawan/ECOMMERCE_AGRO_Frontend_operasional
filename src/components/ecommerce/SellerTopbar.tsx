@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Package,
   LogOut,
-  ChevronDown,
   User as UserIcon,
   MessageCircle,
   Store,
@@ -20,10 +19,10 @@ import NotifBell from "./NotifBell";
 import FullScreenButton from "./FullScreenButton";
 
 const NAV_TABS = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/seller/dashboard" },
+  { label: "Beranda", icon: LayoutDashboard, path: "/seller/dashboard" },
   { label: "Produk", icon: Package, path: "/seller/produk" },
   { label: "Tren & Laporan", icon: BarChart2, path: "/seller/tren" },
-  { label: "Chat", icon: MessageCircle, path: "/seller/chat" },
+  { label: "Percakapan", icon: MessageCircle, path: "/seller/chat" },
 ];
 
 export default function SellerTopbar() {
@@ -125,13 +124,13 @@ export default function SellerTopbar() {
                 <button
                   key={tab.path}
                   onClick={() => router.push(tab.path)}
-                  className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all duration-300 border ${
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-all duration-300 border ${
                     isTabActive
                       ? "text-white bg-primary-600 border-primary-600 shadow-sm"
                       : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-800 hover:bg-gray-50"
                   }`}
                 >
-                  <Icon size={13} />
+                  <Icon size={14} />
                   {tab.label}
                 </button>
               );

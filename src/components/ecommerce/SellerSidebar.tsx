@@ -24,7 +24,7 @@ const UTAMA_MENU: SidebarMenuItem[] = [
   { label: "Utama", isHeader: true },
   {
     path: "/seller/dashboard",
-    label: "Dashboard",
+    label: "Beranda",
     icon: <LayoutDashboard size={17} />,
   },
   { label: "Pesanan", isHeader: true },

@@ -6,20 +6,20 @@ import {
   Truck,
   Loader2,
   AlertCircle,
-  RefreshCw,
   Mail,
   Phone,
   MessageSquare,
-  Shield,
   TrendingUp,
-  MapPin,
+  ChevronRight,
 } from "lucide-react";
 
 import { storesApi, chatApi } from "@/lib/ecommerce-api";
 
 interface CourierData {
-  id: string;
-  name: string | null;
+  id?: string;
+  id_pengguna?: string;
+  name?: string | null;
+  nama?: string | null;
   email: string;
   noTelepon?: string | null;
   phoneNumber?: string | null;
@@ -83,26 +83,26 @@ export default function SellerKurirPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center py-32 space-y-4">
-        <Loader2 className="w-8 h-8 text-emerald-600/80 animate-spin" />
-        <p className="text-sm font-medium text-slate-400">
-          Memuat kurir toko...
-        </p>
+      <div className="flex flex-col justify-center items-center py-32 gap-3">
+        <Loader2 className="w-7 h-7 text-emerald-500 animate-spin" />
+        <p className="text-sm text-slate-400">Memuat kurir toko...</p>
       </div>
     );
   }
 
   if (!store) {
     return (
-      <div className="bg-rose-50/50 border border-rose-100 text-rose-700 p-6 rounded-2xl flex items-start gap-3 max-w-2xl mx-auto mt-8">
-        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-        <div className="space-y-0.5">
-          <h3 className="font-medium text-sm text-rose-800">
-            Toko Tidak Ditemukan
-          </h3>
-          <p className="text-xs text-rose-600/90 leading-relaxed font-medium">
-            Profil toko Anda tidak dapat ditemukan atau belum terdaftar.
-          </p>
+      <div className="max-w-lg mx-auto mt-10 p-5 bg-white border border-gray-100 rounded-2xl">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+          <div>
+            <p className="text-sm font-semibold text-slate-700">
+              Toko Tidak Ditemukan
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Profil toko Anda tidak dapat ditemukan atau belum terdaftar.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -115,155 +115,126 @@ export default function SellerKurirPage() {
         ? [store.courierStaff]
         : [];
 
-  return (
-    <div className="w-full space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-6 border-b border-slate-100/80">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
-              <Truck className="w-5 h-5" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-slate-800">
-              Kurir Afiliasi
-            </h1>
-          </div>
-          <p className="text-xs md:text-sm text-slate-400 font-medium">
-            Daftar kurir resmi yang ditugaskan khusus untuk mengirimkan produk
-            toko Anda
-          </p>
-        </div>
+  const getCourierId = (c: CourierData) => c.id_pengguna || c.id || "";
+  const getCourierName = (c: CourierData) =>
+    c.name || c.nama || "Kurir Agrojabar";
 
-        <button
-          onClick={() => fetchStore()}
-          className="self-start sm:self-center px-4 py-2 border border-slate-100 rounded-xl text-xs font-medium hover:bg-slate-50 active:scale-[0.98] transition-all text-slate-500 flex items-center gap-2 bg-white shadow-sm"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Perbarui
-        </button>
+  return (
+    <div className="w-full space-y-6">
+      {/* ── Page Header ───────────────────────────────────── */}
+      <div className="pb-5 border-b border-gray-100">
+        <div className="flex items-center gap-2.5 mb-1">
+          <Truck className="w-5 h-5 text-emerald-600" />
+          <h1 className="text-2xl font-semibold text-slate-800">
+            Kurir Afiliasi
+          </h1>
+          <span className="text-[11px] font-medium text-slate-400 bg-gray-50 border border-gray-100 rounded-full px-2.5 py-0.5 ml-1">
+            {couriers.length} kurir
+          </span>
+        </div>
+        <p className="text-sm text-slate-400">
+          Daftar kurir yang ditugaskan untuk mengirimkan produk toko Anda
+        </p>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl text-xs font-medium flex items-center gap-2">
-          ⚠️ {error}
+        <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {error}
         </div>
       )}
 
-      {/* Main Grid */}
+      {/* ── Courier List ──────────────────────────────────── */}
       {couriers.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-slate-100/80 shadow-sm max-w-xl mx-auto space-y-4">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-slate-100/50 text-slate-300">
-            <Truck className="w-6 h-6" />
+        <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white border border-gray-100 rounded-2xl">
+          <div className="w-12 h-12 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-slate-300">
+            <Truck className="w-5 h-5" />
           </div>
-          <div className="space-y-1">
-            <h3 className="font-medium text-base text-slate-700">
+          <div className="text-center">
+            <p className="text-sm font-semibold text-slate-600">
               Belum Ada Kurir Terafiliasi
-            </h3>
-            <p className="text-xs text-slate-400 max-w-xs mx-auto px-4 leading-relaxed font-medium">
-              Toko Anda belum memiliki kurir yang ditugaskan oleh Admin. Silakan
-              hubungi admin Agrojabar untuk menambahkan kurir.
+            </p>
+            <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
+              Toko Anda belum memiliki kurir yang ditugaskan oleh Admin.
             </p>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {couriers.map((courier, idx) => (
-            <div
-              key={courier?.id || idx}
-              className="bg-white border border-slate-100 hover:border-emerald-200/60 rounded-3xl p-5 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-slate-100/60 flex flex-col md:flex-row md:items-center justify-between gap-5 group relative overflow-hidden"
-            >
-              {/* Left & Middle combined in horizontal flow */}
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                {/* Initials Avatar */}
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-medium text-lg shadow-sm shrink-0 uppercase">
-                  {courier.name ? courier.name.charAt(0) : "K"}
-                </div>
+        <div className="space-y-3">
+          {couriers.map((courier, idx) => {
+            const courierId = getCourierId(courier);
+            const courierName = getCourierName(courier);
+            const initial = courierName.charAt(0).toUpperCase();
+            const isRedirecting = redirectingCourierId === courierId;
 
-                {/* Text Info */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <h3 className="font-medium text-slate-750 group-hover:text-emerald-600 transition-colors truncate text-base">
-                      {courier.name || "Kurir Agrojabar"}
-                    </h3>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50/50 text-emerald-600 text-[10px] font-medium rounded-full uppercase border border-emerald-100/60 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Aktif
-                    </span>
+            return (
+              <div
+                key={courierId || idx}
+                className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-emerald-200 transition-colors group"
+              >
+                {/* Left: avatar + info */}
+                <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                  {/* Avatar */}
+                  <div className="w-11 h-11 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-base shrink-0 select-none">
+                    {initial}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 text-xs text-slate-400 font-medium">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <Mail className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                      <span className="truncate">{courier.email}</span>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-emerald-700 transition-colors">
+                        {courierName}
+                      </p>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[9px] font-semibold rounded-full border border-emerald-100 shrink-0">
+                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                        AKTIF
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Phone className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-                      <span>
-                        {courier.noTelepon ||
-                          courier.phoneNumber ||
-                          "Nomor tidak tersedia"}
+                    <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-4 text-xs text-slate-400">
+                      <span className="flex items-center gap-1.5 truncate">
+                        <Mail className="w-3 h-3 shrink-0" />
+                        {courier.email}
+                      </span>
+                      <span className="flex items-center gap-1.5 shrink-0">
+                        <Phone className="w-3 h-3 shrink-0" />
+                        {courier.noTelepon || courier.phoneNumber || "—"}
                       </span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Right Action buttons stacked side-by-side */}
-              <div className="flex items-center gap-3 shrink-0 pt-4 md:pt-0 border-t md:border-t-0 border-slate-50 flex-wrap">
-                <button
-                  onClick={() => router.push(`/seller/kurir/${courier.id}`)}
-                  className="px-4 py-2 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/50 text-slate-555 hover:text-emerald-600 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
-                >
-                  <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
-                  Aktivitas Kurir
-                </button>
-                <button
-                  onClick={() => router.push(`/seller/pesanan`)}
-                  className="px-4 py-2 border border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-555 hover:text-slate-700 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  Maps
-                </button>
-                <button
-                  onClick={() => handleHubungiKurir(courier.id)}
-                  disabled={redirectingCourierId === courier.id}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 shadow-sm hover:shadow active:scale-[0.98] disabled:opacity-50"
-                >
-                  {redirectingCourierId === courier.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <MessageSquare className="w-3.5 h-3.5" />
-                  )}
-                  Hubungi Kurir
-                </button>
+                {/* Right: actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Aktivitas */}
+                  <button
+                    onClick={() => router.push(`/seller/kurir/${courierId}`)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 text-slate-500 hover:text-emerald-600 rounded-lg text-xs font-medium transition-all"
+                  >
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Aktivitas
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+
+                  {/* Hubungi */}
+                  <button
+                    onClick={() => handleHubungiKurir(courierId)}
+                    disabled={isRedirecting}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-lg text-xs font-semibold transition-colors"
+                  >
+                    {isRedirecting ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <MessageSquare className="w-3.5 h-3.5" />
+                    )}
+                    Hubungi
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
-
-      {/* Info Banner */}
-      <div className="bg-slate-50/50 border border-slate-100 rounded-3xl p-6 flex flex-col md:flex-row items-start gap-4">
-        <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
-          <Shield className="w-5 h-5" />
-        </div>
-        <div className="space-y-1">
-          <h4 className="font-medium text-slate-700 text-sm md:text-base">
-            Kebijakan Manajemen Kurir
-          </h4>
-          <p className="text-xs md:text-sm text-slate-400 font-medium leading-relaxed">
-            Demi menjaga stabilitas operasional pengiriman, pelepasan,
-            perubahan, atau penambahan kurir afiliasi hanya dapat dilakukan
-            secara sah oleh{" "}
-            <span className="text-emerald-600 font-medium">
-              Admin Agrojabar
-            </span>
-            . Penjual tidak memiliki otorisasi untuk merubah status afiliasi
-            kurir secara langsung. Apabila Anda membutuhkan pergantian staff
-            pengantar, silakan hubungi pusat bantuan admin.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }

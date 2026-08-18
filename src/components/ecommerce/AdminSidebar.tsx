@@ -19,7 +19,7 @@ import AppSidebar, { SidebarMenuItem } from "./AppSidebar";
 const ADMIN_MENU: SidebarMenuItem[] = [
   {
     path: "/admin/dashboard",
-    label: "Dashboard",
+    label: "Beranda",
     icon: <LayoutDashboard size={17} />,
   },
   {

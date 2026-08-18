@@ -7,12 +7,14 @@ import {
   ChevronLeft,
   Shield,
   Store,
+  Truck,
 } from "lucide-react";
 
 interface ChatHeaderProps {
   title: string;
   subtitle?: string;
   chatType: "ADMIN_CS" | "SELLER_CHAT";
+  isCourier?: boolean;
   phone?: string | null;
   email?: string | null;
   onBack?: () => void;
@@ -22,6 +24,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   title,
   subtitle,
   chatType,
+  isCourier,
   phone,
   email,
   onBack,
@@ -40,10 +43,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </button>
       )}
 
-      <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${chatType === "ADMIN_CS" ? "bg-primary-600 text-white" : "bg-primary-600 text-white"}`}
-      >
-        {chatType === "ADMIN_CS" ? <Shield size={20} /> : <Store size={20} />}
+      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100 border border-gray-200/60 text-gray-600">
+        {isCourier ? (
+          <Truck size={20} />
+        ) : chatType === "ADMIN_CS" ? (
+          <Shield size={20} />
+        ) : (
+          <Store size={20} />
+        )}
       </div>
 
       <div className="flex-1 min-w-0" onClick={onBack}>
@@ -51,7 +58,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           {title}
         </h2>
         {subtitle && (
-          <p className="text-gray-500 text-[12px] font-medium capitalize mt-0.5 truncate">
+          <p className="text-gray-500 text-[12px] font-medium mt-0.5 truncate">
             {subtitle}
           </p>
         )}
