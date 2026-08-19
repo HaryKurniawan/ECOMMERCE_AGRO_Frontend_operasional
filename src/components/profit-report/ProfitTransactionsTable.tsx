@@ -115,9 +115,9 @@ export function ProfitTransactionsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 text-[13px]">
-            {transactions.map((tx) => (
+            {transactions.map((tx, idx) => (
               <tr
-                key={tx.id}
+                key={tx.id ?? `tx-${idx}`}
                 className="hover:bg-slate-50/50 transition-colors group"
               >
                 <td className="py-4 px-5 text-gray-500 whitespace-nowrap">

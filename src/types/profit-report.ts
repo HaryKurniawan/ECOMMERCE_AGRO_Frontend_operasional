@@ -63,4 +63,11 @@ export interface ProfitSummaryResponseDto {
   rataRataMargin: number;
   produkTerlaris: TopProduct[];
   trendKeuntungan: TrendData[];
+  transaksiDetail?: {
+    tanggal: string;
+    nomorPesanan: string;
+    namaProduk: string;
+    jumlahTerjual: number;
+    keuntungan: number;
+  }[];
 }

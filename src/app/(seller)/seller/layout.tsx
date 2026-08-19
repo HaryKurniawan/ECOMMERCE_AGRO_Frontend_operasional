@@ -42,14 +42,20 @@ export default function SellerLayout({
     ) || isMarginPage;
 
   return (
-    <div className="h-screen bg-white flex flex-col items-center justify-center p-5 gap-3 overflow-hidden">
+    <div className="h-screen bg-white flex flex-col items-center justify-center p-5 gap-3 overflow-hidden print:h-auto print:p-0 print:overflow-visible print:block">
       {/* Top Bar */}
-      <SellerTopbar />
+      <div className="w-full print:hidden">
+        <SellerTopbar />
+      </div>
 
       {/* Desktop App Container */}
-      <div className="w-full flex-1 bg-white rounded-2xl overflow-hidden flex border border-gray-200 min-h-0 relative">
+      <div className="w-full flex-1 bg-white rounded-2xl overflow-hidden flex border border-gray-200 min-h-0 relative print:border-none print:rounded-none print:overflow-visible print:block">
         {/* Sidebar */}
-        {showSidebar && <SellerSidebar />}
+        {showSidebar && (
+          <div className="print:hidden">
+            <SellerSidebar />
+          </div>
+        )}
 
         {/* Main Content */}
         <main
@@ -62,7 +68,7 @@ export default function SellerLayout({
             pathname === "/seller/gudang/produk"
               ? "overflow-hidden"
               : `overflow-auto ${pathname === "/seller/dashboard" ? "scrollbar-hide" : ""}`
-          } bg-gray-100 flex flex-col min-h-0`}
+          } bg-gray-100 flex flex-col min-h-0 print:bg-white print:overflow-visible print:block`}
         >
           <div
             className={`${
@@ -73,7 +79,7 @@ export default function SellerLayout({
               pathname === "/seller/gudang/produk"
                 ? "h-full"
                 : "p-6 md:p-8 pb-20 max-w-6xl mx-auto w-full"
-            } flex-1 flex flex-col min-h-0`}
+            } flex-1 flex flex-col min-h-0 print:p-0 print:m-0 print:block`}
           >
             {children}
           </div>
