@@ -1,321 +1,379 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
-  BarChart3,
-  Loader2,
-  RefreshCw,
-  TrendingUp,
+  ArrowLeft,
   Package,
+  Loader2,
+  TrendingUp,
   TrendingDown,
   Minus,
-  Store,
+  AlertCircle,
+  BarChart2,
+  Zap,
+  ChevronDown,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import { analyticsApi, type TrenProdukItem } from "@/lib/api/analytics";
-import { storesApi } from "@/lib/api/stores";
+import { useTrenProdukBulanan } from "@/hooks/seller/useSellerTren";
+import { storesApi } from "@/lib/ecommerce-api";
 
-interface TokoOption {
-  id: string;
-  nama: string;
+function formatRupiah(n: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 
-const fmtRp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
+const MONTHS_LIST = [
+  { value: 1, label: "Januari" },
+  { value: 2, label: "Februari" },
+  { value: 3, label: "Maret" },
+  { value: 4, label: "April" },
+  { value: 5, label: "Mei" },
+  { value: 6, label: "Juni" },
+  { value: 7, label: "Juli" },
+  { value: 8, label: "Agustus" },
+  { value: 9, label: "September" },
+  { value: 10, label: "Okt" },
+  { value: 11, label: "November" },
+  { value: 12, label: "Desember" },
+];
 
-// --- SUB-COMPONENTS ---
-
-const TrendIcon = ({ arah }: { arah: string }) => {
-  if (arah === "UP")
-    return <TrendingUp size={12} className="text-primary-600" />;
-  if (arah === "DOWN")
-    return <TrendingDown size={12} className="text-red-500" />;
-  return <Minus size={12} className="text-slate-400" />;
-};
-
-const trendBadge = (arah: string, persen: number) => {
-  const colors =
-    arah === "UP"
-      ? "bg-primary-50 border-primary-100 text-primary-700"
-      : arah === "DOWN"
-        ? "bg-red-50 border-red-100 text-red-600"
-        : "bg-slate-50 border-slate-100 text-slate-400";
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-normal ${colors}`}
-    >
-      <TrendIcon arah={arah} />
-      {arah === "UP" && "+"}
-      {persen.toFixed(1)}%
-    </span>
-  );
-};
-
-export default function ProdukTerlarisAdminPage() {
-  const [stores, setStores] = useState<TokoOption[]>([]);
-  const [selectedToko, setSelectedToko] = useState<string>("");
-  const [items, setItems] = useState<TrenProdukItem[]>([]);
-  const [periodLabel, setPeriodLabel] = useState<string>("");
-  const [loadingStores, setLoadingStores] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  minWidth = "140px",
+}: {
+  value: any;
+  onChange: (val: any) => void;
+  options: { value: any; label: string }[];
+  minWidth?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        setLoadingStores(true);
-        const res = await storesApi.adminGetAll({ limit: 200 });
-        const raw = res?.data?.data || res?.data || [];
-        const list: TokoOption[] = Array.isArray(raw)
-          ? raw
-          : (raw.data ?? raw.items ?? []);
-        setStores(list);
-        // Do not force select the first store, leave it as "" (Semua Toko)
-      } catch (err) {
-        console.error("Error fetching stores:", err);
-        setError("Gagal memuat daftar toko.");
-      } finally {
-        setLoadingStores(false);
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
       }
-    };
-    fetchStores();
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const fetchTrenProduk = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const result = await analyticsApi.getTrenProdukBulanan(
-        selectedToko,
-        undefined,
-        undefined,
-        15,
-      );
-      setItems(result?.data ?? []);
-      setPeriodLabel(result?.period?.label ?? "");
-    } catch (err: any) {
-      setError(err.message || "Gagal memuat tren produk.");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedToko]);
-
-  useEffect(() => {
-    // Always fetch, because "" is a valid state (Semua Toko)
-    fetchTrenProduk();
-  }, [selectedToko, fetchTrenProduk]);
-
-  const maxQty = Math.max(...items.map((i) => Number(i.jumlahTerjual) || 0), 1);
-
-  const handleRefresh = () => {
-    fetchTrenProduk();
-  };
+  const selectedOption = options.find((o) => o.value === value) || options[0];
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto space-y-6 font-sans pb-10">
-      {/* ── Page Header ─────────────────── */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div>
-          <h1 className="text-xl font-normal text-slate-800 tracking-tight flex items-center gap-2">
-            <BarChart3 size={18} className="text-primary-500" />
+    <div className="relative" ref={ref} style={{ minWidth }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between bg-white border shadow-sm rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer ${isOpen ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-gray-200 hover:bg-gray-50 hover:border-gray-300"}`}
+      >
+        <span className="truncate">{selectedOption?.label}</span>
+        <ChevronDown
+          size={16}
+          className={`text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <div
+        className={`absolute z-50 mt-1 w-full bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top ${isOpen ? "opacity-100 scale-y-100 translate-y-0" : "opacity-0 scale-y-95 -translate-y-2 pointer-events-none"}`}
+      >
+        <div className="max-h-60 overflow-y-auto py-1 custom-scrollbar">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${value === opt.value ? "bg-emerald-50 text-emerald-700" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminProdukTerlarisPage() {
+  const router = useRouter();
+  const currentDate = new Date();
+
+  const [selectedTokoId, setSelectedTokoId] = useState<string>("");
+  const [stores, setStores] = useState<any[]>([]);
+
+  useEffect(() => {
+    storesApi.adminGetAll({ limit: 100 }).then((res) => {
+      const raw = res?.data?.data || res?.data || [];
+      const arr = Array.isArray(raw) ? raw : (raw.data ?? []);
+      if (Array.isArray(arr)) setStores(arr);
+    });
+  }, []);
+
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    currentDate.getMonth() + 1,
+  );
+  const [selectedYear, setSelectedYear] = useState<number>(
+    currentDate.getFullYear(),
+  );
+
+  const [periodType, setPeriodType] = useState<
+    "WEEK" | "MONTH" | "SIX_MONTHS" | "YEAR"
+  >("MONTH");
+
+  const { data: topProductsData, isLoading: isTopLoading } =
+    useTrenProdukBulanan(
+      selectedTokoId,
+      selectedMonth,
+      selectedYear,
+      100, // Menampilkan semua (atau setidaknya 100 teratas)
+      periodType,
+    );
+
+  const yearsList = [currentDate.getFullYear() - 1, currentDate.getFullYear()];
+
+  return (
+    <div className="space-y-8 pb-10">
+      {/* Header */}
+      <div className="pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl md:text-3xl font-medium text-slate-800 flex items-center gap-2">
+            <TrendingUp size={24} className="text-emerald-600" /> Peringkat
             Produk Terlaris
           </h1>
-          <p className="text-xs text-slate-400 mt-1 font-normal">
-            Analisis produk terlaris dan grafik detail untuk setiap Toko/Seller.
-          </p>
         </div>
-        <button
-          onClick={handleRefresh}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-normal text-slate-600 hover:text-slate-800 hover:border-slate-300 transition-all active:scale-95"
-        >
-          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-          Segarkan
-        </button>
+        <div>
+          <CustomSelect
+            value={selectedTokoId}
+            onChange={(val) => setSelectedTokoId(val)}
+            minWidth="220px"
+            options={[
+              { value: "", label: "Semua Toko (Global)" },
+              ...stores.map((s) => ({ value: s.id, label: s.nama })),
+            ]}
+          />
+        </div>
       </div>
 
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-        {/* ── Store Selector ─────────────────── */}
-        <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4">
-          <label className="text-[10px] font-normal text-slate-400 block mb-2 uppercase tracking-wider flex items-center gap-1.5">
-            <Store size={11} /> Pilih Toko
-          </label>
-          {loadingStores ? (
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <Loader2 size={14} className="animate-spin text-primary-600" />{" "}
-              Memuat daftar toko...
-            </div>
-          ) : (
-            <select
-              value={selectedToko}
-              onChange={(e) => setSelectedToko(e.target.value)}
-              className="w-full md:w-96 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-700 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
-            >
-              <option value="">Semua Toko (Global)</option>
-              {stores.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nama}
-                </option>
-              ))}
-            </select>
-          )}
-          {periodLabel && !loading && (
-            <p className="text-[10px] text-slate-400 mt-2 font-normal">
-              Periode: <span className="text-slate-600">{periodLabel}</span>
+      {/* Section 2: Top Products Monthly Breakdown */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-50">
+          <div>
+            <h2 className="text-base font-medium text-slate-800 flex items-center gap-2">
+              <BarChart2 size={18} className="text-emerald-600" /> Peringkat
+              Seluruh Produk{" "}
+              {periodType === "WEEK"
+                ? "Mingguan"
+                : periodType === "MONTH"
+                  ? "Bulanan"
+                  : periodType === "SIX_MONTHS"
+                    ? "Per 6 Bulan"
+                    : "Tahunan"}
+            </h2>
+            <p className="text-xs text-gray-400">
+              Daftar produk paling laku berdasarkan kuantitas penjualan{" "}
+              {periodType === "WEEK"
+                ? "7 hari terakhir"
+                : periodType === "MONTH"
+                  ? "bulanan"
+                  : periodType === "SIX_MONTHS"
+                    ? "6 bulan terakhir"
+                    : "tahunan"}
             </p>
-          )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <CustomSelect
+              value={periodType}
+              onChange={(val) => setPeriodType(val as any)}
+              minWidth="160px"
+              options={[
+                { value: "WEEK", label: "7 Hari Terakhir" },
+                { value: "MONTH", label: "Per Bulan" },
+                { value: "SIX_MONTHS", label: "6 Bulan Terakhir" },
+                { value: "YEAR", label: "Per Tahun" },
+              ]}
+            />
+
+            {periodType === "MONTH" && (
+              <>
+                <CustomSelect
+                  value={selectedMonth}
+                  onChange={(val) => setSelectedMonth(Number(val))}
+                  minWidth="130px"
+                  options={MONTHS_LIST}
+                />
+
+                <CustomSelect
+                  value={selectedYear}
+                  onChange={(val) => setSelectedYear(Number(val))}
+                  minWidth="110px"
+                  options={yearsList.map((y) => ({
+                    value: y,
+                    label: String(y),
+                  }))}
+                />
+              </>
+            )}
+
+            {periodType === "YEAR" && (
+              <CustomSelect
+                value={selectedYear}
+                onChange={(val) => setSelectedYear(Number(val))}
+                minWidth="110px"
+                options={yearsList.map((y) => ({ value: y, label: String(y) }))}
+              />
+            )}
+          </div>
         </div>
 
-        {/* ── Loading ─────────────────── */}
-        {loading && (
-          <div className="flex items-center justify-center py-16">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 size={26} className="animate-spin text-primary-600" />
-              <p className="text-xs text-slate-400 font-normal">
-                Memuat data produk terlaris...
-              </p>
-            </div>
+        {isTopLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 size={28} className="animate-spin text-emerald-500" />
           </div>
-        )}
+        ) : topProductsData &&
+          topProductsData.data &&
+          topProductsData.data.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <th className="py-3 px-4 w-16 text-center">Rank</th>
+                  <th className="py-3 px-4">Nama Produk</th>
+                  <th className="py-3 px-4 text-right">Kuantitas</th>
+                  <th className="py-3 px-4 text-right">Revenue</th>
+                  <th className="py-3 px-4 text-right">Jumlah Transaksi</th>
+                  <th className="py-3 px-4 text-center">
+                    Tren vs{" "}
+                    {periodType === "WEEK"
+                      ? "Minggu Lalu"
+                      : periodType === "MONTH"
+                        ? "Bulan Lalu"
+                        : periodType === "SIX_MONTHS"
+                          ? "6 Bulan Lalu"
+                          : "Tahun Lalu"}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50/50 text-sm">
+                {topProductsData.data.map((item) => {
+                  const hasTrend =
+                    item.trendPersen !== null && item.trendPersen !== undefined;
+                  const isUp = hasTrend && item.trendPersen > 0;
+                  const isDown = hasTrend && item.trendPersen < 0;
 
-        {/* ── Error ─────────────────── */}
-        {error && !loading && (
-          <div className="bg-red-50 border border-red-100 text-red-600 p-3.5 rounded-xl">
-            <p className="text-xs font-normal">{error}</p>
-          </div>
-        )}
-
-        {/* ── Chart + Table ─────────────────── */}
-        {!loading &&
-          !error &&
-          items &&
-          (items.length === 0 ? (
-            <div className="text-center py-16 bg-slate-50 border border-slate-100 rounded-2xl">
-              <Package size={32} className="text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-normal text-slate-500">
-                Belum ada data produk untuk toko ini
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Mini bar chart visual */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-5">
-                <h2 className="text-xs font-normal text-slate-500 uppercase tracking-wider mb-4">
-                  Grafik Qty Terjual — {periodLabel}
-                </h2>
-                <div className="space-y-2.5">
-                  {items.slice(0, 10).map((item) => {
-                    const qty = Number(item.jumlahTerjual) || 0;
-                    const widthPct = Math.max(2, (qty / maxQty) * 100);
-                    return (
-                      <div
-                        key={item.produk.id}
-                        className="flex items-center gap-3"
-                      >
-                        <div className="w-32 flex-shrink-0 truncate">
-                          <p className="text-[11px] font-normal text-slate-700 truncate">
-                            {item.produk.nama?.replace(" - ", " ")}
-                          </p>
-                        </div>
-                        <div className="flex-1 h-5 bg-slate-50 rounded-md overflow-hidden relative">
-                          <div
-                            className="h-full bg-primary-500 rounded-md transition-all duration-700"
-                            style={{ width: `${widthPct}%` }}
-                          />
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-normal">
-                            {qty.toFixed(1)} {item.produk.satuan}
-                          </span>
-                        </div>
-                        <div className="w-16 flex-shrink-0 text-right">
-                          {trendBadge(item.trendArah, item.trendPersen)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Detail Table */}
-              <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-slate-100 bg-slate-50/30">
-                        <th className="px-5 py-3 text-[10px] font-normal text-slate-400 uppercase tracking-wider">
-                          #
-                        </th>
-                        <th className="px-5 py-3 text-[10px] font-normal text-slate-400 uppercase tracking-wider">
-                          Produk
-                        </th>
-                        <th className="px-5 py-3 text-[10px] font-normal text-slate-400 uppercase tracking-wider text-right">
-                          Terjual
-                        </th>
-                        <th className="px-5 py-3 text-[10px] font-normal text-slate-400 uppercase tracking-wider text-right">
-                          Bulan Lalu
-                        </th>
-                        <th className="px-5 py-3 text-[10px] font-normal text-slate-400 uppercase tracking-wider text-center">
-                          Tren
-                        </th>
-                        <th className="px-5 py-3 text-[10px] font-normal text-slate-400 uppercase tracking-wider text-right">
-                          Revenue
-                        </th>
-                        <th className="px-5 py-3 text-[10px] font-normal text-slate-400 uppercase tracking-wider text-center">
-                          Transaksi
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {items.map((item) => (
-                        <tr
-                          key={item.produk.id}
-                          className="hover:bg-slate-50/60 transition-colors"
-                        >
-                          <td className="px-5 py-3.5">
-                            <span
-                              className={`w-6 h-6 rounded-md inline-flex items-center justify-center text-xs font-normal ${
-                                item.rank === 1
-                                  ? "bg-amber-50 text-amber-700 border border-amber-100"
-                                  : item.rank === 2
-                                    ? "bg-slate-100 text-slate-600"
-                                    : item.rank === 3
-                                      ? "bg-orange-50 text-orange-600 border border-orange-100"
-                                      : "bg-slate-50 text-slate-400"
-                              }`}
-                            >
-                              {item.rank}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5">
-                            <p className="text-xs font-normal text-slate-800">
+                  return (
+                    <tr
+                      key={item.produk.id}
+                      onClick={() =>
+                        router.push(`/seller/laporan/produk/${item.produk.id}`)
+                      }
+                      className="hover:bg-gray-50/30 transition-colors group cursor-pointer"
+                    >
+                      <td className="py-4 px-4 text-center font-bold text-gray-400 group-hover:text-emerald-500 transition-colors">
+                        {item.rank === 1
+                          ? "🥇"
+                          : item.rank === 2
+                            ? "🥈"
+                            : item.rank === 3
+                              ? "🥉"
+                              : String(item.rank).padStart(2, "0")}
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100/50 group-hover:border-emerald-100 transition-colors">
+                            {item.produk.gambarUrl ? (
+                              <img
+                                src={item.produk.gambarUrl}
+                                alt={item.produk.nama?.replace(" - ", " ")}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package size={14} className="text-gray-300" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800 text-sm group-hover:text-emerald-700 transition-colors">
                               {item.produk.nama?.replace(" - ", " ")}
                             </p>
                             {item.produk.kategori && (
-                              <p className="text-[10px] text-slate-400 mt-0.5">
+                              <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mt-0.5">
                                 {item.produk.kategori.nama}
                               </p>
                             )}
-                          </td>
-                          <td className="px-5 py-3.5 text-right text-xs font-normal text-slate-700">
-                            {item.jumlahTerjual} {item.produk.satuan}
-                          </td>
-                          <td className="px-5 py-3.5 text-right text-xs font-normal text-slate-400">
-                            {item.prevJumlahTerjual} {item.produk.satuan}
-                          </td>
-                          <td className="px-5 py-3.5 text-center">
-                            {trendBadge(item.trendArah, item.trendPersen)}
-                          </td>
-                          <td className="px-5 py-3.5 text-right text-xs font-normal text-slate-700">
-                            {fmtRp(item.totalRevenue)}
-                          </td>
-                          <td className="px-5 py-3.5 text-center text-xs font-normal text-slate-600">
-                            {item.jumlahTransaksi}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
-          ))}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <span className="font-bold text-gray-800">
+                          {(item.jumlahTerjual || 0).toFixed(1)}
+                        </span>
+                        <span className="text-gray-400 text-xs ml-1">
+                          {item.produk.satuan || "kg"}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right font-bold text-emerald-600">
+                        {formatRupiah(item.totalRevenue || 0)}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <span className="inline-flex items-center justify-center bg-gray-50 px-2.5 py-1 rounded-lg text-xs font-bold text-gray-600">
+                          {item.jumlahTransaksi || 0}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-center">
+                        {hasTrend ? (
+                          <span
+                            className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg ${
+                              isUp
+                                ? "bg-emerald-50 text-emerald-600"
+                                : isDown
+                                  ? "bg-red-50 text-red-600"
+                                  : "bg-gray-50 text-gray-500"
+                            }`}
+                          >
+                            {isUp ? (
+                              <TrendingUp size={12} strokeWidth={2.5} />
+                            ) : isDown ? (
+                              <TrendingDown size={12} strokeWidth={2.5} />
+                            ) : (
+                              <Minus size={12} strokeWidth={2.5} />
+                            )}
+                            {isUp ? "+" : ""}
+                            {item.trendPersen}%
+                          </span>
+                        ) : (
+                          <span className="text-gray-300 text-xs">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-12 text-gray-400 text-sm">
+            Tidak ada data penjualan produk untuk periode{" "}
+            {periodType === "WEEK"
+              ? "7 hari terakhir"
+              : periodType === "MONTH"
+                ? `${MONTHS_LIST.find((m) => m.value === selectedMonth)?.label} ${selectedYear}`
+                : periodType === "SIX_MONTHS"
+                  ? "6 bulan terakhir"
+                  : `Tahun ${selectedYear}`}
+            .
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -17,6 +17,8 @@ import {
   Star,
   Loader2,
   AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -61,9 +63,20 @@ interface ProductItem {
 
 interface OrderItem {
   id: string;
+  id_pesanan?: string;
+  id_pesananEcom?: string;
+  pesananId?: string;
+  _id?: string;
   createdAt: string;
-  customer?: { name: string };
-  user?: { name: string };
+  customer?: { name?: string; id?: string };
+  user?: { name?: string; id?: string };
+  konsumen?: { nama?: string; id?: string; id_konsumen?: string };
+  userId?: string;
+  user_id?: string;
+  id_user?: string;
+  id_konsumen?: string;
+  konsumen_id?: string;
+  id_pembeli?: string;
   totalAmount?: number;
   totalHarga?: number;
   status: string;
@@ -79,6 +92,8 @@ interface StockRequestItem {
   status: string;
   catatan?: string;
   tokoId?: string;
+  toko_id?: string;
+  id_toko?: string;
   gudangId?: string;
   gudang?: {
     nama?: string;
@@ -94,11 +109,23 @@ interface StockRequestItem {
     produkGudang?: {
       nama?: string;
       satuan?: string;
+      harga?: number;
     };
     namaProduk?: string;
     jumlahPermintaan: number;
     jumlahDisetujui?: number;
+    harga_beli?: number;
+    ukuranKemasanKg?: number;
+    jumlahKemasan?: number;
+    kemasanDetail?: Array<{
+      ukuranKg: number;
+      jumlahKemasan: number;
+    }>;
   }>;
+  totalHarga?: number;
+  total_harga?: number;
+  totalBiaya?: number;
+  total_biaya?: number;
 }
 
 export default function DetailTokoPage() {
@@ -114,6 +141,7 @@ export default function DetailTokoPage() {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [stockRequests, setStockRequests] = useState<StockRequestItem[]>([]);
+  const [expandedStockId, setExpandedStockId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -169,7 +197,13 @@ export default function DetailTokoPage() {
             ? rawStock
             : (rawStock.data ?? []);
           const filteredStock = stockArr.filter((s: StockRequestItem) => {
-            const reqTokoId = s.tokoId || s.toko?.id_toko || s.toko?.id;
+            const reqTokoId =
+              s.tokoId ||
+              s.toko_id ||
+              s.id_toko ||
+              s.toko?.id_toko ||
+              s.toko?.id ||
+              (s as any).storeId;
             return reqTokoId === id;
           });
           setStockRequests(filteredStock);
@@ -285,20 +319,6 @@ export default function DetailTokoPage() {
                   </p>
                   <p className="font-normal text-xs text-slate-800 mt-0.5">
                     {store.courierStaff?.name || "Belum Ada Kurir"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-slate-50/60 rounded-xl p-3 border border-slate-200 flex items-center gap-3 min-w-[170px]">
-                <div className="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
-                  <Building2 size={14} />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-normal text-slate-400 tracking-wider">
-                    Gudang Penyimpanan
-                  </p>
-                  <p className="font-normal text-xs text-slate-800 mt-0.5">
-                    {store.warehouseAdmin?.name || "Belum Ada Gudang"}
                   </p>
                 </div>
               </div>
@@ -536,13 +556,27 @@ export default function DetailTokoPage() {
                         className="hover:bg-slate-50/60 transition-colors"
                       >
                         <td className="px-5 py-3 font-mono text-emerald-600 font-normal">
-                          #{order?.id?.slice(-8).toUpperCase() ?? "-"}
+                          #
+                          {String(
+                            order.id ||
+                              (order as any).id_pesanan ||
+                              (order as any).id_pesananEcom ||
+                              (order as any).pesananId ||
+                              (order as any)._id ||
+                              "",
+                          )
+                            .slice(-8)
+                            .toUpperCase() || "-"}
                         </td>
                         <td className="px-5 py-3 text-slate-500 font-normal">
                           {formatTanggal(order.createdAt)}
                         </td>
                         <td className="px-5 py-3 text-slate-800 font-normal">
-                          {order.customer?.name || order.user?.name || "-"}
+                          {order.konsumen?.nama ||
+                            order.customer?.name ||
+                            order.user?.name ||
+                            (order as any).penerima ||
+                            "Tidak Diketahui"}
                         </td>
                         <td className="px-5 py-3 text-slate-800 font-normal">
                           {formatRupiah(
@@ -552,9 +586,16 @@ export default function DetailTokoPage() {
                         <td className="px-5 py-3">
                           <span
                             className={`px-2 py-0.5 text-[10px] font-normal rounded-md uppercase tracking-wider border ${
-                              ["DELIVERED", "COMPLETED"].includes(order.status)
+                              [
+                                "DELIVERED",
+                                "COMPLETED",
+                                "SELESAI",
+                                "DIKIRIM",
+                              ].includes((order.status || "").toUpperCase())
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : order.status === "CANCELLED"
+                                : ["CANCELLED", "DIBATALKAN"].includes(
+                                      (order.status || "").toUpperCase(),
+                                    )
                                   ? "bg-rose-50 text-rose-700 border-rose-200"
                                   : "bg-amber-50 text-amber-700 border-amber-200"
                             }`}
@@ -600,78 +641,244 @@ export default function DetailTokoPage() {
                 <table className="w-full text-left whitespace-nowrap">
                   <thead>
                     <tr className="bg-slate-50/80 text-slate-400 border-b border-slate-200 text-[11px] font-normal uppercase tracking-wider">
+                      <th className="px-5 py-3 font-normal w-10" />
                       <th className="px-5 py-3 font-normal">Tanggal</th>
                       <th className="px-5 py-3 font-normal">No. Pengajuan</th>
-                      <th className="px-5 py-3 font-normal">Gudang</th>
                       <th className="px-5 py-3 font-normal">Item Produk</th>
                       <th className="px-5 py-3 font-normal">
                         Total Permintaan
                       </th>
+                      <th className="px-5 py-3 font-normal">Harga (per kg)</th>
+                      <th className="px-5 py-3 font-normal">Total Harga</th>
                       <th className="px-5 py-3 font-normal">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {stockRequests.map((item, idx) => {
-                      const totalQty = (item.items || []).reduce(
-                        (acc, it) => acc + (it.jumlahPermintaan || 0),
+                      const uniqueItems = (item.items || []).reduce(
+                        (acc: any[], current: any) => {
+                          const key =
+                            current.produkId ||
+                            current.namaProduk ||
+                            current.id;
+                          const existing = acc.find(
+                            (x: any) =>
+                              (x.produkId || x.namaProduk || x.id) === key,
+                          );
+                          if (existing) {
+                            existing.jumlahPermintaan +=
+                              current.jumlahPermintaan || 0;
+                          } else {
+                            acc.push({ ...current });
+                          }
+                          return acc;
+                        },
+                        [],
+                      );
+
+                      const totalQty = uniqueItems.reduce(
+                        (acc: number, it: any) =>
+                          acc + (it.jumlahPermintaan || 0),
                         0,
                       );
-                      const itemsPreview = (item.items || [])
+                      const itemsPreview = uniqueItems
                         .map(
-                          (it) =>
+                          (it: any) =>
                             it.produkGudang?.nama || it.namaProduk || "Produk",
                         )
                         .slice(0, 2)
                         .join(", ");
 
+                      const rowId =
+                        item.id || (item as any).id_pengajuan || `stock-${idx}`;
+                      const isExpanded = expandedStockId === rowId;
+
                       return (
-                        <tr
-                          key={
-                            item.id ||
-                            (item as any).id_pengajuan ||
-                            `stock-${idx}`
-                          }
-                          className="hover:bg-slate-50/60 transition-colors"
-                        >
-                          <td className="px-5 py-3 text-slate-500 font-normal">
-                            {formatTanggal(item.createdAt)}
-                          </td>
-                          <td className="px-5 py-3 font-mono text-emerald-600 font-normal">
-                            {item.nomorPengajuan ||
-                              `#${item.id.slice(-8).toUpperCase()}`}
-                          </td>
-                          <td className="px-5 py-3 text-slate-700 font-normal">
-                            {item.gudang?.nama ||
-                              store.warehouseAdmin?.name ||
-                              "Gudang Utama"}
-                          </td>
-                          <td className="px-5 py-3 text-slate-800 font-normal max-w-xs truncate">
-                            {itemsPreview || "—"}
-                            {(item.items?.length || 0) > 2
-                              ? ` (+${item.items!.length - 2} lainnya)`
-                              : ""}
-                          </td>
-                          <td className="px-5 py-3 text-slate-800 font-normal">
-                            {totalQty} unit / kg
-                          </td>
-                          <td className="px-5 py-3">
-                            <span
-                              className={`px-2 py-0.5 text-[10px] font-normal rounded-md uppercase tracking-wider border ${
-                                ["COMPLETED", "APPROVED", "DISETUJUI"].includes(
-                                  item.status,
-                                )
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                  : ["REJECTED", "DITOLAK"].includes(
-                                        item.status,
-                                      )
-                                    ? "bg-rose-50 text-rose-700 border-rose-200"
-                                    : "bg-amber-50 text-amber-700 border-amber-200"
-                              }`}
-                            >
-                              {item.status}
-                            </span>
-                          </td>
-                        </tr>
+                        <React.Fragment key={rowId}>
+                          <tr
+                            onClick={() =>
+                              setExpandedStockId(isExpanded ? null : rowId)
+                            }
+                            className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+                          >
+                            <td className="px-5 py-3 text-slate-400">
+                              {isExpanded ? (
+                                <ChevronUp size={16} />
+                              ) : (
+                                <ChevronDown size={16} />
+                              )}
+                            </td>
+                            <td className="px-5 py-3 text-slate-500 font-normal">
+                              {formatTanggal(item.createdAt)}
+                            </td>
+                            <td className="px-5 py-3 font-mono text-emerald-600 font-normal">
+                              {item.nomorPengajuan ||
+                                `#${item.id.slice(-8).toUpperCase()}`}
+                            </td>
+                            <td className="px-5 py-3 text-slate-800 font-normal max-w-xs truncate">
+                              {itemsPreview || "—"}
+                              {(uniqueItems.length || 0) > 2
+                                ? ` (+${uniqueItems.length - 2} lainnya)`
+                                : ""}
+                            </td>
+                            <td className="px-5 py-3 text-slate-800 font-normal">
+                              {totalQty} kg
+                            </td>
+                            <td className="px-5 py-3 text-emerald-600 font-normal">
+                              {uniqueItems.length > 0
+                                ? formatRupiah(
+                                    (uniqueItems[0] as any).hargaGudang ||
+                                      (uniqueItems[0] as any).harga ||
+                                      (uniqueItems[0] as any).hargaBeli ||
+                                      (uniqueItems[0] as any).harga_beli ||
+                                      (uniqueItems[0] as any).hargaSatuan ||
+                                      (uniqueItems[0] as any).harga_satuan ||
+                                      uniqueItems[0].produkGudang?.harga ||
+                                      (uniqueItems[0] as any).produk?.harga ||
+                                      0,
+                                  )
+                                : "-"}
+                            </td>
+                            <td className="px-5 py-3 font-semibold text-slate-800">
+                              {formatRupiah(
+                                (item as any).totalHargaBeli ||
+                                  item.totalHarga ||
+                                  (item as any).total_harga ||
+                                  (item as any).totalBiaya ||
+                                  (item as any).total_biaya ||
+                                  totalQty *
+                                    ((uniqueItems[0] as any)?.hargaGudang ||
+                                      (uniqueItems[0] as any)?.harga ||
+                                      (uniqueItems[0] as any)?.hargaBeli ||
+                                      (uniqueItems[0] as any)?.harga_beli ||
+                                      (uniqueItems[0] as any)?.hargaSatuan ||
+                                      (uniqueItems[0] as any)?.harga_satuan ||
+                                      uniqueItems[0]?.produkGudang?.harga ||
+                                      (uniqueItems[0] as any)?.produk?.harga ||
+                                      0),
+                              )}
+                            </td>
+                            <td className="px-5 py-3">
+                              <span
+                                className={`px-2 py-0.5 text-[10px] font-normal rounded-md uppercase tracking-wider border ${
+                                  [
+                                    "COMPLETED",
+                                    "APPROVED",
+                                    "DISETUJUI",
+                                  ].includes(item.status)
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : ["REJECTED", "DITOLAK"].includes(
+                                          item.status,
+                                        )
+                                      ? "bg-rose-50 text-rose-700 border-rose-200"
+                                      : "bg-amber-50 text-amber-700 border-amber-200"
+                                }`}
+                              >
+                                {item.status}
+                              </span>
+                            </td>
+                          </tr>
+                          {isExpanded && (
+                            <tr className="bg-slate-50/50">
+                              <td
+                                colSpan={8}
+                                className="px-8 py-4 border-b border-slate-100 shadow-inner"
+                              >
+                                <div className="text-sm font-semibold text-slate-700 mb-3">
+                                  Daftar Produk yang Diajukan
+                                </div>
+                                <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-sm">
+                                  <table className="w-full text-left whitespace-nowrap">
+                                    <thead className="bg-slate-100/80 border-b border-slate-200">
+                                      <tr className="text-[11px] text-slate-500 uppercase tracking-wider">
+                                        <th className="px-4 py-2 font-medium">
+                                          Nama Produk
+                                        </th>
+                                        <th className="px-4 py-2 font-medium">
+                                          Satuan / Kemasan
+                                        </th>
+                                        <th className="px-4 py-2 font-medium">
+                                          Harga Satuan
+                                        </th>
+                                        <th className="px-4 py-2 font-medium text-right">
+                                          Permintaan (kg)
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                      {uniqueItems.map(
+                                        (detailIt: any, dIdx: number) => (
+                                          <tr
+                                            key={detailIt.id || dIdx}
+                                            className="hover:bg-slate-50/30"
+                                          >
+                                            <td className="px-4 py-2.5 text-slate-700">
+                                              {detailIt.produkGudang?.nama ||
+                                                detailIt.namaProduk ||
+                                                "Produk"}
+                                            </td>
+                                            <td className="px-4 py-2.5 text-slate-600">
+                                              {(() => {
+                                                const uk =
+                                                  detailIt.ukuranKemasanKg ||
+                                                  (detailIt as any)
+                                                    .ukuran_kemasan_kg ||
+                                                  (detailIt as any).ukuranKg ||
+                                                  detailIt.kemasanDetail?.[0]
+                                                    ?.ukuranKg ||
+                                                  (detailIt as any)
+                                                    .kemasan_detail?.[0]
+                                                    ?.ukuranKg;
+                                                if (uk)
+                                                  return uk === 1.0 || uk === 1
+                                                    ? "Retail (1 kg)"
+                                                    : `Medium (${uk} kg)`;
+                                                return (
+                                                  detailIt.produkGudang
+                                                    ?.satuan ||
+                                                  (detailIt.produkGudang as any)
+                                                    ?.kemasan ||
+                                                  (detailIt as any).satuan ||
+                                                  (detailIt as any).kemasan ||
+                                                  (detailIt as any).produk
+                                                    ?.satuan ||
+                                                  (detailIt as any).produk
+                                                    ?.kemasan ||
+                                                  "Kg"
+                                                );
+                                              })()}
+                                            </td>
+                                            <td className="px-4 py-2.5 text-slate-600">
+                                              {formatRupiah(
+                                                (detailIt as any).hargaGudang ||
+                                                  (detailIt as any).harga ||
+                                                  (detailIt as any).hargaBeli ||
+                                                  (detailIt as any)
+                                                    .harga_beli ||
+                                                  (detailIt as any)
+                                                    .hargaSatuan ||
+                                                  (detailIt as any)
+                                                    .harga_satuan ||
+                                                  detailIt.produkGudang
+                                                    ?.harga ||
+                                                  (detailIt as any).produk
+                                                    ?.harga ||
+                                                  0,
+                                              )}
+                                            </td>
+                                            <td className="px-4 py-2.5 text-slate-700 text-right">
+                                              {detailIt.jumlahPermintaan}
+                                            </td>
+                                          </tr>
+                                        ),
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>

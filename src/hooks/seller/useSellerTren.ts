@@ -7,7 +7,7 @@ export function useTrenBulanan(tokoId: string, bulanKe = 6) {
   return useQuery({
     queryKey: queryKeys.analytics.trenBulanan(tokoId, bulanKe),
     queryFn: () => analyticsApi.getTrenBulanan(tokoId, bulanKe),
-    enabled: !!tokoId,
+    enabled: true,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -25,7 +25,8 @@ export function useTrenProdukBulanan(
       period,
     ],
     queryFn: () => {
-      const params: any = { tokoId, limit };
+      const params: any = { limit };
+      if (tokoId) params.tokoId = tokoId;
       if (period === "WEEK") {
         params.period = "WEEK";
       } else if (period === "SIX_MONTHS") {
@@ -41,7 +42,7 @@ export function useTrenProdukBulanan(
       const q = new URLSearchParams(params).toString();
       return analyticsApi.getTrenProdukBulananRaw(q);
     },
-    enabled: !!tokoId,
+    enabled: true,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -54,7 +55,7 @@ export function usePolaPenjualan(
   return useQuery({
     queryKey: [...queryKeys.analytics.polaPenjualan(tokoId, year), month],
     queryFn: () => analyticsApi.getPolaPenjualan(tokoId, year, month),
-    enabled: !!tokoId,
+    enabled: true,
     staleTime: 15 * 60 * 1000, // 15 menit — pola penjualan lambat berubah
   });
 }
@@ -63,7 +64,7 @@ export function usePesananHarian(tokoId: string, date: string) {
   return useQuery({
     queryKey: ["analytics", "pesanan-harian", tokoId, date],
     queryFn: () => analyticsApi.getPesananHarian(tokoId, date),
-    enabled: !!tokoId && !!date,
+    enabled: !!date,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -82,7 +83,8 @@ export function usePertumbuhanProduk(
       year,
     ],
     queryFn: () => {
-      const params: any = { tokoId };
+      const params: any = {};
+      if (tokoId) params.tokoId = tokoId;
       if (period === "WEEK") {
         params.period = "WEEK";
       } else if (period === "SIX_MONTHS") {

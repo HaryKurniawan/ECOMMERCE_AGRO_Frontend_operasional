@@ -144,6 +144,16 @@ export default function ManajemenProdukPage() {
     }
   };
 
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      await productsApi.updateStatus(id, newStatus);
+      await fetchProducts(false);
+    } catch {
+      alert("Gagal merubah status produk.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nama || !form.tokoId) {
@@ -481,6 +491,29 @@ export default function ManajemenProdukPage() {
                                   </p>
                                 )}
                               </div>
+                            </div>
+
+                            {/* Tombol Aksi di Dropdown */}
+                            <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleStatus(p.id, p.status);
+                                }}
+                                className="px-4 py-2 text-sm font-medium bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm"
+                              >
+                                <RefreshCw
+                                  size={14}
+                                  className={
+                                    p.status === "ACTIVE"
+                                      ? "text-red-500"
+                                      : "text-emerald-500"
+                                  }
+                                />
+                                {p.status === "ACTIVE"
+                                  ? "Nonaktifkan Produk"
+                                  : "Aktifkan Produk"}
+                              </button>
                             </div>
                           </td>
                         </tr>

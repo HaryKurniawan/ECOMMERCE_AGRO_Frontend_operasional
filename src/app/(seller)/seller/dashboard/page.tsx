@@ -28,6 +28,18 @@ import {
   computeTrend,
 } from "@/components/ecommerce/analytics/AnalyticsWidgets";
 
+// ─── Helper Hari Ini ─────────────────────────────────────────────────────────
+function isToday(dateStr?: string): boolean {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
+
 // ─── Mini Sparkline ───────────────────────────────────────────────────────────
 function Sparkline({
   data,
@@ -318,15 +330,50 @@ const DashboardSellerPage: React.FC = () => {
   const conversionRate =
     totalOrdersCount > 0 ? (selesaiCount / totalOrdersCount) * 100 : 0;
 
-  const distItems = [
-    { label: "Pending", count: pendingCount, cls: "bg-amber-400" },
-    { label: "Dikirim", count: dikirimCount, cls: "bg-sky-400" },
-    { label: "Selesai", count: selesaiCount, cls: "bg-emerald-500" },
-    { label: "Batal", count: batalCount, cls: "bg-slate-300" },
-  ];
+  // ── Filter Khusus HARI INI & AKTIF ────────────────────────────────────
+  const allOrdersList: any[] =
+    (dashboardStats?.recentOrders?.length
+      ? dashboardStats.recentOrders
+      : safeOrders) || [];
+
+  const todayActiveOrders = allOrdersList.filter((o: any) => {
+    const dateStr = o.createdAt || o.tanggalDibuat || o.tanggal;
+    const matchDate = isToday(dateStr);
+    const statusUpper = (o.status || "").toUpperCase();
+    const isActive =
+      statusUpper !== "DIBATALKAN" && statusUpper !== "CANCELLED";
+    return matchDate && isActive;
+  });
+
+  const todayPendingCount = todayActiveOrders.filter((o: any) =>
+    ["MENUNGGU_BAYAR", "DIPROSES", "MENUNGGU", "DIPROSES"].includes(
+      (o.status || "").toUpperCase(),
+    ),
+  ).length;
+
+  const todayDikirimCount = todayActiveOrders.filter((o: any) =>
+    ["DIKIRIM", "SHIPPED"].includes((o.status || "").toUpperCase()),
+  ).length;
+
+  const todaySelesaiCount = todayActiveOrders.filter((o: any) =>
+    ["SELESAI", "DELIVERED"].includes((o.status || "").toUpperCase()),
+  ).length;
+
+  const todayDistItems = [
+    { label: "Pending", count: todayPendingCount, cls: "bg-amber-400" },
+    { label: "Dikirim", count: todayDikirimCount, cls: "bg-sky-400" },
+    { label: "Selesai", count: todaySelesaiCount, cls: "bg-emerald-500" },
+  ].filter((item) => item.count > 0);
+
+  const MAX_SHOW_ORDERS = 5;
+  const displayedTodayOrders = todayActiveOrders.slice(0, MAX_SHOW_ORDERS);
+  const remainingOrdersCount = Math.max(
+    0,
+    todayActiveOrders.length - MAX_SHOW_ORDERS,
+  );
 
   return (
-    <div className="space-y-8 w-full">
+    <div className="space-y-8 w-full pb-10">
       {/* ── HERO HEADER ─────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden bg-gradient-to-r from-primary-700 to-primary-600 rounded-2xl px-6 py-5 text-white shadow-md">
         {/* Subtle grid pattern overlay */}
@@ -508,7 +555,7 @@ const DashboardSellerPage: React.FC = () => {
                 <BarChart2 size={12} className="text-slate-400" />
               </div>
               <span className="text-[13px] font-medium text-slate-700">
-                Distribusi Status
+                Distribusi Status (Hari Ini)
               </span>
             </div>
             <button
@@ -519,84 +566,95 @@ const DashboardSellerPage: React.FC = () => {
             </button>
           </div>
 
-          <DistBar items={distItems} />
+          <DistBar items={todayDistItems} />
 
           <div className="grid grid-cols-2 gap-2 mt-4">
             {[
               {
-                label: "Selesai",
-                count: selesaiCount,
-                dot: "bg-emerald-500",
-                onClick: () => router.push("/seller/pesanan"),
-              },
-              {
-                label: "Dikirim",
-                count: dikirimCount,
-                dot: "bg-sky-400",
-                onClick: () => router.push("/seller/pesanan"),
-              },
-              {
                 label: "Pending",
-                count: pendingCount,
+                count: todayPendingCount,
                 dot: "bg-amber-400",
                 onClick: () => router.push("/seller/pesanan"),
               },
               {
-                label: "Batal",
-                count: batalCount,
-                dot: "bg-slate-300",
+                label: "Dikirim",
+                count: todayDikirimCount,
+                dot: "bg-sky-400",
                 onClick: () => router.push("/seller/pesanan"),
               },
-            ].map((item) => (
-              <StatPill key={item.label} {...item} />
-            ))}
+              {
+                label: "Selesai",
+                count: todaySelesaiCount,
+                dot: "bg-emerald-500",
+                onClick: () => router.push("/seller/pesanan"),
+              },
+            ]
+              .filter((item) => item.count > 0)
+              .map((item) => (
+                <StatPill key={item.label} {...item} />
+              ))}
           </div>
 
           {/* Total badge */}
           <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
             <span className="text-[11px] text-slate-400 font-normal">
-              Total Pesanan
+              Total Pesanan Hari Ini
             </span>
             <span className="text-[15px] font-medium text-slate-800">
-              {totalOrdersCount}
+              {todayActiveOrders.length}
             </span>
           </div>
         </div>
 
         {/* Recent Orders */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center">
-                <ClipboardList size={12} className="text-slate-400" />
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center">
+                  <ClipboardList size={12} className="text-slate-400" />
+                </div>
+                <span className="text-[13px] font-medium text-slate-700">
+                  Pesanan Terbaru (Hari Ini)
+                </span>
               </div>
-              <span className="text-[13px] font-medium text-slate-700">
-                Pesanan Terbaru
-              </span>
+              <button
+                onClick={() => router.push("/seller/pesanan")}
+                className="text-[11px] text-emerald-600 font-medium hover:underline flex items-center gap-0.5"
+              >
+                Lihat semua <ArrowUpRight size={11} />
+              </button>
             </div>
-            <button
-              onClick={() => router.push("/seller/pesanan")}
-              className="text-[11px] text-emerald-600 font-medium hover:underline flex items-center gap-0.5"
-            >
-              Lihat semua <ArrowUpRight size={11} />
-            </button>
+
+            {displayedTodayOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
+                  <ShoppingBag size={16} className="text-slate-300" />
+                </div>
+                <p className="text-xs text-slate-400 font-medium">
+                  Belum ada pesanan aktif hari ini
+                </p>
+              </div>
+            ) : (
+              <div>
+                {displayedTodayOrders.map((p: any, idx: number) => (
+                  <OrderRow key={p?.id || idx} order={p} />
+                ))}
+              </div>
+            )}
           </div>
 
-          {safeOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="w-10 h-10 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
-                <ShoppingBag size={16} className="text-slate-300" />
-              </div>
-              <p className="text-xs text-slate-400 font-medium">
-                Belum ada pesanan masuk
-              </p>
-            </div>
-          ) : (
-            <div>
-              {safeOrders.map((p: any, idx: number) => (
-                <OrderRow key={p?.id || idx} order={p} />
-              ))}
-            </div>
+          {remainingOrdersCount > 0 && (
+            <button
+              onClick={() => router.push("/seller/pesanan")}
+              className="mt-3 w-full py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-center text-xs font-semibold text-emerald-600 transition-colors flex items-center justify-center gap-1 group"
+            >
+              +{remainingOrdersCount} pesanan lagi
+              <ChevronRight
+                size={14}
+                className="group-hover:translate-x-0.5 transition-transform"
+              />
+            </button>
           )}
         </div>
       </div>

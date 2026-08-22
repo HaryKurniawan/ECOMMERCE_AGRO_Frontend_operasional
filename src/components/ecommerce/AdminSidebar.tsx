@@ -50,7 +50,6 @@ const ADMIN_MENU: SidebarMenuItem[] = [
     children: [
       { path: "/admin/pesanan", label: "Pesanan" },
       { path: "/admin/barang-siap", label: "Barang Siap Jual" },
-      { path: "/admin/pesanan/cari", label: "Cari Transaksi" },
     ],
   },
   {
@@ -65,8 +64,8 @@ const ADMIN_MENU: SidebarMenuItem[] = [
     icon: <TrendingUp size={17} />,
     children: [
       { path: "/admin/laporan/produk-terlaris", label: "Produk Terlaris" },
-      { path: "/admin/tren-komoditas", label: "Komoditas Global" },
       { path: "/admin/tren/per-seller", label: "Per Seller" },
+      { path: "/admin/tren/pola", label: "Pola Penjualan" },
     ],
   },
   {
@@ -85,9 +84,7 @@ const ADMIN_MENU: SidebarMenuItem[] = [
     label: "Pengaturan",
     icon: <Settings size={17} />,
     children: [
-      { path: "/admin/pengaturan", label: "Umum" },
       { path: "/admin/pengaturan/ppn", label: "Pajak (PPN)" },
-      { path: "/admin/kelola-foto", label: "Kelola Foto" },
       { path: "/admin/banner", label: "Banner Promo" },
     ],
   },

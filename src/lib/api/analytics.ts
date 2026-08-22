@@ -216,9 +216,9 @@ export const analyticsApi = {
     tokoId: string,
     bulanKe = 6,
   ): Promise<TrenBulananResponse> => {
-    const res = await apiClient.get(
-      `/analytics/tren/bulanan?tokoId=${tokoId}&bulanKe=${bulanKe}`,
-    );
+    let url = `/analytics/tren/bulanan?bulanKe=${bulanKe}`;
+    if (tokoId) url += `&tokoId=${tokoId}`;
+    const res = await apiClient.get(url);
     return res.data?.data ?? res.data;
   },
 
@@ -247,26 +247,30 @@ export const analyticsApi = {
     year?: number,
     month?: number,
   ): Promise<PolaPenjualanResponse> => {
-    let url = `/analytics/tren/pola?tokoId=${tokoId}`;
-    if (year) url += `&year=${year}`;
-    if (month) url += `&month=${month}`;
+    let url = `/analytics/tren/pola`;
+    const queryParams = new URLSearchParams();
+    if (tokoId) queryParams.append("tokoId", tokoId);
+    if (year) queryParams.append("year", String(year));
+    if (month) queryParams.append("month", String(month));
+    const qs = queryParams.toString();
+    if (qs) url += `?${qs}`;
     const res = await apiClient.get(url);
     return res.data?.data ?? res.data;
   },
 
   getPesananHarian: async (tokoId: string, date: string): Promise<any> => {
-    const res = await apiClient.get(
-      `/analytics/tren/pola/pesanan-harian?tokoId=${tokoId}&date=${date}`,
-    );
+    let url = `/analytics/tren/pola/pesanan-harian?date=${date}`;
+    if (tokoId) url += `&tokoId=${tokoId}`;
+    const res = await apiClient.get(url);
     return res.data?.data ?? res.data;
   },
 
   getPertumbuhanProduk: async (
     tokoId: string,
   ): Promise<PertumbuhanProdukResponse> => {
-    const res = await apiClient.get(
-      `/analytics/tren/pertumbuhan-produk?tokoId=${tokoId}`,
-    );
+    let url = `/analytics/tren/pertumbuhan-produk`;
+    if (tokoId) url += `?tokoId=${tokoId}`;
+    const res = await apiClient.get(url);
     return res.data?.data ?? res.data;
   },
 

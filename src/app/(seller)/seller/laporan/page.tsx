@@ -139,7 +139,7 @@ export default function LaporanKeuanganPage() {
   const [orders, setOrders] = useState<FinanceOrder[]>([]);
   const [baseLoading, setBaseLoading] = useState(true);
 
-  const [activePeriod, setActivePeriod] = useState<PeriodKey>("month");
+  const [activePeriod, setActivePeriod] = useState<PeriodKey>("all");
   const [orderType, setOrderType] = useState<OrderFilterType>("ALL");
   const [summary, setSummary] = useState<ProfitSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -369,10 +369,28 @@ export default function LaporanKeuanganPage() {
       statusFilter === "semua" ||
       (order.status || "").toLowerCase() === statusFilter;
 
-    return matchSearch && matchStatus;
+    let matchPeriod = true;
+    if (activePeriod !== "all") {
+      const { startDate, endDate } = getDateRange(activePeriod);
+      if (startDate || endDate) {
+        const rawDate =
+          order.tanggalDibuat || order.createdAt || (order as any).tanggal;
+        if (rawDate) {
+          try {
+            const orderDateStr = new Date(rawDate).toISOString().split("T")[0];
+            if (startDate && orderDateStr < startDate) matchPeriod = false;
+            if (endDate && orderDateStr > endDate) matchPeriod = false;
+          } catch {
+            // fallback jika format tanggal bukan ISO baku
+          }
+        }
+      }
+    }
+
+    return matchSearch && matchStatus && matchPeriod;
   });
 
-  const totalSelesai = orders.filter((o) =>
+  const totalSelesai = filteredOrders.filter((o) =>
     ["selesai", "delivered"].includes((o.status || "").toLowerCase()),
   ).length;
 
@@ -723,17 +741,35 @@ export default function LaporanKeuanganPage() {
                 const orderMargin =
                   orderHpp > 0 ? (orderKeuntungan / orderHpp) * 100 : 0;
 
+                const orderId =
+                  order.id ||
+                  (order as any).id_pesanan ||
+                  (order as any).id_pesananEcom ||
+                  (order as any).pesananId ||
+                  (order as any)._id;
+                const isGrosir = Boolean(
+                  (order as any).isGrosir ||
+                  (order as any).isPesananGrosir ||
+                  (order as any).tipe === "B2B" ||
+                  (order as any).tipePesanan === "GROSIR",
+                );
+                const detailUrl = isGrosir
+                  ? `/seller/pesanan-grosir/${orderId}`
+                  : `/seller/pesanan/${orderId}`;
+
                 return (
                   <tr
-                    key={order.id || idx}
-                    onClick={() =>
-                      order.id && router.push(`/seller/pesanan/${order.id}`)
-                    }
+                    key={orderId || idx}
+                    onClick={() => {
+                      if (orderId) {
+                        window.location.href = detailUrl;
+                      }
+                    }}
                     className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors cursor-pointer group"
                   >
                     <td className="py-3.5 px-5">
                       <span className="font-mono text-emerald-600 font-medium group-hover:text-emerald-700 transition-colors">
-                        #{(order.id || "").substring(0, 8).toUpperCase()}
+                        #{(orderId || "").substring(0, 8).toUpperCase()}
                       </span>
                       <div className="text-[10px] text-slate-400 mt-0.5">
                         {items.length} item

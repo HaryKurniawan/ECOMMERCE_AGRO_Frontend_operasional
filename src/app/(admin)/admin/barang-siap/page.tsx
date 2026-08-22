@@ -15,6 +15,7 @@ interface ReadyProduct {
   status: string;
   gambarUrl?: string;
   store?: { nama: string; kabupaten?: string };
+  toko?: { nama: string; kabupaten?: string };
   category?: { nama: string };
   createdAt?: string;
   grades?: Array<{ grade: string; stok: number }>;
@@ -51,6 +52,7 @@ const BarangSiapJualPage: React.FC = () => {
     (b) =>
       b.nama.toLowerCase().includes(search.toLowerCase()) ||
       (b.store?.nama || "").toLowerCase().includes(search.toLowerCase()) ||
+      (b.toko?.nama || "").toLowerCase().includes(search.toLowerCase()) ||
       (b.category?.nama || "").toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -65,7 +67,8 @@ const BarangSiapJualPage: React.FC = () => {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-display font-bold text-gray-900 flex items-center gap-2">
-          <ShoppingBag size={24} className="text-indigo-600" /> Barang Siap Jual
+          <ShoppingBag size={24} className="text-emerald-600" /> Barang Siap
+          Jual
         </h1>
         <p className="text-sm text-gray-500">
           Produk aktif yang tersedia di etalase toko marketplace
@@ -83,14 +86,14 @@ const BarangSiapJualPage: React.FC = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari produk, toko, atau kategori..."
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
           />
         </div>
       </div>
 
       {loading && (
         <div className="flex justify-center items-center py-20">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
         </div>
       )}
 
@@ -138,7 +141,9 @@ const BarangSiapJualPage: React.FC = () => {
                     <div>
                       <p className="font-bold text-gray-900">{b.nama}</p>
                       <p className="text-xs text-gray-500">
-                        {b.store?.nama || "Toko Tidak Diketahui"}
+                        {b.toko?.nama ||
+                          b.store?.nama ||
+                          "Pusat / Tidak Diketahui"}
                       </p>
                     </div>
                   </div>
@@ -153,19 +158,21 @@ const BarangSiapJualPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-indigo-50 rounded-xl p-2.5 text-center">
-                    <p className="text-xs text-indigo-600">Stok</p>
-                    <p className="font-bold">
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-2.5 text-center">
+                    <p className="text-xs text-gray-500">Stok</p>
+                    <p className="font-bold text-gray-900">
                       {b.stok.toLocaleString()} {b.satuan || "kg"}
                     </p>
                   </div>
-                  <div className="bg-emerald-50 rounded-xl p-2.5 text-center">
-                    <p className="text-xs text-emerald-600">Harga</p>
-                    <p className="font-bold text-xs">{formatRupiah(b.harga)}</p>
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-2.5 text-center">
+                    <p className="text-xs text-gray-500">Harga</p>
+                    <p className="font-bold text-gray-900 text-xs">
+                      {formatRupiah(b.harga)}
+                    </p>
                   </div>
-                  <div className="bg-blue-50 rounded-xl p-2.5 text-center">
-                    <p className="text-xs text-blue-600">Kategori</p>
-                    <p className="font-bold text-xs">
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-2.5 text-center">
+                    <p className="text-xs text-gray-500">Kategori</p>
+                    <p className="font-bold text-gray-900 text-xs">
                       {b.category?.nama || "-"}
                     </p>
                   </div>

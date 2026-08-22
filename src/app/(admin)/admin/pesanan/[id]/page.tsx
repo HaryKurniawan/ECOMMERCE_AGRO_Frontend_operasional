@@ -40,6 +40,10 @@ const STATUS_LABEL: Record<string, string> = {
 
 interface OrderDetail {
   id: string;
+  id_pesanan?: string;
+  id_pesananEcom?: string;
+  pesananId?: string;
+  _id?: string;
   status: string;
   totalHarga?: number | string;
   total?: number | string;
@@ -196,7 +200,15 @@ export default function AdminDetailPesananPage() {
   const customerName =
     order.customer?.name || order.konsumen?.nama || order.penerima || "—";
   const customerEmail = order.customer?.email || order.konsumen?.email || "—";
-  const shortId = `#${order.id.slice(-12).toUpperCase()}`;
+  const orderIdRaw = String(
+    order.id ||
+      order.id_pesanan ||
+      order.id_pesananEcom ||
+      order.pesananId ||
+      order._id ||
+      "",
+  );
+  const shortId = `#${orderIdRaw.slice(-12).toUpperCase()}`;
   const totalHarga = Number(order.totalHarga || order.total || 0);
   const ongkir = Number(order.ongkir || 0);
   const subtotal = totalHarga - ongkir;

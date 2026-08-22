@@ -40,7 +40,9 @@ export function useFetchProducts(params: UseFetchProductsParams = {}) {
       const total = rawRes?.data?.total || rawRes?.total || data.length;
       return { products: data, total };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 menit data dianggap segar
+    gcTime: 15 * 60 * 1000, // 15 menit data disimpan di memori saat tidak tampil
+    refetchOnWindowFocus: false, // jangan fetch ulang hanya karena user pindah tab
     placeholderData: (prev) => prev, // smooth transitions saat filter berubah
   });
 
