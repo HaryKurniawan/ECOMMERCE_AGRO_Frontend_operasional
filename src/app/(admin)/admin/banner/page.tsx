@@ -197,12 +197,12 @@ export default function AdminBannerPage() {
           },
         );
 
+        const rawResData = uploadRes.data;
         const uploaded =
-          uploadRes.data?.data?.url ||
-          uploadRes.data?.url ||
-          (typeof uploadRes.data?.data === "string"
-            ? uploadRes.data.data
-            : undefined);
+          rawResData?.data?.data?.url ||
+          rawResData?.data?.url ||
+          rawResData?.url ||
+          (typeof rawResData?.data === "string" ? rawResData.data : undefined);
 
         if (uploaded) {
           finalImageUrl = uploaded;
