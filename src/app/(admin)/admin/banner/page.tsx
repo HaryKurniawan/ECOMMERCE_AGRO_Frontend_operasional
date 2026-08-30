@@ -183,7 +183,7 @@ export default function AdminBannerPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      let finalImageUrl = editingBanner?.imageUrl;
+      let finalImageUrl = imagePreview ? editingBanner?.imageUrl : undefined;
 
       // Upload image first if new file is selected
       if (imageFile) {
@@ -196,7 +196,21 @@ export default function AdminBannerPage() {
             headers: { "Content-Type": "multipart/form-data" },
           },
         );
-        finalImageUrl = uploadRes.data?.data?.url;
+
+        const uploaded =
+          uploadRes.data?.data?.url ||
+          uploadRes.data?.url ||
+          (typeof uploadRes.data?.data === "string"
+            ? uploadRes.data.data
+            : undefined);
+
+        if (uploaded) {
+          finalImageUrl = uploaded;
+        }
+      }
+
+      if (!imagePreview && !imageFile) {
+        finalImageUrl = null as any;
       }
 
       const hasImage = Boolean(finalImageUrl || imagePreview);
@@ -214,7 +228,7 @@ export default function AdminBannerPage() {
         linkUrl,
         gradient: formattedGradient,
         isAktif,
-        imageUrl: finalImageUrl,
+        imageUrl: finalImageUrl ?? null,
       };
 
       if (editingBanner) {
