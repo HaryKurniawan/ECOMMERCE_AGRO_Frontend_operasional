@@ -177,6 +177,12 @@ export interface ApiUserProfile {
   email?: string;
   phone?: string;
   role: string;
+  kurirTokoId?: string;
+  kurirToko?: {
+    id_toko?: string;
+    nama?: string;
+    slug?: string;
+  };
 }
 
 export interface ApiChatMessage {

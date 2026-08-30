@@ -50,10 +50,12 @@ interface OrderItem {
   alamatKirim?: string;
   items?: Array<{
     product?: { nama: string; namaEtalase?: string; gambarUrl?: string };
+    produk?: { nama: string; namaEtalase?: string; gambarUrl?: string };
     jumlah: number;
     harga: number;
   }>;
   item?: Array<{
+    product?: { nama: string; namaEtalase?: string; gambarUrl?: string };
     produk?: { nama: string; namaEtalase?: string; gambarUrl?: string };
     jumlah: number;
     harga: number;
@@ -567,24 +569,26 @@ export default function CourierActivityDetailPage() {
                   {/* Items */}
                   {allItems.length > 0 && (
                     <div className="bg-gray-50/80 border border-gray-100 rounded-xl px-3 py-2 mb-3 space-y-1">
-                      {allItems.slice(0, 2).map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between text-xs"
-                        >
-                          <span className="text-slate-500 truncate mr-3">
-                            {item.product?.nama?.replace(" - ", " ") ||
-                              (item as any).produk?.nama?.replace(" - ", " ") ||
-                              "Produk"}{" "}
-                            <span className="text-slate-400">
-                              ×{item.jumlah}
+                      {allItems.slice(0, 2).map((item, idx) => {
+                        const productData = item.product || item.produk;
+                        return (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between text-xs"
+                          >
+                            <span className="text-slate-500 truncate mr-3">
+                              {productData?.nama?.replace(" - ", " ") ||
+                                "Produk"}{" "}
+                              <span className="text-slate-400">
+                                ×{item.jumlah}
+                              </span>
                             </span>
-                          </span>
-                          <span className="font-semibold text-slate-700 shrink-0">
-                            {formatRupiah(item.harga * item.jumlah)}
-                          </span>
-                        </div>
-                      ))}
+                            <span className="font-semibold text-slate-700 shrink-0">
+                              {formatRupiah(item.harga * item.jumlah)}
+                            </span>
+                          </div>
+                        );
+                      })}
                       {allItems.length > 2 && (
                         <p className="text-[10px] text-slate-400 pt-0.5">
                           +{allItems.length - 2} item lainnya

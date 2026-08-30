@@ -19,11 +19,13 @@ import {
 
 import { ordersApi } from "@/lib/ecommerce-api";
 import { useAuthStore } from "@/store/auth-store";
+import { useProfile } from "@/hooks/profil/useProfile";
 
 interface OrderItem {
   id: string;
   status: string;
   createdAt: string;
+  tokoNama?: string;
   shipping?: {
     status: string;
   };
@@ -32,6 +34,7 @@ interface OrderItem {
 export default function KurirProfilPage() {
   const router = useRouter();
   const { user, _hasHydrated, clearAuth } = useAuthStore();
+  const { profile } = useProfile(!!user, _hasHydrated);
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,6 +72,13 @@ export default function KurirProfilPage() {
   const totalLifetime = orders.filter(
     (o) => o.shipping?.status === "ARRIVED",
   ).length;
+
+  const mitraSellerName =
+    profile?.kurirToko?.nama ||
+    (user as any)?.kurirToko?.nama ||
+    (user as any)?.toko?.nama ||
+    orders.find((o) => o.tokoNama)?.tokoNama ||
+    "Belum Terafiliasi Seller";
 
   const menuLogistik = [
     {
@@ -140,15 +150,15 @@ export default function KurirProfilPage() {
         {/* Mitra Seller Card */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-200">
-              <Store size={20} className="text-gray-600" strokeWidth={2} />
+            <div className="w-11 h-11 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100">
+              <Store size={20} className="text-emerald-600" strokeWidth={2} />
             </div>
             <div className="flex-1">
               <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
                 Mitra Seller
               </p>
               <p className="text-sm font-semibold text-gray-900">
-                Agro Lembang Asri
+                {mitraSellerName}
               </p>
             </div>
           </div>

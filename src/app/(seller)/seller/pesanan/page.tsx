@@ -1,20 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  ClipboardList,
-  AlertCircle,
-  Loader2,
-  Package,
-  ArrowUpDown,
-} from "lucide-react";
+import { ClipboardList, AlertCircle, Loader2, Package } from "lucide-react";
 
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { SortDropdown } from "@/components/ecommerce/SortDropdown";
-import { useOrderEvents } from "@/hooks/orders/useOrderEvents";
-import { useSellerDashboard } from "@/hooks/seller/useSellerDashboard";
 
-import { useSellerOrders, OrderItem } from "./_hooks/useSellerOrders";
+import { useSellerOrders } from "./_hooks/useSellerOrders";
 import OrderCard from "./_components/OrderCard";
 
 export default function PesananMasukPage() {
@@ -23,27 +15,12 @@ export default function PesananMasukPage() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const {
-    orders,
-    loading,
-    errorText,
-    myStore,
-    actionLoading,
-    fetchOrders,
-    handleInitShipping,
-    handleAdvanceStatus,
-    totalPages,
-    totalItems,
-  } = useSellerOrders();
-
-  const { dashboardStats } = useSellerDashboard();
+  const { orders, loading, errorText, fetchOrders, totalPages, statusCounts } =
+    useSellerOrders();
 
   useEffect(() => {
     fetchOrders(page, limit, filterStatus, true);
   }, [page, limit, filterStatus, fetchOrders]);
-
-  // Real-time order updates for this store
-  useOrderEvents(myStore?.id);
 
   const statusList = [
     { id: "semua", label: "Aktif" },
@@ -53,8 +30,6 @@ export default function PesananMasukPage() {
     { id: "TIBA", label: "Tiba" },
   ];
 
-  // We are now fetching already filtered data from backend for this page
-  // The sorting is also mostly handled by backend (desc), but we can sort the current page if needed
   const filtered = [...orders].sort((a, b) => {
     const timeA = new Date(a.createdAt).getTime();
     const timeB = new Date(b.createdAt).getTime();
@@ -98,24 +73,11 @@ export default function PesananMasukPage() {
               setPage(1); // reset to page 1 on filter change
             }}
             options={statusList.map((tab) => {
-              const counts = dashboardStats?.statusCounts || {};
               let count = 0;
               if (tab.id === "semua") {
-                const total = Object.values(counts).reduce(
-                  (a: any, b: any) => a + b,
-                  0,
-                ) as number;
-                const inactive =
-                  (counts["SELESAI"] || 0) +
-                  (counts["DIBATALKAN"] || 0) +
-                  (counts["DITUTUP"] || 0);
-                count = total - inactive;
-              } else if (tab.id === "TIBA") {
-                // For TIBA we might just show DIKIRIM count or fetch from specific shipping stats,
-                // this is a limitation without advanced backend counts. Let's just use 0 or skip
-                count = 0; // or use some other way to get it
+                count = statusCounts["SEMUA"] ?? statusCounts["semua"] ?? 0;
               } else {
-                count = counts[tab.id] || 0;
+                count = statusCounts[tab.id] ?? 0;
               }
 
               const isActive = filterStatus === tab.id;

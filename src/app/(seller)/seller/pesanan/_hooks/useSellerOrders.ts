@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 import { storesApi, ordersApi, shippingApi } from "@/lib/ecommerce-api";
 
@@ -40,6 +40,17 @@ export const useSellerOrders = () => {
 
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+
+  const lastParamsRef = useRef<{
+    page: number;
+    limit: number;
+    status?: string;
+  }>({
+    page: 1,
+    limit: 10,
+    status: "semua",
+  });
 
   const fetchOrders = useCallback(
     async (
@@ -50,6 +61,9 @@ export const useSellerOrders = () => {
     ) => {
       try {
         if (showLoading) setLoading(true);
+
+        lastParamsRef.current = { page, limit, status };
+
         const storeRes = await storesApi.getMyStore();
         const storeData = storeRes?.data?.data || storeRes?.data;
         if (!storeData?.id) {
@@ -59,23 +73,14 @@ export const useSellerOrders = () => {
         setMyStore(storeData);
 
         const queryParams: any = { isGrosir: false, page, limit };
-        if (status && status !== "semua") {
-          // handle special cases like "TIBA" on backend or frontend?
-          // The backend only filters by pesanan status.
-          // For now, pass status directly.
-          if (status === "TIBA") {
-            // "TIBA" is actually a shipping status. We might just fetch DIKIRIM and filter on frontend for now, or backend needs update.
-            // Let's just fetch DIKIRIM for TIBA.
-            queryParams.status = "DIKIRIM";
-          } else {
-            queryParams.status = status;
-          }
+        if (status) {
+          queryParams.status = status;
         }
 
-        const ordersRes = await ordersApi.sellerGetOrders(
-          storeData.id,
-          queryParams,
-        );
+        const [ordersRes, statsRes] = await Promise.all([
+          ordersApi.sellerGetOrders(storeData.id, queryParams),
+          ordersApi.getDashboardStats(storeData.id),
+        ]);
 
         const responseData = ordersRes?.data?.data || ordersRes?.data;
         const rawList = responseData?.data || responseData || [];
@@ -83,6 +88,11 @@ export const useSellerOrders = () => {
         if (responseData?.totalPages) {
           setTotalPages(responseData.totalPages);
           setTotalItems(responseData.total || 0);
+        }
+
+        const statsData = statsRes?.data?.data || statsRes?.data;
+        if (statsData?.statusCounts) {
+          setStatusCounts(statsData.statusCounts);
         }
 
         const list = Array.isArray(rawList)
@@ -127,44 +137,9 @@ export const useSellerOrders = () => {
     [],
   );
 
-  useEffect(() => {
-    // Initial fetch is now handled by the component using the hook so it can pass states
-    // fetchOrders(1, 10, "semua", true);
-
-    // SSE Real-time Updates for Seller Orders
-    let eventSource: EventSource | null = null;
-    let retryTimeout: NodeJS.Timeout | null = null;
-
-    const connectSSE = () => {
-      eventSource = new EventSource("/api/proxy/ecom-pesanan/stream", {
-        withCredentials: true,
-      });
-
-      eventSource.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          // Skip heartbeat pings — they are just keep-alive signals, not real updates
-          if (payload?.type === "heartbeat") return;
-          console.log("[SSE] Seller Order Update received:", payload);
-          fetchOrders(undefined, undefined, undefined, false);
-        } catch {
-          // Ignore parse errors on non-JSON frames
-        }
-      };
-
-      eventSource.onerror = () => {
-        // Silently close — backend may be unavailable, retry after delay
-        eventSource?.close();
-        retryTimeout = setTimeout(connectSSE, 30000); // retry in 30s
-      };
-    };
-
-    connectSSE();
-
-    return () => {
-      eventSource?.close();
-      if (retryTimeout) clearTimeout(retryTimeout);
-    };
+  const refreshCurrentOrders = useCallback(async () => {
+    const { page, limit, status } = lastParamsRef.current;
+    await fetchOrders(page, limit, status, false);
   }, [fetchOrders]);
 
   const handleInitShipping = async (orderId: string) => {
@@ -176,7 +151,7 @@ export const useSellerOrders = () => {
     setActionLoading("init");
     try {
       await shippingApi.init(orderId);
-      await fetchOrders();
+      await refreshCurrentOrders();
     } finally {
       setActionLoading(null);
     }
@@ -192,7 +167,6 @@ export const useSellerOrders = () => {
     try {
       const payload: any = { note, sendEmailNotification };
       if (kurirId) {
-        // Find selected courier details
         const selectedCourier =
           myStore?.kurirStaffs?.find((c: any) => c.id === kurirId) ||
           (myStore?.courierStaff?.id === kurirId ? myStore.courierStaff : null);
@@ -207,7 +181,7 @@ export const useSellerOrders = () => {
         }
       }
       await shippingApi.advance(orderId, payload);
-      await fetchOrders();
+      await refreshCurrentOrders();
     } finally {
       setActionLoading(null);
     }
@@ -220,9 +194,11 @@ export const useSellerOrders = () => {
     myStore,
     actionLoading,
     fetchOrders,
+    refreshCurrentOrders,
     handleInitShipping,
     handleAdvanceStatus,
     totalPages,
     totalItems,
+    statusCounts,
   };
 };
