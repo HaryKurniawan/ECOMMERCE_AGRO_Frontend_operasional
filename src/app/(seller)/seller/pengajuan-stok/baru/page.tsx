@@ -313,6 +313,12 @@ export default function NewStockRequestPage() {
             ukuranKemasanKg: MEDIUM_KG,
             jumlahKemasan: it.packMedium,
             totalKg: it.packMedium * MEDIUM_KG,
+            kemasanDetail: [
+              {
+                ukuranKg: MEDIUM_KG,
+                jumlahKemasan: it.packMedium,
+              },
+            ],
           });
         }
         if (it.packRetail > 0) {
@@ -322,6 +328,12 @@ export default function NewStockRequestPage() {
             ukuranKemasanKg: RETAIL_KG,
             jumlahKemasan: it.packRetail,
             totalKg: it.packRetail * RETAIL_KG,
+            kemasanDetail: [
+              {
+                ukuranKg: RETAIL_KG,
+                jumlahKemasan: it.packRetail,
+              },
+            ],
           });
         }
       }
