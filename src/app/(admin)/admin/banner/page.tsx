@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Loader2,
   Image as ImageIcon,
@@ -51,8 +51,23 @@ const GRADIENTS = [
 export function getBannerImageUrl(url?: string | null) {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/api/proxy")) return url;
-  return `/api/proxy${url.startsWith("/") ? "" : "/"}${url}`;
+
+  const backendUrl =
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    "https://api.agro-ecommerce.web.id";
+
+  let domainRoot = "https://api.agro-ecommerce.web.id";
+  try {
+    const parsed = new URL(backendUrl);
+    domainRoot = `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    // Abaikan error parse URL, gunakan domain fallback
+  }
+
+  // Hapus awalan /api/proxy jika tidak sengaja tersimpan ganda
+  const cleanUrl = url.replace(/^\/api\/proxy/i, "");
+  return `${domainRoot}${cleanUrl.startsWith("/") ? "" : "/"}${cleanUrl}`;
 }
 
 export function parseBannerGradient(gradStr?: string | null) {
@@ -62,16 +77,19 @@ export function parseBannerGradient(gradStr?: string | null) {
       posX: 50,
       posY: 50,
       fit: "cover" as "cover" | "contain",
+      zoom: 1,
     };
   }
   if (gradStr.includes("pos:")) {
     const posMatch = gradStr.match(/pos:(\d+)%\s+(\d+)%/);
     const fitMatch = gradStr.match(/fit:(cover|contain)/);
+    const zoomMatch = gradStr.match(/zoom:([\d.]+)/);
     return {
       gradientClass: GRADIENTS[0].value,
       posX: posMatch ? parseInt(posMatch[1], 10) : 50,
       posY: posMatch ? parseInt(posMatch[2], 10) : 50,
       fit: (fitMatch ? fitMatch[1] : "cover") as "cover" | "contain",
+      zoom: zoomMatch ? parseFloat(zoomMatch[1]) : 1,
     };
   }
   return {
@@ -79,6 +97,7 @@ export function parseBannerGradient(gradStr?: string | null) {
     posX: 50,
     posY: 50,
     fit: "cover" as "cover" | "contain",
+    zoom: 1,
   };
 }
 
@@ -87,10 +106,11 @@ export function formatBannerGradient(
   posX: number,
   posY: number,
   fit: string,
+  zoom: number,
   hasImage: boolean,
 ) {
   if (hasImage) {
-    return `pos:${posX}% ${posY}%|fit:${fit}`;
+    return `pos:${posX}% ${posY}%|fit:${fit}|zoom:${zoom}`;
   }
   return gradientClass;
 }
@@ -108,11 +128,51 @@ export default function AdminBannerPage() {
   const [gradientClass, setGradientClass] = useState(GRADIENTS[0].value);
   const [posX, setPosX] = useState(50);
   const [posY, setPosY] = useState(50);
+  const [zoom, setZoom] = useState(1);
   const [fitMode, setFitMode] = useState<"cover" | "contain">("cover");
   const [isAktif, setIsAktif] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [hasRemovedImage, setHasRemovedImage] = useState(false);
+
+  // Drag to reposition photo preview
+  const isDragging = useRef(false);
+  const startDragCoords = useRef({ x: 0, y: 0 });
+  const startPos = useRef({ x: 50, y: 50 });
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    // Biarkan default agar pointer events jalan, tapi cegah drag-and-drop bawaan browser pada gambar
+    if (e.cancelable) e.preventDefault();
+    isDragging.current = true;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    startDragCoords.current = { x: clientX, y: clientY };
+    startPos.current = { x: posX, y: posY };
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging.current) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+
+    const deltaX = clientX - startDragCoords.current.x;
+    const deltaY = clientY - startDragCoords.current.y;
+
+    const dragScale = 0.2; // Sensitivitas geser
+    let newX = startPos.current.x - deltaX * dragScale;
+    let newY = startPos.current.y - deltaY * dragScale;
+
+    newX = Math.max(0, Math.min(100, Math.round(newX)));
+    newY = Math.max(0, Math.min(100, Math.round(newY)));
+
+    setPosX(newX);
+    setPosY(newY);
+  };
+
+  const handleDragEnd = () => {
+    isDragging.current = false;
+  };
 
   const fetchBanners = async () => {
     setLoading(true);
@@ -132,6 +192,7 @@ export default function AdminBannerPage() {
   }, []);
 
   const handleOpenModal = (banner?: Banner) => {
+    setHasRemovedImage(false);
     if (banner) {
       setEditingBanner(banner);
       setJudul(banner.judul);
@@ -143,8 +204,9 @@ export default function AdminBannerPage() {
       setGradientClass(parsed.gradientClass);
       setPosX(parsed.posX);
       setPosY(parsed.posY);
+      setZoom(parsed.zoom || 1);
       setFitMode(parsed.fit);
-
+      setIsAktif(banner.isAktif);
       setImagePreview(
         banner.imageUrl ? getBannerImageUrl(banner.imageUrl) : null,
       );
@@ -157,6 +219,7 @@ export default function AdminBannerPage() {
       setGradientClass(GRADIENTS[0].value);
       setPosX(50);
       setPosY(50);
+      setZoom(1);
       setFitMode("cover");
       setIsAktif(true);
       setImagePreview(null);
@@ -173,6 +236,7 @@ export default function AdminBannerPage() {
         return;
       }
       setImageFile(file);
+      setHasRemovedImage(false);
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
@@ -183,14 +247,17 @@ export default function AdminBannerPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      let finalImageUrl = imagePreview ? editingBanner?.imageUrl : undefined;
+      let finalImageUrl = editingBanner?.imageUrl;
+      if (hasRemovedImage) {
+        finalImageUrl = null as any;
+      }
 
       // Upload image first if new file is selected
       if (imageFile) {
         const formData = new FormData();
         formData.append("file", imageFile);
         const uploadRes = await apiClient.post(
-          "/upload/banner/gambar",
+          "/upload/poster/gambar",
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
@@ -209,7 +276,7 @@ export default function AdminBannerPage() {
         }
       }
 
-      if (!imagePreview && !imageFile) {
+      if (!imagePreview && !imageFile && hasRemovedImage) {
         finalImageUrl = null as any;
       }
 
@@ -219,6 +286,7 @@ export default function AdminBannerPage() {
         posX,
         posY,
         fitMode,
+        zoom,
         hasImage,
       );
 
@@ -345,10 +413,24 @@ export default function AdminBannerPage() {
                           <div className="relative w-40 h-20 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 shadow-xs">
                             <img
                               src={imgUrl}
-                              alt={banner.judul}
+                              alt={banner.judul || "Banner"}
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (
+                                  !target.dataset.retried &&
+                                  imgUrl.startsWith("/api/proxy/")
+                                ) {
+                                  target.dataset.retried = "true";
+                                  target.src = imgUrl.replace(
+                                    "/api/proxy/",
+                                    "http://localhost:4000/",
+                                  );
+                                }
+                              }}
                               style={{
                                 objectFit: parsed.fit,
                                 objectPosition: `${parsed.posX}% ${parsed.posY}%`,
+                                transform: `scale(${parsed.zoom})`,
                               }}
                               className="w-full h-full"
                             />
@@ -486,32 +568,45 @@ export default function AdminBannerPage() {
                   {imagePreview ? (
                     <div className="space-y-3">
                       {/* Live Crop & Position Preview Container */}
-                      <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-slate-900 border-2 border-emerald-500 shadow-md group">
+                      <div
+                        onMouseDown={handleDragStart}
+                        onMouseMove={handleDragMove}
+                        onMouseUp={handleDragEnd}
+                        onMouseLeave={handleDragEnd}
+                        onTouchStart={handleDragStart}
+                        onTouchMove={handleDragMove}
+                        onTouchEnd={handleDragEnd}
+                        className="relative w-full h-44 rounded-2xl overflow-hidden bg-slate-900 border-2 border-emerald-500 shadow-md group cursor-grab active:cursor-grabbing select-none"
+                      >
                         <img
                           src={imagePreview}
                           alt="Live Preview"
+                          draggable="false"
+                          onDragStart={(e) => e.preventDefault()}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (
+                              !target.dataset.retried &&
+                              imagePreview.startsWith("/api/proxy/")
+                            ) {
+                              target.dataset.retried = "true";
+                              target.src = imagePreview.replace(
+                                "/api/proxy/",
+                                "http://localhost:4000/",
+                              );
+                            }
+                          }}
                           style={{
                             objectFit: fitMode,
                             objectPosition: `${posX}% ${posY}%`,
+                            transform: `scale(${zoom})`,
+                            transformOrigin: `${posX}% ${posY}%`,
                           }}
-                          className="w-full h-full transition-all duration-150"
+                          className="w-full h-full transition-all duration-150 pointer-events-none select-none"
                         />
-                        <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur text-white text-[10px] font-mono px-2.5 py-1 rounded-lg border border-white/10 shadow-xs">
-                          X: {posX}% | Y: {posY}% ({fitMode})
-                        </div>
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setImageFile(null);
-                              setImagePreview(null);
-                              if (editingBanner)
-                                editingBanner.imageUrl = undefined;
-                            }}
-                            className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-md transition-all"
-                          >
-                            Hapus Foto
-                          </button>
+                        <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur text-white text-[10px] font-mono px-2.5 py-1 rounded-lg border border-white/10 shadow-xs pointer-events-none">
+                          X: {posX}% | Y: {posY}% | Z: {zoom.toFixed(1)}x (
+                          {fitMode})
                         </div>
                       </div>
 
@@ -628,6 +723,34 @@ export default function AdminBannerPage() {
                             </div>
                           </div>
                         </div>
+
+                        <div className="pt-2 border-t border-slate-200">
+                          <div className="flex justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                            <span>Perbesar (Zoom In/Out)</span>
+                            <span className="text-emerald-600">
+                              {zoom.toFixed(1)}x
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-slate-400">
+                              1x
+                            </span>
+                            <input
+                              type="range"
+                              min="1"
+                              max="3"
+                              step="0.1"
+                              value={zoom}
+                              onChange={(e) =>
+                                setZoom(parseFloat(e.target.value))
+                              }
+                              className="w-full accent-emerald-500 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <span className="text-[10px] font-mono text-slate-400">
+                              3x
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -643,12 +766,27 @@ export default function AdminBannerPage() {
                     </div>
                   )}
 
-                  <input
-                    type="file"
-                    accept="image/png, image/jpeg, image/webp"
-                    onChange={handleImageChange}
-                    className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer mt-2"
-                  />
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-3">
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      onChange={handleImageChange}
+                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                    />
+                    {imagePreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageFile(null);
+                          setImagePreview(null);
+                          setHasRemovedImage(true);
+                        }}
+                        className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-xl border border-rose-200 transition-all shrink-0"
+                      >
+                        Hapus Foto
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {!imagePreview && (

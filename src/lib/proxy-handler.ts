@@ -73,9 +73,18 @@ export async function handleProxyRequest(request: NextRequest, slug: string[]) {
     }
   }
 
-  let body = undefined;
+  let body: any = undefined;
   if (request.method !== "GET" && request.method !== "HEAD") {
-    body = await request.text();
+    if (
+      contentType?.includes("multipart/form-data") ||
+      contentType?.includes("application/octet-stream") ||
+      contentType?.includes("image/")
+    ) {
+      // PROXY RAW BINARY DATA (Termasuk boundary file upload)
+      body = await request.arrayBuffer();
+    } else {
+      body = await request.text();
+    }
   }
 
   try {
