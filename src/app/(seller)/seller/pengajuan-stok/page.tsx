@@ -6,15 +6,12 @@ import {
   FileSpreadsheet,
   Loader2,
   AlertCircle,
-  RefreshCw,
   Plus,
   Clock,
   CheckCircle2,
   XCircle,
   Warehouse,
   ChevronRight,
-  Package,
-  History,
   FileText,
 } from "lucide-react";
 
@@ -105,7 +102,8 @@ export default function SellerStockRequestsPage() {
   }, [fetchRequests]);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const s = (status || "").toUpperCase();
+    switch (s) {
       case "PENDING":
       case "DIAJUKAN":
         return (
@@ -116,24 +114,36 @@ export default function SellerStockRequestsPage() {
         );
       case "DISETUJUI":
       case "DIPROSES":
+      case "DIKONFIRMASI":
+      case "CONFIRMED":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-blue-50/50 text-blue-600 border border-blue-100/60 uppercase tracking-wider shrink-0">
             <CheckCircle2 className="w-3 h-3 text-blue-500" />
-            Disetujui
+            Dikonfirmasi
           </span>
         );
       case "PROSES_KIRIM":
       case "DIKIRIM":
+      case "SHIPPED":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-indigo-50/50 text-indigo-600 border border-indigo-100/60 uppercase tracking-wider shrink-0">
             <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
             Pengiriman
           </span>
         );
-      case "KONFIRMASI_DITERIMA":
+      case "TIBA":
+      case "ARRIVED":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-green-50/50 text-green-600 border border-green-100/60 uppercase tracking-wider shrink-0">
-            <CheckCircle2 className="w-3 h-3 text-green-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-teal-50/50 text-teal-600 border border-teal-100/60 uppercase tracking-wider shrink-0">
+            <CheckCircle2 className="w-3 h-3 text-teal-500" />
+            Tiba
+          </span>
+        );
+      case "KONFIRMASI_DITERIMA":
+      case "RECEIVED":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-emerald-50/50 text-emerald-600 border border-emerald-100/60 uppercase tracking-wider shrink-0">
+            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
             Konfirmasi Diterima
           </span>
         );
@@ -145,6 +155,7 @@ export default function SellerStockRequestsPage() {
           </span>
         );
       case "DITOLAK":
+      case "REJECTED":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium rounded-full bg-rose-50/50 text-rose-500 border border-rose-100/60 uppercase tracking-wider shrink-0">
             <XCircle className="w-3 h-3 text-rose-400" />
@@ -161,15 +172,25 @@ export default function SellerStockRequestsPage() {
   };
 
   const renderOrderCard = (request: StockRequest) => {
-    const statusOrder = [
-      "DIAJUKAN",
-      "DIPROSES",
-      "DIKIRIM",
-      "KONFIRMASI_DITERIMA",
-    ];
-    const currentStatusIndex = statusOrder.indexOf(
-      request.status || "DIAJUKAN",
-    );
+    const reqStatus = (request.status || "DIAJUKAN").toUpperCase();
+    let currentStatusIndex = 0;
+    if (
+      ["DISETUJUI", "DIPROSES", "DIKONFIRMASI", "CONFIRMED"].includes(reqStatus)
+    ) {
+      currentStatusIndex = 1;
+    } else if (["DIKIRIM", "PROSES_KIRIM", "SHIPPED"].includes(reqStatus)) {
+      currentStatusIndex = 2;
+    } else if (
+      [
+        "TIBA",
+        "ARRIVED",
+        "KONFIRMASI_DITERIMA",
+        "RECEIVED",
+        "SELESAI",
+      ].includes(reqStatus)
+    ) {
+      currentStatusIndex = 3;
+    }
 
     return (
       <button
@@ -223,9 +244,9 @@ export default function SellerStockRequestsPage() {
             <div className="flex justify-between w-full relative z-10">
               {[
                 { label: "Diajukan", status: "DIAJUKAN" },
-                { label: "Disetujui", status: "DIPROSES" },
+                { label: "Dikonfirmasi", status: "DIPROSES" },
                 { label: "Dikirim", status: "DIKIRIM" },
-                { label: "Diterima", status: "KONFIRMASI_DITERIMA" },
+                { label: "Tiba", status: "TIBA" },
               ].map((step, idx) => {
                 const isActive = idx <= currentStatusIndex;
                 const StepIcon = isActive ? CheckCircle2 : Clock;
