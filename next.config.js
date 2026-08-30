@@ -9,6 +9,10 @@ const nextConfig = {
     // Mengabaikan type-checking saat build untuk menghemat RAM dan mencegah OOM di Jenkins
     ignoreBuildErrors: true,
   },
+  productionBrowserSourceMaps: false,
+  experimental: {
+    cpus: 1,
+  },
   images: {
     remotePatterns: [
       {
