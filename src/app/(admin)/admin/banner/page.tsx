@@ -672,15 +672,18 @@ export default function AdminBannerPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">
-                    Judul Utama <span className="text-rose-500">*</span>
+                    Judul Utama (Opsional)
                   </label>
+                  <p className="text-[11px] text-slate-400 mb-1.5">
+                    Kosongkan jika judul/teks sudah ada di dalam desain foto
+                    banner Anda.
+                  </p>
                   <input
                     type="text"
-                    required
                     value={judul}
                     onChange={(e) => setJudul(e.target.value)}
                     className="w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none text-sm"
-                    placeholder="Contoh: Promo Spesial Petani Lokal 70%"
+                    placeholder="Contoh: Promo Spesial (Kosongkan jika judul sudah di dalam foto)"
                   />
                 </div>
 
