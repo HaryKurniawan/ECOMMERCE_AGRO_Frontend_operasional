@@ -769,7 +769,7 @@ export default function AdminBannerPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-3">
                     <input
                       type="file"
-                      accept="image/png, image/jpeg, image/webp"
+                      accept="image/png, image/jpeg, image/webp, image/avif"
                       onChange={handleImageChange}
                       className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
                     />
