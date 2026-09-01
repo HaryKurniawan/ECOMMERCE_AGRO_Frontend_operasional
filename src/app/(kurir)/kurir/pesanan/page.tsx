@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 
 import { formatRupiah, ordersApi, deliveryBatchApi } from "@/lib/ecommerce-api";
 import { useAuthStore } from "@/store/auth-store";
+import { useNotifStore } from "@/store/notifikasi-store";
 
 function MobileSegmentedControl({
   options,
@@ -162,6 +163,7 @@ interface OrderItem {
   totalHarga: number;
   metodeBayar: string;
   createdAt: string;
+  updatedAt?: string;
   tokoNama?: string;
   customer?: { name?: string; email?: string; phoneNumber?: string };
   alamatKirim?: string;
@@ -188,6 +190,7 @@ const STEPS = [
   { key: "PICKED_UP", label: "Diambil Kurir", icon: "✅" },
   { key: "IN_TRANSIT", label: "Dikirim", icon: "🚚" },
   { key: "ARRIVED", label: "Terkirim", icon: "📍" },
+  { key: "SELESAI", label: "Selesai (Dikonfirmasi)", icon: "✔️" },
 ] as const;
 
 const ACTIVE_STATUSES = [
@@ -222,6 +225,7 @@ function toResiId(orderId: string) {
 export default function KurirTasksPage() {
   const router = useRouter();
   const { user, _hasHydrated } = useAuthStore();
+  const { unreadCount } = useNotifStore();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState("");
@@ -299,11 +303,16 @@ export default function KurirTasksPage() {
   const activeOrders = orders.filter((o) =>
     ACTIVE_STATUSES.includes(o.shipping?.status || ""),
   );
-  const doneOrders = orders.filter(
-    (o) =>
-      o.shipping?.status === "ARRIVED" &&
-      new Date(o.createdAt).toDateString() === today,
-  );
+  const doneOrders = orders.filter((o) => {
+    const isCompletedStatus =
+      o.shipping?.status === "ARRIVED" ||
+      o.status === "SELESAI" ||
+      o.status === "DITUTUP";
+    const completedDate = new Date(
+      o.shipping?.updatedAt || o.updatedAt || o.createdAt,
+    );
+    return isCompletedStatus && completedDate.toDateString() === today;
+  });
   const displayed = (activeTab === "active" ? activeOrders : doneOrders).sort(
     (a, b) => {
       const timeA = new Date(a.createdAt).getTime();
@@ -346,9 +355,11 @@ export default function KurirTasksPage() {
               className="w-10 h-10 bg-primary-500/50 border border-primary-400/30 rounded-xl flex items-center justify-center text-white hover:bg-primary-500/70 transition-colors relative"
             >
               <Bell size={18} strokeWidth={2.5} />
-              <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 px-1.5 bg-red-500 rounded-full border-2 border-primary-600 text-[10px] font-bold flex items-center justify-center text-white shadow-sm">
-                3
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full border-2 border-primary-600 text-[9px] font-bold flex items-center justify-center text-white shadow-sm leading-none">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -531,7 +542,10 @@ function OrderCard({
   isCompleted: boolean;
 }) {
   const router = useRouter();
-  const status = order.shipping?.status || "UNKNOWN";
+  const status =
+    order.status === "SELESAI" || order.status === "DITUTUP"
+      ? "SELESAI"
+      : order.shipping?.status || "UNKNOWN";
   const stepIdx = getStepIdx(status);
   const action = getActionConfig(status);
   const resiId = toResiId(order.id);
@@ -638,10 +652,10 @@ function OrderCard({
           </div>
         )}
 
-        {(isCompleted || status === "ARRIVED") && (
+        {(isCompleted || status === "ARRIVED" || status === "SELESAI") && (
           <div className="flex items-center justify-center gap-2 py-3 mt-2 bg-primary-50 rounded-lg text-primary-700 text-sm font-semibold border border-primary-200">
             <CheckCircle2 size={15} strokeWidth={2} />
-            Paket Telah Terkirim
+            {status === "SELESAI" ? "Pesanan Selesai" : "Paket Telah Terkirim"}
           </div>
         )}
       </div>

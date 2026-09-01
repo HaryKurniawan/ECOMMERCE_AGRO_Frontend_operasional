@@ -20,6 +20,7 @@ import {
 import { ordersApi } from "@/lib/ecommerce-api";
 import { useAuthStore } from "@/store/auth-store";
 import { useProfile } from "@/hooks/profil/useProfile";
+import { useNotifStore } from "@/store/notifikasi-store";
 
 interface OrderItem {
   id: string;
@@ -28,13 +29,16 @@ interface OrderItem {
   tokoNama?: string;
   shipping?: {
     status: string;
+    updatedAt?: string;
   };
+  updatedAt?: string;
 }
 
 export default function KurirProfilPage() {
   const router = useRouter();
   const { user, _hasHydrated, clearAuth } = useAuthStore();
   const { profile } = useProfile(!!user, _hasHydrated);
+  const { unreadCount } = useNotifStore();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,13 +68,22 @@ export default function KurirProfilPage() {
   };
 
   const today = new Date().toDateString();
-  const todayDelivered = orders.filter(
-    (o) =>
-      o.shipping?.status === "ARRIVED" &&
-      new Date(o.createdAt).toDateString() === today,
-  ).length;
+  const todayDelivered = orders.filter((o) => {
+    const isCompletedStatus =
+      o.shipping?.status === "ARRIVED" ||
+      o.status === "SELESAI" ||
+      o.status === "DITUTUP";
+    const completedDate = new Date(
+      o.shipping?.updatedAt || o.updatedAt || o.createdAt,
+    );
+    return isCompletedStatus && completedDate.toDateString() === today;
+  }).length;
+
   const totalLifetime = orders.filter(
-    (o) => o.shipping?.status === "ARRIVED",
+    (o) =>
+      o.shipping?.status === "ARRIVED" ||
+      o.status === "SELESAI" ||
+      o.status === "DITUTUP",
   ).length;
 
   const mitraSellerName =
@@ -114,9 +127,11 @@ export default function KurirProfilPage() {
             className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors relative"
           >
             <Bell size={18} strokeWidth={2.5} />
-            <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 min-w-[20px] h-[20px] bg-red-500 rounded-full border-2 border-white text-[10px] font-bold flex items-center justify-center text-white shadow-sm leading-none">
-              3
-            </span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 rounded-full border-2 border-white text-[9px] font-bold flex items-center justify-center text-white shadow-sm leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
