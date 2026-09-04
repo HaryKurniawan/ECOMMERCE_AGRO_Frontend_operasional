@@ -15,10 +15,14 @@ export interface ActionModalProps {
     label: string;
     onClick: () => void;
     danger?: boolean;
+    className?: string;
+    disabled?: boolean;
   };
   secondaryButton?: {
     label: string;
     onClick?: () => void;
+    className?: string;
+    disabled?: boolean;
   };
   variant?: "vertical" | "horizontal";
 }
@@ -88,7 +92,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
             danger={primaryButton.danger}
             size="large"
             onClick={primaryButton.onClick}
-            className={`flex-1 rounded-2xl font-semibold !py-3.5 h-auto leading-none text-[13px] shadow-none ${!primaryButton.danger ? "bg-primary-600 hover:bg-primary-500 border-none" : ""}`}
+            disabled={primaryButton.disabled}
+            className={`flex-1 rounded-2xl font-semibold !py-3.5 h-auto leading-none text-[13px] shadow-none ${primaryButton.className || (!primaryButton.danger ? "bg-primary-600 hover:bg-primary-500 border-none" : "")}`}
           >
             {primaryButton.label}
           </Button>
@@ -98,7 +103,8 @@ const ActionModal: React.FC<ActionModalProps> = ({
               type="default"
               size="large"
               onClick={secondaryButton.onClick || onClose}
-              className="flex-1 rounded-2xl font-semibold !py-3.5 h-auto leading-none text-[13px] text-gray-400 border border-gray-100 bg-white hover:bg-gray-50 shadow-none"
+              disabled={secondaryButton.disabled}
+              className={`flex-1 rounded-2xl font-semibold !py-3.5 h-auto leading-none text-[13px] text-gray-400 border border-gray-100 bg-white hover:bg-gray-50 shadow-none ${secondaryButton.className || ""}`}
             >
               {secondaryButton.label}
             </Button>

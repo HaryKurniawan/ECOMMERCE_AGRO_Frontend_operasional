@@ -12,6 +12,7 @@ import {
   Star,
   TrendingUp,
   Truck,
+  Users,
 } from "lucide-react";
 
 import AppSidebar, { SidebarMenuItem } from "./AppSidebar";
@@ -40,6 +41,16 @@ const ADMIN_MENU: SidebarMenuItem[] = [
     children: [
       { path: "/admin/produk", label: "Produk" },
       { path: "/admin/master-komoditas", label: "Komoditas" },
+    ],
+  },
+  {
+    // Group: Pengguna & Akses
+    path: "/admin/pengguna",
+    label: "Pengguna & Akses",
+    icon: <Users size={17} />,
+    children: [
+      { path: "/admin/pengguna", label: "Pengguna" },
+      { path: "/admin/verifikasi-b2b", label: "Verifikasi B2B" },
     ],
   },
   {

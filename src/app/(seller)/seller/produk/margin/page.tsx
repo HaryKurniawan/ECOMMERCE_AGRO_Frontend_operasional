@@ -44,6 +44,8 @@ export default function MarginPage() {
   const [defaultMargin, setDefaultMargin] = useState<number>(15);
   const [newDefaultMargin, setNewDefaultMargin] = useState<number>(15);
   const [marginMaxPersen, setMarginMaxPersen] = useState<number>(30);
+  const [b2bDiscount, setB2bDiscount] = useState<number>(0);
+  const [newB2bDiscount, setNewB2bDiscount] = useState<number>(0);
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [editingProduct, setEditingProduct] = useState<ProductSummary | null>(
     null,
@@ -81,9 +83,12 @@ export default function MarginPage() {
       const configRes = await apiClient.get("/toko/harga/config");
       const curMargin = configRes.data.data.marginDefaultPersen;
       const maxMargin = configRes.data.data.marginMaxPersen || 30;
+      const b2bDisc = configRes.data.data.diskonB2BPersen || 0;
       setDefaultMargin(curMargin);
       setNewDefaultMargin(curMargin);
       setMarginMaxPersen(maxMargin);
+      setB2bDiscount(b2bDisc);
+      setNewB2bDiscount(b2bDisc);
 
       // Fetch products summary
       const summaryRes = await apiClient.get("/toko/harga/summary");
@@ -135,6 +140,35 @@ export default function MarginPage() {
         type: "error",
         text:
           err.response?.data?.message || "Gagal memperbarui margin default.",
+      });
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
+  const handleSaveB2bDiscount = async () => {
+    if (newB2bDiscount < 0 || newB2bDiscount > 100) {
+      setMessage({
+        type: "error",
+        text: "Diskon B2B harus antara 0% dan 100%.",
+      });
+      return;
+    }
+    setSavingConfig(true);
+    setMessage(null);
+    try {
+      await apiClient.patch("/toko/harga/config", {
+        diskonB2BPersen: Number(newB2bDiscount),
+      });
+      setB2bDiscount(Number(newB2bDiscount));
+      setMessage({
+        type: "success",
+        text: "Diskon khusus B2B berhasil diperbarui!",
+      });
+    } catch (err: any) {
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Gagal memperbarui diskon B2B.",
       });
     } finally {
       setSavingConfig(false);
@@ -300,7 +334,7 @@ export default function MarginPage() {
       )}
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Card default margin */}
         <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
           <div className="flex justify-between items-start">
@@ -363,6 +397,61 @@ export default function MarginPage() {
                 ⚠️ Melebihi batas maksimum {marginMaxPersen}%!
               </p>
             )}
+          </div>
+        </div>
+
+        {/* Card B2B Discount */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+              <Percent size={20} />
+            </div>
+            <span className="text-[10px] bg-blue-500/10 text-blue-700 font-medium px-2 py-0.5 rounded-full">
+              Khusus B2B
+            </span>
+          </div>
+          <div>
+            <h3 className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+              Diskon B2B
+            </h3>
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-3xl font-medium text-slate-850">
+                {b2bDiscount}%
+              </span>
+              <span className="text-xs text-slate-400 font-medium">
+                potongan harga
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+            <div className="flex justify-between items-center text-[11px] text-slate-400 pb-1 font-medium">
+              <span>Atur Diskon:</span>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={newB2bDiscount}
+                onChange={(e) =>
+                  setNewB2bDiscount(parseFloat(e.target.value) || 0)
+                }
+                className={`w-20 px-2 py-1.5 bg-slate-50 border rounded-xl text-center text-xs font-medium focus:ring-1 focus:outline-none ${
+                  newB2bDiscount < 0 || newB2bDiscount > 100
+                    ? "border-rose-300 focus:ring-rose-500 text-rose-600"
+                    : "border-slate-100 focus:ring-blue-500 focus:bg-white"
+                }`}
+              />
+              <button
+                onClick={handleSaveB2bDiscount}
+                disabled={
+                  savingConfig || newB2bDiscount < 0 || newB2bDiscount > 100
+                }
+                className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-400 disabled:opacity-75 disabled:cursor-not-allowed text-white rounded-xl text-xs font-medium transition-all"
+              >
+                {savingConfig ? "Menyimpan..." : "Simpan Diskon"}
+              </button>
+            </div>
           </div>
         </div>
 

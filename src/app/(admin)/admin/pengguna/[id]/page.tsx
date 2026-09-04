@@ -21,6 +21,8 @@ import {
   MessageCircle,
   Star,
   Package,
+  Building2,
+  FileText,
 } from "lucide-react";
 import { message, Modal } from "antd";
 
@@ -40,6 +42,10 @@ interface UserDetail {
   noTelepon?: string;
   emailTerverifikasiPada?: string | null;
   createdAt?: string;
+  namaPerusahaan?: string;
+  npwpPerusahaan?: string;
+  nibPerusahaan?: string;
+  statusVerifikasiPerusahaan?: string;
 }
 
 interface OrderItem {
@@ -503,6 +509,45 @@ export default function PenggunaDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* B2B Info */}
+              {userData.statusVerifikasiPerusahaan === "DISETUJUI" && (
+                <div className="pt-4 mt-4 border-t border-slate-100 space-y-3">
+                  <span className="text-[11px] text-slate-400 font-normal uppercase tracking-wider block mb-2">
+                    Informasi Perusahaan B2B
+                  </span>
+
+                  <div className="flex items-start gap-3 text-xs">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 flex-shrink-0 mt-0.5">
+                      <Building2 size={14} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] text-slate-400 font-normal">
+                        Nama Perusahaan
+                      </p>
+                      <p className="text-slate-700 font-normal mt-0.5">
+                        {userData.namaPerusahaan || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 text-xs">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500 flex-shrink-0 mt-0.5">
+                      <FileText size={14} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] text-slate-400 font-normal">
+                        NPWP / NIB
+                      </p>
+                      <p className="text-slate-700 font-normal mt-0.5">
+                        {userData.npwpPerusahaan || "—"}{" "}
+                        <span className="text-slate-300 mx-1">|</span>{" "}
+                        {userData.nibPerusahaan || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

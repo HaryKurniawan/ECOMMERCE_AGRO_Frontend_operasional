@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload, X } from "lucide-react";
+import { Upload, X, Camera } from "lucide-react";
 import Image from "next/image";
 
 interface PhotoGalleryProps {
@@ -60,21 +60,36 @@ export default function PhotoGallery({
           </div>
         ))}
 
-        {/* Upload Box */}
+        {/* Upload Options */}
         {canAddMore && (
-          <label className="border-2 border-dashed border-emerald-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition aspect-square">
-            <Upload size={20} className="text-emerald-400" />
-            <span className="text-xs text-slate-500 mt-1 text-center">
-              Tambah Foto
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
+          <>
+            <label className="border-2 border-dashed border-primary-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition aspect-square">
+              <Camera size={20} className="text-primary-400" />
+              <span className="text-[10px] text-slate-500 mt-1 text-center font-medium">
+                Kamera
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+
+            <label className="border-2 border-dashed border-emerald-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition aspect-square">
+              <Upload size={20} className="text-emerald-400" />
+              <span className="text-[10px] text-slate-500 mt-1 text-center font-medium">
+                Galeri
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+          </>
         )}
       </div>
 

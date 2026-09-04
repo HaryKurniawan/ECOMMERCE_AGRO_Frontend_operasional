@@ -46,8 +46,13 @@ export const usersApi = {
                       : u.peran,
             emailVerifiedAt: u.emailTerverifikasiPada,
             phoneNumber: u.noTelepon,
-            isVerifiedB2B: u.terverifikasiB2B,
-            b2bVerification: u.pengajuanB2B,
+            isVerifiedB2B:
+              u.terverifikasiB2B ||
+              u.statusVerifikasiPerusahaan === "DISETUJUI" ||
+              u.statusVerifikasiPerusahaan === true,
+            b2bVerification: u.pengajuanB2B || {
+              status: u.statusVerifikasiPerusahaan,
+            },
             sellerProfile: u.profilPenjual
               ? {
                   storeName: u.profilPenjual.namaToko,
